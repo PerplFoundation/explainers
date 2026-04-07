@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive Simulation — Change vs Post/Cancel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #999;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  .site-nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 32px; background: #0d0d0d; border-bottom: 1px solid #1a1a1a;
+  }
+  .site-nav .logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-nav .links { display: flex; gap: 6px; }
+  .site-nav a {
+    padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a2a;
+    background: #1a1a1a; color: #888; font-size: 11px; font-weight: 500;
+    text-decoration: none; transition: all 0.15s;
+  }
+  .site-nav a:hover { border-color: #444; color: #ccc; }
+  .site-nav a.active { border-color: #3a3a6a; color: #99f; background: #1a1a2a; }
+
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 32px; border-bottom: 1px solid #222;
+  }
+  .top-bar h1 { font-size: 15px; color: #ccc; font-weight: 500; }
+  .top-controls { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 6px 16px; border-radius: 4px; border: 1px solid #333;
+    background: #1a1a1a; color: #888; font-size: 12px; cursor: pointer;
+    transition: all 0.15s; font-weight: 500;
+  }
+  .btn:hover { border-color: #555; color: #ccc; }
+  .btn-go { background: #1a2a1a; border-color: #2a5a2a; color: #5a5; }
+  .btn-stop { background: #2a1a1a; border-color: #5a2a2a; color: #a55; }
+  .btn-sel { background: #1a1a2a; border-color: #3a3a6a; color: #88f; }
+  .speed-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .speed-row input { width: 80px; accent-color: #555; }
+
+  .status-bar {
+    text-align: center; padding: 8px; font-size: 13px; color: #666;
+    border-bottom: 1px solid #222; background: #0d0d0d;
+  }
+  .status-bar strong { color: #999; }
+
+  .main { display: grid; grid-template-columns: 1fr 1fr; height: calc(100vh - 120px); }
+  .panel {
+    display: flex; flex-direction: column;
+    border-right: 1px solid #1a1a1a; overflow: hidden;
+  }
+  .panel:last-child { border-right: none; }
+  .panel-head {
+    padding: 10px 20px; border-bottom: 1px solid #1a1a1a;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .panel-head .name { font-size: 13px; font-weight: 600; }
+  .pc-name { color: #b77; }
+  .ch-name { color: #7a9; }
+  .tag { font-size: 9px; padding: 2px 8px; border-radius: 3px; font-weight: 600; letter-spacing: 0.5px; }
+  .tag-s { background: #1a1111; color: #a66; }
+  .tag-p { background: #111a14; color: #6a8; }
+
+  .panel-body {
+    flex: 1; display: flex; flex-direction: column;
+    padding: 12px 20px; gap: 10px; overflow: hidden;
+  }
+
+  /* Top info row: action + depth side by side */
+  .info-row {
+    flex-shrink: 0; display: flex; gap: 10px; align-items: stretch;
+  }
+  .action-card {
+    flex: 1; padding: 10px 14px; border-radius: 6px;
+    background: #151515; border: 1px solid #222; min-height: 56px;
+  }
+  .action-title {
+    font-size: 9px; color: #555; margin-bottom: 4px;
+    text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600;
+  }
+  .action-body { font-size: 11px; color: #888; line-height: 1.5; }
+  .action-body .hl { color: #ccc; font-weight: 500; }
+  .action-body .neg { color: #c77; }
+  .action-body .pos { color: #7b9; }
+  .action-body .mut { color: #a8a; }
+
+  .depth-card {
+    flex-shrink: 0; width: 90px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 8px; border-radius: 6px;
+    background: #151515; border: 1px solid #222;
+  }
+  .depth-pct {
+    font-size: 22px; font-weight: 600; font-family: 'SF Mono', monospace;
+    transition: color 0.3s;
+  }
+  .depth-lbl { font-size: 8px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+  /* MM legend */
+  .mm-legend { display: flex; gap: 10px; flex-wrap: wrap; flex-shrink: 0; }
+  .mm-legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #666; transition: opacity 0.3s; }
+  .mm-legend-dot { width: 7px; height: 7px; border-radius: 50%; transition: opacity 0.3s; }
+
+  /* Order Book — takes all remaining space */
+  .book-section {
+    flex: 1; display: flex; flex-direction: column; gap: 1px;
+    overflow-y: auto; min-height: 0;
+  }
+  .book-row { display: flex; align-items: center; height: 32px; gap: 6px; flex-shrink: 0; }
+  .book-price {
+    width: 58px; text-align: right; font-size: 10px;
+    font-family: 'SF Mono', 'Fira Code', monospace; color: #444;
+  }
+  .book-bar-track {
+    flex: 1; height: 28px; background: #161616; border-radius: 3px;
+    position: relative; overflow: hidden;
+  }
+  .book-bar {
+    position: absolute; right: 0; top: 0; height: 100%; border-radius: 3px;
+    transition: width 0.35s ease;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 8px; gap: 4px;
+  }
+  .book-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .book-lots {
+    font-size: 9px; color: #666; font-family: 'SF Mono', monospace; margin-right: 4px;
+  }
+  .book-row.flash .book-bar-track {
+    animation: barflash 0.8s ease;
+  }
+  @keyframes barflash {
+    0% { background: #1a2a1a; }
+    100% { background: #161616; }
+  }
+  .oracle-marker {
+    display: flex; align-items: center; height: 20px; gap: 6px; flex-shrink: 0;
+    margin: 2px 0;
+  }
+  .oracle-marker .oracle-price {
+    width: 58px; text-align: right; font-size: 9px;
+    font-family: 'SF Mono', monospace; color: #b93;
+  }
+  .oracle-marker .oracle-line {
+    flex: 1; height: 0; border-top: 1px dashed #553a1a;
+  }
+  .oracle-marker .oracle-tag {
+    font-size: 8px; color: #996; padding: 1px 6px; background: #1a1500;
+    border-radius: 3px; border: 1px solid #332a10;
+  }
+</style>
+</head>
+<body>
+
+<div class="site-nav">
+  <span class="logo">Perpl</span>
+  <div class="links">
+    <a href="index.html">Overview</a>
+    <a class="active" href="interactive.html">Interactive Sim</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</div>
+
+<div class="top-bar">
+  <h1>Order Book Depth: Change vs Post/Cancel</h1>
+  <div class="top-controls">
+    <button class="btn btn-go" id="playBtn">&#9654; Play</button>
+    <button class="btn" id="stepBtn">Step</button>
+    <button class="btn" id="resetBtn">Reset</button>
+    <div class="speed-row">
+      <span>Speed</span>
+      <input type="range" id="speedSlider" min="1" max="10" value="4">
+    </div>
+    <button class="btn mm-btn" id="mm3">3 MMs</button>
+    <button class="btn btn-sel mm-btn" id="mm5">5 MMs</button>
+    <button class="btn mm-btn" id="mm10">10 MMs</button>
+  </div>
+</div>
+
+<div class="status-bar" id="statusBar">Press <strong>Play</strong> or <strong>Step</strong> to begin</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="panel-head">
+      <span class="name pc-name">Post / Cancel</span>
+      <span class="tag tag-s">SERIAL</span>
+    </div>
+    <div class="panel-body">
+      <div class="info-row">
+        <div class="action-card">
+          <div class="action-title">What's happening</div>
+          <div class="action-body" id="actionBodyPC">Waiting to start...</div>
+        </div>
+        <div class="depth-card">
+          <span class="depth-pct" id="depthPctPC">100%</span>
+          <span class="depth-lbl">Bid depth</span>
+        </div>
+      </div>
+      <div class="mm-legend" id="legendPC"></div>
+      <div class="book-section" id="bookPC"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head">
+      <span class="name ch-name">Change</span>
+      <span class="tag tag-p">PARALLEL</span>
+    </div>
+    <div class="panel-body">
+      <div class="info-row">
+        <div class="action-card">
+          <div class="action-title">What's happening</div>
+          <div class="action-body" id="actionBodyCH">Waiting to start...</div>
+        </div>
+        <div class="depth-card">
+          <span class="depth-pct" id="depthPctCH">100%</span>
+          <span class="depth-lbl">Bid depth</span>
+        </div>
+      </div>
+      <div class="mm-legend" id="legendCH"></div>
+      <div class="book-section" id="bookCH"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var COLORS = ['#6688bb','#9977bb','#669977','#bb8855','#bb7799','#77aabb','#aa99cc','#77bb88','#bb8866','#bb7777'];
+var NAMES = ['A','B','C','D','E','F','G','H','I','J'];
+
+var N = 5, curStep = 0, playing = false, timer = null, speed = 1;
+var pcMMs = [], chMMs = [], steps = [];
+var currentOracle = 85000;
+var chJustFlashed = false;
+var pcAction = '', chAction = '';
+
+// Fixed price range — coarse levels so moves are visually obvious
+var BOOK_LO = 84400;
+var BOOK_HI = 85600;
+var PRICE_STEP = 50;
+
+var waves = [
+  { price: 85200, desc: '+$200 pump' },
+  { price: 85450, desc: '+$250 pump', lots: [{m:0,l:130,r:'scaling up'},{m:2,l:45,r:'reducing'}] },
+  { price: 85050, desc: '-$400 dump', lots: [{m:1,l:140,r:'adding size'},{m:3,l:25,r:'cutting'}] },
+  { price: 84700, desc: '-$350 dump', lots: [{m:0,l:55,r:'pulling back'},{m:4,l:95,r:'adding size'}] },
+  { price: 85300, desc: '+$600 pump', lots: [{m:0,l:90,r:'normalizing'},{m:1,l:80,r:'normalizing'}] },
+];
+
+function mkPrices(oracle, n) {
+  var out = [];
+  // Round oracle down to nearest PRICE_STEP, then place MMs below
+  var base = Math.floor(oracle / PRICE_STEP) * PRICE_STEP - PRICE_STEP;
+  for (var i = 0; i < n; i++) out.push(base - i * PRICE_STEP);
+  return out;
+}
+
+function genSteps() {
+  steps = [];
+  var oracle = 85000;
+  steps.push({t: 'init'});
+
+  for (var w = 0; w < waves.length; w++) {
+    var wave = waves[w];
+    var prev = oracle;
+    oracle = wave.price;
+
+    steps.push({t: 'oracle', prev: prev, oracle: oracle, desc: wave.desc});
+
+    if (wave.lots) {
+      var adj = [];
+      for (var k = 0; k < wave.lots.length; k++) {
+        if (wave.lots[k].m < N) adj.push(wave.lots[k]);
+      }
+      if (adj.length) steps.push({t: 'lots', adj: adj});
+    }
+
+    var np = mkPrices(oracle, N);
+    for (var i = 0; i < N; i++) {
+      steps.push({t: 'cancel', mm: i, isFirst: i === 0, np: np});
+      steps.push({t: 'post', mm: i, price: np[i]});
+    }
+    steps.push({t: 'settle', wave: w});
+  }
+  steps.push({t: 'end'});
+}
+
+function initMMs() {
+  pcMMs = []; chMMs = [];
+  currentOracle = 85000;
+  var p = mkPrices(85000, N);
+  var baseLots = [100, 80, 70, 60, 55, 50, 45, 40, 35, 30];
+  for (var i = 0; i < N; i++) {
+    pcMMs.push({name: NAMES[i], color: COLORS[i], price: p[i], on: true, lots: baseLots[i] || 50});
+    chMMs.push({name: NAMES[i], color: COLORS[i], price: p[i], on: true, lots: baseLots[i] || 50});
+  }
+}
+
+function setMMs(n) {
+  N = n;
+  document.querySelectorAll('.mm-btn').forEach(function(b) {
+    b.className = (b.id === 'mm' + n) ? 'btn btn-sel mm-btn' : 'btn mm-btn';
+  });
+  resetSim();
+}
+
+function resetSim() {
+  if (timer) clearTimeout(timer);
+  playing = false; curStep = 0; currentOracle = 85000; chJustFlashed = false;
+  document.getElementById('playBtn').innerHTML = '&#9654; Play';
+  document.getElementById('playBtn').className = 'btn btn-go';
+  genSteps(); initMMs();
+  pcAction = 'All market makers on book at initial prices.';
+  chAction = 'All market makers on book at initial prices.';
+  document.getElementById('statusBar').innerHTML = 'Press <strong>Play</strong> or <strong>Step</strong>';
+  render();
+}
+
+function togglePlay() {
+  if (playing) {
+    clearTimeout(timer); playing = false;
+    document.getElementById('playBtn').innerHTML = '&#9654; Play';
+    document.getElementById('playBtn').className = 'btn btn-go';
+  } else {
+    if (curStep >= steps.length - 1) resetSim();
+    playing = true;
+    document.getElementById('playBtn').innerHTML = '&#10073;&#10073;';
+    document.getElementById('playBtn').className = 'btn btn-stop';
+    tick();
+  }
+}
+
+function tick() {
+  if (!playing) return;
+  doStep();
+  if (curStep < steps.length - 1 && playing) {
+    timer = setTimeout(tick, Math.max(120, 900 / speed));
+  } else {
+    playing = false;
+    document.getElementById('playBtn').innerHTML = '&#9654; Play';
+    document.getElementById('playBtn').className = 'btn btn-go';
+  }
+}
+
+function updateSpeed() { speed = document.getElementById('speedSlider').value / 4; }
+
+function doStep() {
+  if (curStep >= steps.length - 1) return;
+  curStep++;
+  applyStep(curStep);
+  render();
+}
+
+function applyStep(idx) {
+  var s = steps[idx];
+
+  if (s.t === 'init') {
+    pcAction = 'All market makers on book at initial prices.';
+    chAction = 'All market makers on book at initial prices.';
+    document.getElementById('statusBar').innerHTML = 'Initial state';
+  }
+
+  if (s.t === 'oracle') {
+    currentOracle = s.oracle;
+    chJustFlashed = false;
+    var dir = s.oracle > s.prev ? '&#9650;' : '&#9660;';
+    var diff = s.oracle - s.prev;
+    var sign = diff > 0 ? '+' : '';
+    pcAction = 'Oracle <span class="hl">' + dir + ' $' + s.prev.toLocaleString() + ' &rarr; $' + s.oracle.toLocaleString() + '</span> (' + sign + diff + ')<br>All ' + N + ' quotes stale. Serial requote...';
+    chAction = 'Oracle <span class="hl">' + dir + ' $' + s.prev.toLocaleString() + ' &rarr; $' + s.oracle.toLocaleString() + '</span> (' + sign + diff + ')<br>All ' + N + ' MMs change in parallel.';
+    document.getElementById('statusBar').innerHTML = 'Oracle ' + s.desc;
+  }
+
+  if (s.t === 'lots') {
+    var lines = [];
+    for (var k = 0; k < s.adj.length; k++) {
+      var a = s.adj[k];
+      if (a.m >= N) continue;
+      var oldL = pcMMs[a.m].lots;
+      pcMMs[a.m].lots = a.l;
+      chMMs[a.m].lots = a.l;
+      lines.push('<span class="mut">' + NAMES[a.m] + '</span>: ' + oldL + ' &rarr; ' + a.l + ' lots (' + a.r + ')');
+    }
+    pcAction += '<br>' + lines.join('<br>');
+    chAction += '<br>' + lines.join('<br>');
+    document.getElementById('statusBar').innerHTML = 'Lot adjustments';
+  }
+
+  if (s.t === 'cancel') {
+    var m = s.mm;
+    pcMMs[m].on = false;
+    var remain = 0;
+    for (var j = 0; j < N; j++) { if (pcMMs[j].on) remain++; }
+    pcAction = '<span class="neg">' + NAMES[m] + ' removed</span> &mdash; ' + pcMMs[m].lots + ' lots gone<br>' + remain + '/' + N + ' MMs still quoting';
+    if (m > 0) pcAction += '<br><span style="color:#554">re-executed (Idx16 conflict)</span>';
+
+    if (s.isFirst) {
+      for (var j = 0; j < N; j++) {
+        chMMs[j].price = s.np[j];
+        chMMs[j].on = true;
+      }
+      chJustFlashed = true;
+      chAction = '<span class="pos">All ' + N + ' MMs changed simultaneously</span><br>0 conflicts, 0 re-executions';
+    }
+    document.getElementById('statusBar').innerHTML = NAMES[m] + ' cancels' + (m > 0 ? ' (re-exec)' : '');
+  }
+
+  if (s.t === 'post') {
+    var m = s.mm;
+    pcMMs[m].on = true;
+    pcMMs[m].price = s.price;
+    pcAction = '<span class="pos">' + NAMES[m] + ' posted @ $' + s.price.toLocaleString() + '</span> (' + pcMMs[m].lots + ' lots)<br>' + (m + 1) + '/' + N + ' requoted';
+    document.getElementById('statusBar').innerHTML = NAMES[m] + ' posts @ $' + s.price.toLocaleString();
+  }
+
+  if (s.t === 'settle') {
+    pcAction = 'All ' + N + ' MMs requoted. <span class="hl">Book restored.</span>';
+    chAction = 'All ' + N + ' MMs on book. <span class="hl">Depth never interrupted.</span>';
+    document.getElementById('statusBar').innerHTML = 'Wave ' + (s.wave + 1) + ' complete';
+  }
+
+  if (s.t === 'end') {
+    pcAction = 'Done. Depth dropped on every wave.';
+    chAction = 'Done. Depth held at 100% throughout.';
+    document.getElementById('statusBar').innerHTML = 'Simulation complete';
+  }
+}
+
+function render() {
+  renderLegend('legendPC', pcMMs);
+  renderLegend('legendCH', chMMs);
+  renderBook('bookPC', pcMMs, false);
+  renderBook('bookCH', chMMs, true);
+  renderDepth('depthPctPC', pcMMs);
+  renderDepth('depthPctCH', chMMs);
+  document.getElementById('actionBodyPC').innerHTML = pcAction;
+  document.getElementById('actionBodyCH').innerHTML = chAction;
+}
+
+function renderLegend(id, mms) {
+  var c = document.getElementById(id); c.innerHTML = '';
+  for (var i = 0; i < mms.length; i++) {
+    var mm = mms[i];
+    var el = document.createElement('div');
+    el.className = 'mm-legend-item';
+    el.style.opacity = mm.on ? '1' : '0.3';
+    el.innerHTML = '<div class="mm-legend-dot" style="background:' + mm.color + ';opacity:' + (mm.on ? 1 : 0.3) + '"></div>' + mm.name + ' &middot; ' + mm.lots + 'L';
+    c.appendChild(el);
+  }
+}
+
+function renderBook(id, mms, isChange) {
+  var c = document.getElementById(id);
+  var shouldFlash = isChange && chJustFlashed;
+  c.innerHTML = '';
+
+  var lvls = {};
+  var total = 0;
+  for (var i = 0; i < mms.length; i++) total += mms[i].lots;
+  if (total === 0) total = 1;
+
+  for (var i = 0; i < mms.length; i++) {
+    if (!mms[i].on) continue;
+    var p = mms[i].price;
+    if (!lvls[p]) lvls[p] = {lots: 0, mms: []};
+    lvls[p].lots += mms[i].lots;
+    lvls[p].mms.push(mms[i]);
+  }
+
+  var oracleRow = Math.round(currentOracle / PRICE_STEP) * PRICE_STEP;
+  var oracleInserted = false;
+
+  for (var p = BOOK_HI; p >= BOOK_LO; p -= PRICE_STEP) {
+    // Insert oracle marker when we cross it
+    if (!oracleInserted && p <= oracleRow) {
+      oracleInserted = true;
+      var marker = document.createElement('div');
+      marker.className = 'oracle-marker';
+      marker.innerHTML = '<span class="oracle-price">$' + (oracleRow / 1000).toFixed(1) + 'k</span><div class="oracle-line"></div><span class="oracle-tag">ORACLE</span>';
+      c.appendChild(marker);
+    }
+
+    var row = document.createElement('div');
+    row.className = 'book-row';
+    if (shouldFlash && lvls[p]) row.className += ' flash';
+
+    var lbl = document.createElement('div');
+    lbl.className = 'book-price';
+    lbl.textContent = (p / 1000).toFixed(1) + 'k';
+    row.appendChild(lbl);
+
+    var track = document.createElement('div');
+    track.className = 'book-bar-track';
+
+    if (lvls[p]) {
+      var bar = document.createElement('div');
+      bar.className = 'book-bar';
+      var pct = Math.min(92, (lvls[p].lots / total) * 180);
+      bar.style.width = pct + '%';
+
+      var baseColor = lvls[p].mms[0].color;
+      bar.style.background = baseColor + '30';
+      bar.style.borderRight = '2px solid ' + baseColor + '88';
+
+      var lotsEl = document.createElement('span');
+      lotsEl.className = 'book-lots';
+      lotsEl.textContent = lvls[p].lots;
+      bar.appendChild(lotsEl);
+
+      for (var j = 0; j < lvls[p].mms.length; j++) {
+        var dot = document.createElement('div');
+        dot.className = 'book-dot';
+        dot.style.background = lvls[p].mms[j].color;
+        bar.appendChild(dot);
+      }
+      track.appendChild(bar);
+    }
+    row.appendChild(track);
+    c.appendChild(row);
+  }
+
+  if (shouldFlash) chJustFlashed = false;
+}
+
+function renderDepth(pctId, mms) {
+  var total = 0, active = 0;
+  for (var i = 0; i < mms.length; i++) {
+    total += mms[i].lots;
+    if (mms[i].on) active += mms[i].lots;
+  }
+  if (total === 0) total = 1;
+  var pct = Math.round(active / total * 100);
+  var el = document.getElementById(pctId);
+  el.textContent = pct + '%';
+  if (pct < 50) el.style.color = '#c77';
+  else if (pct < 80) el.style.color = '#ca7';
+  else el.style.color = '#7a9';
+}
+
+document.getElementById('playBtn').addEventListener('click', togglePlay);
+document.getElementById('stepBtn').addEventListener('click', doStep);
+document.getElementById('resetBtn').addEventListener('click', resetSim);
+document.getElementById('speedSlider').addEventListener('input', updateSpeed);
+document.getElementById('mm3').addEventListener('click', function() { setMMs(3); });
+document.getElementById('mm5').addEventListener('click', function() { setMMs(5); });
+document.getElementById('mm10').addEventListener('click', function() { setMMs(10); });
+
+window.onerror = function(msg, src, line) {
+  document.getElementById('statusBar').innerHTML = '<span style="color:#f66">Error: ' + msg + ' (line ' + line + ')</span>';
+};
+
+resetSim();
+</script>
+</body>
+</html>

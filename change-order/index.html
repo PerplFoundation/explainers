@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Perpl Keeps the Book Full</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    color: #aaa;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.7;
+  }
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 32px;
+    background: rgba(17,17,17,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #222;
+  }
+  .nav-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .nav-links { display: flex; gap: 6px; }
+  .nav-link {
+    padding: 5px 14px; border-radius: 4px; border: 1px solid #2a2a2a;
+    background: #1a1a1a; color: #888; font-size: 11px; font-weight: 500;
+    text-decoration: none; transition: all 0.15s;
+  }
+  .nav-link:hover { border-color: #444; color: #ccc; }
+  .nav-link.active { border-color: #3a3a6a; color: #99f; background: #1a1a2a; }
+
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 80px 24px 80px;
+  }
+
+  h1 {
+    font-size: 28px; color: #ddd; font-weight: 600;
+    line-height: 1.3; margin-bottom: 12px;
+  }
+  .subtitle {
+    font-size: 14px; color: #666; margin-bottom: 48px;
+  }
+
+  h2 {
+    font-size: 16px; color: #bbb; font-weight: 600;
+    margin-top: 48px; margin-bottom: 12px;
+  }
+
+  p { margin-bottom: 16px; font-size: 15px; }
+
+  strong { color: #ccc; font-weight: 500; }
+
+  .callout {
+    padding: 20px 24px; margin: 28px 0;
+    background: #151515; border: 1px solid #222;
+    border-radius: 8px;
+  }
+  .callout p { margin-bottom: 8px; }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    font-size: 11px; color: #555; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+
+  .compare {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+    margin: 28px 0;
+  }
+  .compare-card {
+    padding: 16px 20px; border-radius: 8px;
+    background: #151515; border: 1px solid #222;
+  }
+  .compare-card h3 {
+    font-size: 12px; font-weight: 600; margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .compare-card.bad h3 { color: #b77; }
+  .compare-card.good h3 { color: #7a9; }
+  .compare-card ul {
+    list-style: none; font-size: 13px; line-height: 1.8;
+  }
+  .compare-card li { color: #888; }
+  .compare-card li span { color: #666; }
+
+  .cta-row {
+    display: flex; gap: 12px; margin-top: 40px;
+  }
+  .cta {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 20px; border-radius: 6px;
+    font-size: 13px; font-weight: 500; text-decoration: none;
+    transition: all 0.15s;
+  }
+  .cta-primary {
+    background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9;
+  }
+  .cta-primary:hover { background: #2a3a2a; color: #9cb; }
+  .cta-secondary {
+    background: #1a1a2a; border: 1px solid #3a3a6a; color: #99b;
+  }
+  .cta-secondary:hover { background: #2a2a3a; color: #bbf; }
+
+  .table-wrap { margin: 24px 0; overflow-x: auto; }
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+  }
+  th {
+    text-align: left; padding: 8px 12px; border-bottom: 1px solid #2a2a2a;
+    color: #666; font-weight: 600; font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  td {
+    padding: 8px 12px; border-bottom: 1px solid #1a1a1a; color: #888;
+  }
+  td.bad { color: #b77; }
+  td.good { color: #7a9; }
+
+  .footer {
+    margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a1a1a;
+    font-size: 11px; color: #444; text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <div class="nav-logo">Perpl</div>
+  <div class="nav-links">
+    <a class="nav-link active" href="index.html">Overview</a>
+    <a class="nav-link" href="interactive.html">Interactive Sim</a>
+    <a class="nav-link" href="diagrams.html">Technical Diagrams</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <h1>How Perpl Keeps the Book Full When Everyone Else Goes Thin</h1>
+  <p class="subtitle">A native order modification primitive designed for parallel execution on Monad.</p>
+
+  <p>Every perpetual DEX faces the same problem: when price moves, market makers need to update their quotes. The faster the chain, the more this matters &mdash; and the more it can go wrong.</p>
+
+  <h2>The Problem Nobody Talks About</h2>
+
+  <p>On every on-chain order book today, requoting works the same way: cancel your old order, post a new one. Two operations. This seems fine until you look at what actually happens inside the EVM.</p>
+
+  <p>Cancel deallocates an order ID. Post allocates a new one. Both write to the same global data structure &mdash; an index that tracks which IDs are in use. When ten market makers requote in the same block, all ten of them write to this same storage slot. On a parallel-execution chain like Monad, this creates a bottleneck: the execution engine detects the conflict, throws out its parallel work, and runs every requote one after another. Serial. Slow.</p>
+
+  <p>Worse, each cancel <em>removes</em> that market maker's liquidity before the post <em>restores</em> it at the new price. During the cascade, the book thins out. A taker arriving mid-block might see 40% of normal depth, wide spreads, and bad fills &mdash; exactly when volatility is highest and liquidity matters most.</p>
+
+  <h2>What Perpl Does Differently</h2>
+
+  <p>Perpl's exchange contract has a native <strong>Change</strong> operation. Instead of cancel + post, a market maker submits a single transaction that modifies their order in place: new price, new size, same order ID.</p>
+
+  <p>This sounds like a small optimization. It isn't.</p>
+
+  <p>Because Change reuses the existing order ID, it never touches the global ID index. It never increments or decrements the order counter. The only storage it writes to is the market maker's own order slot and the price level it's moving to. Each market maker's Change is completely independent of every other market maker's Change.</p>
+
+  <p>On Monad, this means they all execute in parallel. No conflicts. No re-execution. No serial bottleneck.</p>
+
+  <h2>What This Looks Like</h2>
+
+  <div class="compare">
+    <div class="compare-card bad">
+      <h3>Cancel / Post</h3>
+      <ul>
+        <li>10 steps to requote 5 MMs</li>
+        <li>Executed serially <span>(state conflicts)</span></li>
+        <li>Depth drops to ~60%</li>
+        <li>Each MM absent for 2 steps</li>
+        <li>~120&ndash;160k gas per requote</li>
+      </ul>
+    </div>
+    <div class="compare-card good">
+      <h3>Change</h3>
+      <ul>
+        <li>1 step to requote 5 MMs</li>
+        <li>Executed in parallel <span>(no conflicts)</span></li>
+        <li>Depth stays at 100%</li>
+        <li>No MM ever absent</li>
+        <li>~50&ndash;70k gas per requote</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>With ten market makers, cancel/post drops depth below 40%. Change still holds at 100%.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="interactive.html">&#9654; Run the simulation</a>
+    <a class="cta cta-secondary" href="diagrams.html">View technical diagrams</a>
+  </div>
+
+  <h2>Why This Matters</h2>
+
+  <p>Monad's architecture &mdash; 400ms blocks, parallel execution, 200M gas per block &mdash; is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
+
+  <p>Change is designed for this architecture. It keeps each market maker's state isolated, letting Monad do what it's built to do: run everything at once.</p>
+
+  <p>The result is an order book that stays deep through volatility, gives takers better fills, and lets market makers quote tighter spreads with lower gas costs. Not because of a faster chain &mdash; but because the contract was designed to use the chain correctly.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>Post/Cancel</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Execution</td><td class="bad">Serial (1 MM at a time)</td><td class="good">Parallel (all at once)</td></tr>
+        <tr><td>Depth during requote</td><td class="bad">40&ndash;80%</td><td class="good">100%</td></tr>
+        <tr><td>Steps for 5 MMs</td><td class="bad">10</td><td class="good">1</td></tr>
+        <tr><td>Gas per requote (Monad)</td><td class="bad">~120&ndash;160k</td><td class="good">~50&ndash;70k</td></tr>
+        <tr><td>State conflicts</td><td class="bad">N (fully connected)</td><td class="good">0 (disconnected)</td></tr>
+        <tr><td>Liquidity gap</td><td class="bad">Yes</td><td class="good">Never</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Perpl &mdash; Fully on-chain perpetual DEX on Monad
+  </div>
+
+</div>
+
+</body>
+</html>
