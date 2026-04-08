@@ -195,7 +195,7 @@
 
   <h2>Why This Matters</h2>
 
-  <p>Monad's architecture (400ms blocks, parallel execution, 200M gas per block) is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
+  <p>Monad's architecture (400ms blocks, <a href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution">parallel execution</a>, 200M gas per block) is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
 
   <p>Change is designed for this architecture. It keeps each market maker's state isolated, letting Monad do what it's built to do: run everything at once.</p>
 
