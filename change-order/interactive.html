@@ -587,7 +587,7 @@ function applyStep(idx) {
     var sign = diff > 0 ? '+' : '';
     pcAction = 'Oracle <span class="hl">' + dir + ' $' + s.prev.toLocaleString() + ' &rarr; $' + s.oracle.toLocaleString() + '</span> (' + sign + diff + ')<br>All ' + N + ' quotes stale. Serial requote...';
     chAction = 'Oracle <span class="hl">' + dir + ' $' + s.prev.toLocaleString() + ' &rarr; $' + s.oracle.toLocaleString() + '</span> (' + sign + diff + ')<br>All ' + N + ' MMs change in parallel.';
-    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (s.wave + 1) + '</strong> &mdash; Oracle ' + s.desc;
+    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (s.wave + 1) + '</strong> | Oracle ' + s.desc;
   }
 
   if (s.t === 'lots') {
@@ -602,7 +602,7 @@ function applyStep(idx) {
     }
     pcAction += '<br>' + lines.join('<br>');
     chAction += '<br>' + lines.join('<br>');
-    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> &mdash; Lot adjustments';
+    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> | Lot adjustments';
   }
 
   if (s.t === 'cancel') {
@@ -610,7 +610,7 @@ function applyStep(idx) {
     pcMMs[m].on = false;
     var remain = 0;
     for (var j = 0; j < N; j++) { if (pcMMs[j].on) remain++; }
-    pcAction = '<span class="neg">' + NAMES[m] + ' removed</span> &mdash; ' + pcMMs[m].lots + ' lots gone<br>' + remain + '/' + N + ' MMs still quoting';
+    pcAction = '<span class="neg">' + NAMES[m] + ' removed</span> | ' + pcMMs[m].lots + ' lots gone<br>' + remain + '/' + N + ' MMs still quoting';
     if (m > 0) pcAction += '<br><span style="color:#555568">re-executed (Idx16 conflict)</span>';
 
     if (s.isFirst) {
@@ -621,7 +621,7 @@ function applyStep(idx) {
       chJustFlashed = true;
       chAction = '<span class="pos">All ' + N + ' MMs changed simultaneously</span><br>0 conflicts, 0 re-executions';
     }
-    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> &mdash; ' + NAMES[m] + ' cancels' + (m > 0 ? ' (re-exec)' : '');
+    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> | ' + NAMES[m] + ' cancels' + (m > 0 ? ' (re-exec)' : '');
   }
 
   if (s.t === 'post') {
@@ -629,7 +629,7 @@ function applyStep(idx) {
     pcMMs[m].on = true;
     pcMMs[m].price = s.price;
     pcAction = '<span class="pos">' + NAMES[m] + ' posted @ $' + s.price.toLocaleString() + '</span> (' + pcMMs[m].lots + ' lots)<br>' + (m + 1) + '/' + N + ' requoted';
-    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> &mdash; ' + NAMES[m] + ' posts @ $' + s.price.toLocaleString();
+    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (currentWave + 1) + '</strong> | ' + NAMES[m] + ' posts @ $' + s.price.toLocaleString();
   }
 
   if (s.t === 'settle') {
@@ -637,7 +637,7 @@ function applyStep(idx) {
     updateWaveIndicators();
     pcAction = 'All ' + N + ' MMs requoted. <span class="hl">Book restored.</span>';
     chAction = 'All ' + N + ' MMs on book. <span class="hl">Depth never interrupted.</span>';
-    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (s.wave + 1) + '</strong> &mdash; Complete';
+    document.getElementById('statusBar').innerHTML = '<strong>Wave ' + (s.wave + 1) + '</strong> | Complete';
   }
 
   if (s.t === 'end') {

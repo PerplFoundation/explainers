@@ -141,15 +141,15 @@
   <h1>How Perpl Keeps the Book Full When Everyone Else Goes Thin</h1>
   <p class="subtitle">A native order modification primitive designed for parallel execution on Monad.</p>
 
-  <p>Every perpetual DEX faces the same problem: when price moves, market makers need to update their quotes. The faster the chain, the more this matters &mdash; and the more it can go wrong.</p>
+  <p>Every perpetual DEX faces the same problem: when price moves, market makers need to update their quotes. The faster the chain, the more this matters, and the more it can go wrong.</p>
 
   <h2>The Problem Nobody Talks About</h2>
 
   <p>On every on-chain order book today, requoting works the same way: cancel your old order, post a new one. Two operations. This seems fine until you look at what actually happens inside the EVM.</p>
 
-  <p>Cancel deallocates an order ID. Post allocates a new one. Both write to the same global data structure &mdash; an index that tracks which IDs are in use. When ten market makers requote in the same block, all ten of them write to this same storage slot. On a parallel-execution chain like Monad, this creates a bottleneck: the execution engine detects the conflict, throws out its parallel work, and runs every requote one after another. Serial. Slow.</p>
+  <p>Cancel deallocates an order ID. Post allocates a new one. Both write to the same global data structure, an index that tracks which IDs are in use. When ten market makers requote in the same block, all ten of them write to this same storage slot. On a parallel-execution chain like Monad, this creates a bottleneck: the execution engine detects the conflict, throws out its parallel work, and runs every requote one after another. Serial. Slow.</p>
 
-  <p>Worse, each cancel <em>removes</em> that market maker's liquidity before the post <em>restores</em> it at the new price. During the cascade, the book thins out. A taker arriving mid-block might see 40% of normal depth, wide spreads, and bad fills &mdash; exactly when volatility is highest and liquidity matters most.</p>
+  <p>Worse, each cancel <em>removes</em> that market maker's liquidity before the post <em>restores</em> it at the new price. During the cascade, the book thins out. A taker arriving mid-block might see 40% of normal depth, wide spreads, and bad fills, exactly when volatility is highest and liquidity matters most.</p>
 
   <h2>What Perpl Does Differently</h2>
 
@@ -195,11 +195,11 @@
 
   <h2>Why This Matters</h2>
 
-  <p>Monad's architecture &mdash; 400ms blocks, parallel execution, 200M gas per block &mdash; is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
+  <p>Monad's architecture (400ms blocks, parallel execution, 200M gas per block) is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
 
   <p>Change is designed for this architecture. It keeps each market maker's state isolated, letting Monad do what it's built to do: run everything at once.</p>
 
-  <p>The result is an order book that stays deep through volatility, gives takers better fills, and lets market makers quote tighter spreads with lower gas costs. Not because of a faster chain &mdash; but because the contract was designed to use the chain correctly.</p>
+  <p>The result is an order book that stays deep through volatility, gives takers better fills, and lets market makers quote tighter spreads with lower gas costs. Not because of a faster chain, but because the contract was designed to use the chain correctly.</p>
 
   <div class="table-wrap">
     <table>
@@ -218,7 +218,7 @@
   </div>
 
   <div class="footer">
-    Perpl &mdash; Fully on-chain perpetual DEX on Monad
+    Perpl: Fully on-chain perpetual DEX on Monad
   </div>
 
 </div>

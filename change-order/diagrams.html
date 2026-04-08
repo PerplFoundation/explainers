@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Technical Diagrams — Change vs Post/Cancel</title>
+<title>Technical Diagrams: Change vs Post/Cancel</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -413,7 +413,7 @@
 
 <!-- FIGURE 1: Post/Cancel Regime -->
 <div class="figure">
-  <div class="figure-title">Figure 1.0 &mdash; <span>Post/Cancel Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-serial">SERIAL</span></div>
+  <div class="figure-title">Figure 1.0 : <span>Post/Cancel Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-serial">SERIAL</span></div>
 
   <div class="legend">
     <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
@@ -522,7 +522,7 @@
 
 <!-- FIGURE 2: Change Regime -->
 <div class="figure">
-  <div class="figure-title">Figure 2.0 &mdash; <span>Change Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-parallel">PARALLEL</span></div>
+  <div class="figure-title">Figure 2.0 : <span>Change Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-parallel">PARALLEL</span></div>
 
   <div class="legend">
     <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
@@ -553,7 +553,7 @@
 
     <!-- Block N+1 (all execute in parallel) -->
     <div class="block" style="min-width: 320px;">
-      <div class="block-header">Block N+1 <span class="time">t = 400ms &mdash; all execute in parallel</span></div>
+      <div class="block-header">Block N+1 <span class="time">t = 400ms : all execute in parallel</span></div>
       <div class="block-content">
         <div style="display:flex; gap:8px;">
           <div class="mm-group mm-a" style="flex:1;">
@@ -606,18 +606,18 @@
 
   <div class="note">
     <strong>Taker arriving at any point</strong>: sees either full old book or full new book. Never a partially-drained state.
-    No MM is ever absent from the book. Zero <code>Index16Bit</code> or <code>numOrders</code> contention &mdash; all MMs execute in true parallel.
+    No MM is ever absent from the book. Zero <code>Index16Bit</code> or <code>numOrders</code> contention : all MMs execute in true parallel.
   </div>
 </div>
 
 <!-- FIGURE 3: State Contention -->
 <div class="section-divider"></div>
 <div class="figure">
-  <div class="figure-title">Figure 3.0 &mdash; <span>State Contention Map</span></div>
+  <div class="figure-title">Figure 3.0 : <span>State Contention Map</span></div>
 
   <div class="contention-grid">
     <div class="contention-panel">
-      <h3 class="bad">Post/Cancel &mdash; Shared State Conflicts</h3>
+      <h3 class="bad">Post/Cancel : Shared State Conflicts</h3>
       <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">A, B, C all write</div></div>
       <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">A, B, C write (varies)</div></div>
       <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">A, B, C all write</div></div>
@@ -630,7 +630,7 @@
     </div>
 
     <div class="contention-panel">
-      <h3 class="good">Change &mdash; No Shared State</h3>
+      <h3 class="good">Change : No Shared State</h3>
       <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">NOT TOUCHED</div></div>
       <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">NOT TOUCHED</div></div>
       <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">NOT TOUCHED</div></div>
@@ -647,11 +647,11 @@
 <!-- FIGURE 4: Parallel Execution Timeline -->
 <div class="section-divider"></div>
 <div class="figure">
-  <div class="figure-title">Figure 4.0 &mdash; <span>Parallel Executor Timeline</span> (10 MMs, 20 requotes per block)</div>
+  <div class="figure-title">Figure 4.0 : <span>Parallel Executor Timeline</span> (10 MMs, 20 requotes per block)</div>
 
   <div class="contention-grid">
     <div class="contention-panel">
-      <h3 class="bad">Post/Cancel &mdash; Serial Pipeline</h3>
+      <h3 class="bad">Post/Cancel : Serial Pipeline</h3>
       <p style="font-size:11px; color:#8b949e; margin-bottom:12px;">Each tx conflicts with previous via Index16Bit.root. Re-execution on every step.</p>
       <div class="parallel-viz">
         <div class="exec-row"><div class="exec-label">t=0</div><div class="exec-block serial">TX1 (MM-A bid)</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
@@ -677,7 +677,7 @@
     </div>
 
     <div class="contention-panel">
-      <h3 class="good">Change &mdash; Parallel Pipeline</h3>
+      <h3 class="good">Change : Parallel Pipeline</h3>
       <p style="font-size:11px; color:#8b949e; margin-bottom:12px;">No shared slots between MMs at different prices. All execute in first pass.</p>
       <div class="parallel-viz">
         <div class="exec-row"><div class="exec-label">t=0</div><div class="exec-block parallel-a">TX1</div><div class="exec-block parallel-b">TX2</div><div class="exec-block parallel-c">TX3</div><div class="exec-block parallel-a">TX4</div></div>
@@ -707,11 +707,11 @@
 <!-- FIGURE 5: Liquidity Continuity -->
 <div class="section-divider"></div>
 <div class="figure">
-  <div class="figure-title">Figure 5.0 &mdash; <span>Book Depth During Requote Storm</span> (taker perspective)</div>
+  <div class="figure-title">Figure 5.0 : <span>Book Depth During Requote Storm</span> (taker perspective)</div>
 
   <div class="contention-grid">
     <div class="contention-panel">
-      <h3 class="bad">Post/Cancel &mdash; Progressive Thinning</h3>
+      <h3 class="bad">Post/Cancel : Progressive Thinning</h3>
       <div style="display:flex; gap:16px; margin-top:16px;">
         <div style="text-align:center; flex:1;">
           <div class="depth-label" style="margin-bottom:4px;">Before</div>
@@ -757,7 +757,7 @@
     </div>
 
     <div class="contention-panel">
-      <h3 class="good">Change &mdash; Atomic Transition</h3>
+      <h3 class="good">Change : Atomic Transition</h3>
       <div style="display:flex; gap:16px; margin-top:16px;">
         <div style="text-align:center; flex:1;">
           <div class="depth-label" style="margin-bottom:4px;">Before</div>
@@ -795,11 +795,11 @@
 <!-- FIGURE 6: Speculative React Pipeline -->
 <div class="section-divider"></div>
 <div class="figure">
-  <div class="figure-title">Figure 6.0 &mdash; <span>MM React Pipeline</span> (speculative execution window)</div>
+  <div class="figure-title">Figure 6.0 : <span>MM React Pipeline</span> (speculative execution window)</div>
 
   <div class="contention-grid">
     <div class="contention-panel">
-      <h3 class="bad">Post/Cancel &mdash; Dependency Chain</h3>
+      <h3 class="bad">Post/Cancel : Dependency Chain</h3>
       <div style="font-size:11px; color:#8b949e; margin-top:12px;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
           <div class="op op-oracle" style="flex:none; width:140px;">See oracle update</div>
@@ -830,7 +830,7 @@
     </div>
 
     <div class="contention-panel">
-      <h3 class="good">Change &mdash; No Dependencies</h3>
+      <h3 class="good">Change : No Dependencies</h3>
       <div style="font-size:11px; color:#8b949e; margin-top:12px;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
           <div class="op op-oracle" style="flex:none; width:140px;">See oracle update</div>
@@ -860,9 +860,8 @@
 <div style="margin-top:48px; padding:16px; background:#161b22; border-radius:8px; border:1px solid #21262d;">
   <div style="font-size:12px; color:#8b949e;">
     <strong style="color:#e6edf3;">Sources:</strong>
-    Smart contracts (<code>mvp-sc-0.1</code> branch <code>deploy/rc_v1.1.7.2</code>) &bull;
+    Perpl smart contracts &bull;
     Monad docs (<code>docs.monad.xyz</code>) &bull;
-    Spearbit/Cantina audit (March 2026) &bull;
     Perpl docs (<code>docs.perpl.xyz</code>)
   </div>
 </div>
