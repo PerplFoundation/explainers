@@ -279,14 +279,14 @@
   .book-section::-webkit-scrollbar-track { background: transparent; }
   .book-section::-webkit-scrollbar-thumb { background: #2a2a3a; border-radius: 2px; }
   .book-row {
-    display: flex; align-items: center; height: 34px; gap: 8px; flex-shrink: 0;
+    display: flex; align-items: center; height: 28px; gap: 8px; flex-shrink: 0;
   }
   .book-price {
     width: 58px; text-align: right; font-size: 10px;
     font-family: 'SF Mono', 'Fira Code', monospace; color: #606078;
   }
   .book-bar-track {
-    flex: 1; height: 30px; background: #12121a; border-radius: 4px;
+    flex: 1; height: 24px; background: #12121a; border-radius: 4px;
     position: relative; overflow: hidden;
     transition: background 0.3s;
     border-bottom: 1px solid #14141e;
@@ -320,30 +320,30 @@
   /* ── Storage slot visualization ── */
   .storage-section {
     flex-shrink: 0;
-    padding: 8px 0 4px;
+    padding: 12px 0 8px;
     border-top: 1px solid #1a1a24;
   }
   .storage-title {
-    font-size: 8px; color: #444458; text-transform: uppercase;
-    letter-spacing: 0.8px; font-weight: 700; margin-bottom: 6px;
+    font-size: 9px; color: #444458; text-transform: uppercase;
+    letter-spacing: 0.8px; font-weight: 700; margin-bottom: 8px;
   }
   .storage-grid {
-    display: flex; gap: 4px; flex-wrap: wrap;
+    display: flex; gap: 6px; flex-wrap: wrap;
   }
   .slot {
-    display: flex; align-items: center; gap: 4px;
-    padding: 3px 7px; border-radius: 4px;
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 5px;
     background: #12121a; border: 1px solid #1e1e2e;
     transition: all 0.35s ease;
   }
   .slot .sled {
-    width: 5px; height: 5px; border-radius: 50%;
+    width: 7px; height: 7px; border-radius: 50%;
     background: #2a2a3a;
     transition: all 0.35s ease;
     flex-shrink: 0;
   }
   .slot .sname {
-    font-size: 8px; color: #555568; font-family: 'SF Mono', monospace;
+    font-size: 10px; color: #555568; font-family: 'SF Mono', monospace;
     font-weight: 500; white-space: nowrap;
   }
   .slot.shared {
@@ -382,8 +382,8 @@
     50% { opacity: 0.4; }
   }
   .conflict-label {
-    font-size: 9px; font-weight: 600; margin-top: 4px;
-    padding: 2px 8px; border-radius: 3px; display: inline-block;
+    font-size: 10px; font-weight: 600; margin-top: 8px;
+    padding: 4px 10px; border-radius: 4px; display: inline-block;
   }
   .conflict-label.serial-label {
     color: #ef4444; background: #ef444412; border: 1px solid #ef444430;
