@@ -297,9 +297,93 @@
     0% { background: #6F5CFF18; box-shadow: inset 0 0 20px #6F5CFF10; }
     100% { background: #12121a; }
   }
+
+  /* ── Storage slot visualization ── */
+  .storage-section {
+    flex-shrink: 0;
+    padding: 8px 0 4px;
+    border-top: 1px solid #1a1a24;
+  }
+  .storage-title {
+    font-size: 8px; color: #444458; text-transform: uppercase;
+    letter-spacing: 0.8px; font-weight: 700; margin-bottom: 6px;
+  }
+  .storage-grid {
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .slot {
+    display: flex; align-items: center; gap: 4px;
+    padding: 3px 7px; border-radius: 4px;
+    background: #12121a; border: 1px solid #1e1e2e;
+    transition: all 0.35s ease;
+  }
+  .slot .sled {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #2a2a3a;
+    transition: all 0.35s ease;
+    flex-shrink: 0;
+  }
+  .slot .sname {
+    font-size: 8px; color: #555568; font-family: 'SF Mono', monospace;
+    font-weight: 500; white-space: nowrap;
+  }
+  .slot.shared {
+    border-color: #ef444444;
+    background: #ef444412;
+  }
+  .slot.shared .sled {
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef444488;
+    animation: slotpulse 0.6s ease infinite;
+  }
+  .slot.shared .sname { color: #ef4444; }
+  .slot.private {
+    border-color: #22c55e44;
+    background: #22c55e0a;
+  }
+  .slot.private .sled {
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e88;
+  }
+  .slot.private .sname { color: #22c55eaa; }
+  .slot.parallel-write {
+    border-color: #6F5CFF44;
+    background: #6F5CFF0a;
+  }
+  .slot.parallel-write .sled {
+    background: #6F5CFF;
+    box-shadow: 0 0 6px #6F5CFF88;
+  }
+  .slot.parallel-write .sname { color: #6F5CFFaa; }
+  .slot.untouched {
+    opacity: 0.4;
+  }
+  @keyframes slotpulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .conflict-label {
+    font-size: 9px; font-weight: 600; margin-top: 4px;
+    padding: 2px 8px; border-radius: 3px; display: inline-block;
+  }
+  .conflict-label.serial-label {
+    color: #ef4444; background: #ef444412; border: 1px solid #ef444430;
+  }
+  .conflict-label.parallel-label {
+    color: #6F5CFF; background: #6F5CFF12; border: 1px solid #6F5CFF30;
+  }
 </style>
 </head>
 <body>
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 32px;background:#08080e;border-bottom:1px solid #16161e;flex-shrink:0;">
+  <span style="font-size:13px;font-weight:600;color:#ccc;letter-spacing:0.5px;">Perpl</span>
+  <div style="display:flex;gap:6px;">
+    <a href="index.html" style="padding:4px 12px;border-radius:4px;border:1px solid #2a2a3a;background:#16161e;color:#8888a0;font-size:11px;font-weight:500;text-decoration:none;transition:all 0.15s;">Overview</a>
+    <a href="interactive.html" style="padding:4px 12px;border-radius:4px;border:1px solid #6F5CFF44;background:#6F5CFF12;color:#6F5CFF;font-size:11px;font-weight:500;text-decoration:none;">Interactive Sim</a>
+    <a href="diagrams.html" style="padding:4px 12px;border-radius:4px;border:1px solid #2a2a3a;background:#16161e;color:#8888a0;font-size:11px;font-weight:500;text-decoration:none;transition:all 0.15s;">Technical Diagrams</a>
+  </div>
+</div>
 
 <div class="top-bar">
   <h1>Order Book Depth: Change vs Post/Cancel</h1>
@@ -369,6 +453,18 @@
         <span class="oracle-tag">ORACLE</span>
       </div>
       <div class="book-section" id="bookPC"></div>
+      <div class="storage-section">
+        <div class="storage-title">Storage slots written per requote</div>
+        <div class="storage-grid" id="slotsPC">
+          <div class="slot" id="spc-idx16" data-slot="idx16"><span class="sled"></span><span class="sname">Idx16.root</span></div>
+          <div class="slot" id="spc-numord" data-slot="numord"><span class="sled"></span><span class="sname">numOrders</span></div>
+          <div class="slot" id="spc-ordslot" data-slot="ordslot"><span class="sled"></span><span class="sname">order[id]</span></div>
+          <div class="slot" id="spc-lock" data-slot="lock"><span class="sled"></span><span class="sname">orderLock</span></div>
+          <div class="slot" id="spc-pricelv" data-slot="pricelv"><span class="sled"></span><span class="sname">priceLevel</span></div>
+          <div class="slot" id="spc-acctbal" data-slot="acctbal"><span class="sled"></span><span class="sname">lockedBal</span></div>
+        </div>
+        <div class="conflict-label serial-label" id="conflictPC" style="display:none;">Idx16 + numOrders = global conflict</div>
+      </div>
     </div>
   </div>
   <div class="panel panel-ch">
@@ -416,6 +512,18 @@
         <span class="oracle-tag">ORACLE</span>
       </div>
       <div class="book-section" id="bookCH"></div>
+      <div class="storage-section">
+        <div class="storage-title">Storage slots written per requote</div>
+        <div class="storage-grid" id="slotsCH">
+          <div class="slot untouched" id="sch-idx16"><span class="sled"></span><span class="sname">Idx16.root</span></div>
+          <div class="slot untouched" id="sch-numord"><span class="sled"></span><span class="sname">numOrders</span></div>
+          <div class="slot" id="sch-ordslot"><span class="sled"></span><span class="sname">order[id]</span></div>
+          <div class="slot untouched" id="sch-lock"><span class="sled"></span><span class="sname">orderLock</span></div>
+          <div class="slot" id="sch-pricelv"><span class="sled"></span><span class="sname">priceLevel</span></div>
+          <div class="slot" id="sch-acctbal"><span class="sled"></span><span class="sname">lockedBal</span></div>
+        </div>
+        <div class="conflict-label parallel-label" id="conflictCH" style="display:none;">0 shared slots = full parallelism</div>
+      </div>
     </div>
   </div>
 </div>
@@ -658,6 +766,39 @@ function render() {
   renderDepth('depthPctCH', 'ringFillCH', chMMs, true);
   document.getElementById('actionBodyPC').innerHTML = pcAction;
   document.getElementById('actionBodyCH').innerHTML = chAction;
+  renderSlots();
+}
+
+function renderSlots() {
+  var s = steps[curStep];
+  var isCancel = s && s.t === 'cancel';
+  var isPost = s && s.t === 'post';
+  var isActive = isCancel || isPost;
+
+  // Post/Cancel side: shared slots light up during cancel/post
+  setSlotState('spc-idx16',    isActive ? 'shared' : '');
+  setSlotState('spc-numord',   isActive ? 'shared' : '');
+  setSlotState('spc-ordslot',  isActive ? 'private' : '');
+  setSlotState('spc-lock',     isActive ? 'private' : '');
+  setSlotState('spc-pricelv',  isActive ? 'private' : '');
+  setSlotState('spc-acctbal',  isActive ? 'private' : '');
+  document.getElementById('conflictPC').style.display = isActive ? 'inline-block' : 'none';
+
+  // Change side: only private slots, and only on the flash step
+  var chActive = s && s.t === 'cancel' && s.isFirst;
+  setSlotState('sch-idx16',    'untouched');
+  setSlotState('sch-numord',   'untouched');
+  setSlotState('sch-ordslot',  chActive ? 'parallel-write' : '');
+  setSlotState('sch-lock',     'untouched');
+  setSlotState('sch-pricelv',  chActive ? 'parallel-write' : '');
+  setSlotState('sch-acctbal',  chActive ? 'parallel-write' : '');
+  document.getElementById('conflictCH').style.display = chActive ? 'inline-block' : 'none';
+}
+
+function setSlotState(id, state) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'slot' + (state ? ' ' + state : '');
 }
 
 function renderOracle() {
