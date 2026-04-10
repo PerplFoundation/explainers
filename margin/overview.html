@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Hybrid Margin: Cross Efficiency Without Cross Risk</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #aaa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(8,8,14,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #ccc; }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+  .page { max-width: 680px; margin: 0 auto; padding: 80px 24px 80px; }
+  h1 { font-size: 28px; color: #ddd; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 48px; }
+  h2 { font-size: 16px; color: #bbb; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; font-size: 15px; }
+  strong { color: #ccc; font-weight: 500; }
+  em { color: #bbb; }
+  a { color: #88f; text-decoration: none; }
+  a:hover { color: #bbf; }
+  .cta-row { display: flex; gap: 12px; margin-top: 40px; }
+  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .cta-primary { background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9; }
+  .cta-primary:hover { background: #2a3a2a; color: #9cb; }
+  .cta-secondary { background: #1a1a2a; border: 1px solid #3a3a6a; color: #99b; }
+  .cta-secondary:hover { background: #2a2a3a; color: #bbf; }
+  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a1a1a; font-size: 11px; color: #444; text-align: center; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a class="active" href="overview.html">Overview</a>
+    <a href="index.html">Interactive Sim</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <h1>Hybrid Margin: Cross Efficiency Without Cross Risk</h1>
+  <p class="subtitle">A margin system that recognizes hedges without pooling solvency.</p>
+
+  <p>Every perp DEX picks a side. Isolated margin is safe but wasteful. Cross margin is efficient but dangerous. Hybrid Margin gets the benefits of both by separating two things that most designs conflate: recognizing hedges and pooling solvency.</p>
+
+  <h2>The Capital Efficiency Problem</h2>
+
+  <p>A trader running a BTC long and ETH short has a natural hedge. In isolated margin, the protocol doesn't care. Each position needs full collateral independently. The BTC leg needs $10k, the ETH leg needs $10k, even though a broad crypto crash would make one profitable while the other loses. Capital sits idle because the system can't see that the two positions offset.</p>
+
+  <p>Cross margin solves this by throwing everything into a shared pool. The BTC profit automatically covers the ETH loss. Less collateral, more leverage, better capital efficiency. But the efficiency comes from pooling solvency across markets, and that has a cost that only shows up in stress.</p>
+
+  <p>Hybrid Margin separates these two concerns. It recognizes the BTC-ETH hedge at entry through explicit spread credits, reducing the margin requirement without pooling the collateral. Each market keeps its own silo, its own insurance fund, its own liquidation process. The trader gets roughly 80% of cross margin's capital efficiency while keeping every market's failure domain independent.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">&#9654; Try the interactive simulation</a>
+    <a class="cta cta-secondary" href="diagrams.html">View technical diagrams</a>
+  </div>
+
+  <h2>The Liquidation Problem</h2>
+
+  <p>When markets crash in cross margin, the shared pool becomes a race. The first market to liquidate drains the pool. Winners in the second and third markets find nothing left. The outcome depends on which market crashes first, not on whether the trader was right. Change the crash sequence and different people get paid. This is path dependence, and it means payouts are a lottery during the exact moments that matter most.</p>
+
+  <p>In isolated margin, there's no contagion, but there's also no safety net, unless there's an insurance fund. If a loser's $50k collateral can't cover the $70k owed to the winner, the winner eats a $20k loss through ADL. No insurance fund from other markets can help because each market is completely walled off.</p>
+
+  <p>Hybrid Margin resolves this through a deterministic waterfall. When a market has a shortfall, it draws from four sources in order: the loser's collateral, the market's local insurance fund, a global overflow buffer, and only then ADL as a last resort. Each market resolves independently through the same waterfall regardless of what's happening elsewhere. Crash order doesn't change who gets paid. The global overflow buffer provides the cross-market safety net that isolated margin lacks, without the cross-market contagion that makes cross margin dangerous.</p>
+
+  <h2>The Design Principle</h2>
+
+  <p>"We recognize portfolio offsets" is a choice in the risk model. "We mutualize solvency across markets" is a choice in the ledger. Most designs treat these as the same thing. Hybrid Margin keeps them separate: risk-aware where it counts, isolated where it must be.</p>
+
+  <p>The result is a margin system where hedged portfolios require less capital, liquidation outcomes are deterministic, and no market can silently drain another market's resources. Not by choosing a side between isolated and cross, but by taking the useful part of each and leaving the dangerous part behind.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">&#9654; See it in action</a>
+    <a class="cta cta-secondary" href="diagrams.html">Technical diagrams</a>
+  </div>
+
+  <div class="footer">
+    Perpl: Fully on-chain perpetual DEX on Monad
+  </div>
+
+</div>
+</body>
+</html>

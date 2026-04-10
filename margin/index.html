@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Margin Regimes: Isolated vs Cross vs Hybrid</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
+    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --bd: #1e1e2e; --bd2: #2a2a3a;
+    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
+    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
+    --orange: #f97316;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+
+  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; }
+  .site-links a:hover { border-color: #444; color: var(--tx); }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
+
+  .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; display: flex; align-items: center; gap: 8px; user-select: none; }
+  .sec-tab .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bd2); }
+  .sec-tab:hover:not(.active) { border-color: var(--bd); color: var(--tx); }
+  .sec-tab.active { background: #0f172a; border-color: var(--blue); color: var(--blue); }
+  .sec-tab.active .dot { background: var(--blue); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Regime tabs */
+  .reg-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .reg-tab { padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx3); transition: all 0.15s; user-select: none; }
+  .reg-tab:hover { border-color: var(--bd); color: var(--tx2); }
+  .reg-tab.active.iso { border-color: var(--red); color: var(--red); background: #ef44440a; }
+  .reg-tab.active.cross { border-color: var(--blue); color: var(--blue); background: #60a5fa0a; }
+  .reg-tab.active.hybrid { border-color: var(--green); color: var(--green); background: #22c55e0a; }
+
+  /* Efficiency section */
+  .eff-grid { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; }
+  .wallet-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; text-align: center; }
+  .wallet-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .wallet-amount { font-size: 32px; font-weight: 700; font-family: 'SF Mono', monospace; transition: color 0.3s; }
+  .wallet-pct { font-size: 11px; color: var(--tx3); margin-top: 4px; }
+  .wallet-bar { height: 6px; border-radius: 3px; background: var(--bg3); margin-top: 10px; overflow: hidden; }
+  .wallet-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease, background 0.3s; }
+
+  .silos { display: flex; flex-direction: column; gap: 8px; }
+  .silo { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); transition: all 0.4s ease; }
+  .silo-label { width: 80px; flex-shrink: 0; }
+  .silo-market { font-size: 13px; font-weight: 600; }
+  .silo-dir { font-size: 10px; color: var(--tx3); }
+  .silo-bar-wrap { flex: 1; }
+  .silo-bar { height: 28px; border-radius: 4px; background: var(--bg3); position: relative; overflow: hidden; }
+  .silo-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 10px; }
+  .silo-bar-text { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; }
+  .silo-credit { font-size: 10px; color: var(--green); margin-top: 3px; }
+  .silo-val { width: 60px; text-align: right; font-size: 13px; font-weight: 600; font-family: 'SF Mono', monospace; flex-shrink: 0; }
+  .silo.pool { border-color: var(--blue); border-style: dashed; }
+
+  .desc-box { margin-top: 16px; padding: 12px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); font-size: 12px; color: var(--tx2); line-height: 1.7; }
+  .desc-box strong { color: var(--tx); }
+
+  .compare-row { display: flex; gap: 12px; margin-top: 20px; }
+  .compare-card { flex: 1; padding: 14px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); text-align: center; transition: all 0.3s; }
+  .compare-card.highlight { border-width: 2px; }
+  .compare-name { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .compare-val { font-size: 22px; font-weight: 700; font-family: 'SF Mono', monospace; }
+  .compare-note { font-size: 10px; color: var(--tx3); margin-top: 4px; }
+  .compare-card.iso .compare-val { color: var(--red); }
+  .compare-card.cross .compare-val { color: var(--blue); }
+  .compare-card.hybrid .compare-val { color: var(--green); }
+  .compare-card.iso.highlight { border-color: var(--red); }
+  .compare-card.cross.highlight { border-color: var(--blue); }
+  .compare-card.hybrid.highlight { border-color: var(--green); }
+
+  /* Stress section */
+  .scenario-box { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+  .scenario-title { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+  .trader-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .trader-card { padding: 8px 12px; border-radius: 6px; background: var(--bg3); border-left: 3px solid; font-size: 11px; line-height: 1.5; min-width: 200px; flex: 1; }
+  .trader-name { font-weight: 600; margin-bottom: 2px; }
+  .trader-pos { color: var(--tx2); }
+
+  .crash-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .crash-label { font-size: 11px; color: var(--tx3); }
+  .crash-order { display: flex; gap: 4px; }
+  .crash-pill { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); user-select: none; }
+  .crash-pill .num { font-size: 9px; color: var(--tx3); margin-right: 4px; }
+  .play-btn { padding: 8px 20px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; }
+  .play-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .play-btn.go { background: #22c55e18; border-color: #22c55e44; color: var(--green); }
+
+  .stress-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .stress-panel { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
+  .stress-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .stress-title.iso-t { color: var(--red); }
+  .stress-title.cross-t { color: var(--blue); }
+  .stress-title.hybrid-t { color: var(--green); }
+  .stress-sub { font-size: 10px; color: var(--tx3); margin-bottom: 12px; }
+
+  .step-row { margin-bottom: 10px; padding: 8px 10px; border-radius: 6px; background: var(--bg3); border: 1px solid transparent; transition: border-color 0.3s; }
+  .step-row.active-step { border-color: var(--amber); }
+  .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .step-market { font-size: 12px; font-weight: 600; }
+  .step-tag { font-size: 9px; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+  .step-tag.ok { background: #22c55e15; color: var(--green); }
+  .step-tag.shortfall { background: #ef444415; color: var(--red); }
+  .step-tag.insured { background: #eab30815; color: var(--amber); }
+  .step-tag.adl { background: #a78bfa15; color: var(--purple); }
+  .step-detail { font-size: 10px; color: var(--tx3); line-height: 1.5; }
+  .step-detail strong { color: var(--tx2); }
+
+  .waterfall { margin-top: 6px; display: flex; gap: 3px; height: 18px; border-radius: 3px; overflow: hidden; }
+  .wf-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.8); transition: width 0.4s; min-width: 0; overflow: hidden; }
+
+  .divider-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.5px; margin: 12px 0 6px; }
+
+  .payout-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #16161e; }
+  .payout-row:last-child { border-bottom: none; }
+  .payout-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .payout-name { font-size: 11px; color: var(--tx2); flex: 1; }
+  .payout-val { font-size: 12px; font-weight: 600; font-family: 'SF Mono', monospace; }
+  .payout-val.loss { color: var(--red); }
+  .payout-val.gain { color: var(--green); }
+  .payout-val.partial { color: var(--amber); }
+
+  .verdict { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; line-height: 1.6; }
+  .verdict.bad { background: #ef44440a; border: 1px solid #ef444425; color: #fca5a5; }
+  .verdict.good { background: #22c55e0a; border: 1px solid #22c55e25; color: #86efac; }
+  .verdict.warn { background: #eab30808; border: 1px solid #eab30825; color: #fde68a; }
+
+  .order-note { font-size: 11px; color: var(--tx3); margin-top: 16px; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; line-height: 1.7; }
+  .order-note strong { color: var(--amber); }
+
+  /* Position cards */
+  .positions-strip { display: flex; gap: 8px; margin-bottom: 16px; }
+  .pos-card { flex: 1; padding: 10px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); position: relative; transition: all 0.3s; }
+  .pos-card .pos-market { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .pos-card .pos-dir { font-size: 11px; font-weight: 600; }
+  .pos-card .pos-dir.long { color: #22c55e; }
+  .pos-card .pos-dir.short { color: #ef4444; }
+  .pos-card .pos-detail { font-size: 10px; color: var(--tx3); margin-top: 4px; line-height: 1.4; }
+  .pos-card .pos-notional { font-size: 10px; color: var(--tx2); margin-top: 2px; }
+  .pos-card .pos-pnl { font-size: 13px; font-weight: 700; font-family: 'SF Mono', monospace; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--bd); }
+  .pos-card .pos-pnl.profit { color: var(--green); }
+  .pos-card .pos-pnl.loss { color: var(--red); }
+  .pos-card .pos-pnl.flat { color: var(--tx3); }
+  .pos-card .pos-prices { font-size: 10px; color: var(--tx3); margin-top: 3px; font-family: 'SF Mono', monospace; }
+
+  .scenario-toggle { display: flex; gap: 8px; margin-bottom: 12px; align-items: center; }
+  .scenario-toggle .sc-label { font-size: 11px; color: var(--tx3); }
+  .sc-btn { padding: 5px 14px; font-size: 11px; font-weight: 500; cursor: pointer; border-radius: 5px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx3); transition: all 0.15s; user-select: none; }
+  .sc-btn:hover { border-color: var(--bd); color: var(--tx2); }
+  .sc-btn.active { border-color: var(--amber); color: var(--amber); background: #eab30808; }
+
+  .pnl-flow { display: block; margin-bottom: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; line-height: 1.7; transition: all 0.3s; }
+  .pnl-flow strong { font-weight: 600; }
+  .pnl-flow.hidden { display: none; }
+  .pnl-flow.iso-flow { background: #ef44440a; border: 1px solid #ef444420; color: #fca5a5; }
+  .pnl-flow.cross-flow { background: #60a5fa0a; border: 1px solid #60a5fa20; color: #93c5fd; }
+  .pnl-flow.hybrid-flow { background: #22c55e0a; border: 1px solid #22c55e20; color: #86efac; }
+
+  .hedge-bracket { position: relative; margin-bottom: 16px; }
+  .hedge-line { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; }
+  .hedge-dash { height: 1px; flex: 1; max-width: 80px; }
+  .hedge-tag { font-size: 9px; font-weight: 600; padding: 3px 10px; border-radius: 4px; white-space: nowrap; transition: all 0.3s; }
+  .hedge-tag.active { background: #22c55e15; border: 1px solid #22c55e30; color: var(--green); }
+  .hedge-tag.inactive { background: var(--bg3); border: 1px solid var(--bd); color: var(--tx3); }
+  .hedge-tag.pooled { background: #60a5fa10; border: 1px solid #60a5fa30; color: var(--blue); }
+
+  .pos-card.hedged { border-color: #22c55e44; }
+  .pos-card.pooled-highlight { border-color: #60a5fa44; border-style: dashed; }
+  .pos-card.no-hedge { opacity: 0.6; }
+
+  .arrow-down { display: flex; justify-content: center; margin: 8px 0; color: var(--tx3); font-size: 16px; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html">Interactive Sim</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Margin Regimes: Who Pays When It All Goes Wrong?</h1>
+  <p class="sub">Same positions, same crash. Different margin regimes, very different outcomes.</p>
+
+  <div class="sec-tabs">
+    <div class="sec-tab active" onclick="switchSec('efficiency',this)"><span class="dot"></span>Capital Efficiency</div>
+    <div class="sec-tab" onclick="switchSec('stress',this)"><span class="dot"></span>Stress / ADL</div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="panel active" id="panel-efficiency">
+    <div class="reg-tabs">
+      <div class="reg-tab iso active" onclick="switchRegime('iso',this)">Isolated</div>
+      <div class="reg-tab cross" onclick="switchRegime('cross',this)">Cross</div>
+      <div class="reg-tab hybrid" onclick="switchRegime('hybrid',this)">Hybrid</div>
+    </div>
+
+    <!-- Scenario toggle -->
+    <div class="scenario-toggle">
+      <span class="sc-label">Price scenario:</span>
+      <div class="sc-btn active" id="sc-entry" onclick="setScenario('entry')">At Entry</div>
+      <div class="sc-btn" id="sc-move" onclick="setScenario('move')">After BTC +5%, ETH +4%, SOL -10%</div>
+    </div>
+
+    <!-- Positions visualization -->
+    <div class="positions-strip" id="posStrip">
+      <div class="pos-card" id="pos-btc">
+        <div class="pos-market" style="color:#f97316;">BTC</div>
+        <div class="pos-dir long">LONG 10x</div>
+        <div class="pos-notional">$100k notional</div>
+        <div class="pos-prices" id="btc-prices">Entry $100k</div>
+        <div class="pos-pnl flat" id="btc-pnl">UPnL: $0</div>
+        <div class="pos-detail" id="btc-detail">Standalone IM: $10k</div>
+      </div>
+      <div class="pos-card" id="pos-eth">
+        <div class="pos-market" style="color:#8b5cf6;">ETH</div>
+        <div class="pos-dir short">SHORT 10x</div>
+        <div class="pos-notional">$100k notional</div>
+        <div class="pos-prices" id="eth-prices">Entry $4,000</div>
+        <div class="pos-pnl flat" id="eth-pnl">UPnL: $0</div>
+        <div class="pos-detail" id="eth-detail">Standalone IM: $10k</div>
+      </div>
+      <div class="pos-card" id="pos-sol">
+        <div class="pos-market" style="color:#06b6d4;">SOL</div>
+        <div class="pos-dir long">LONG 5x</div>
+        <div class="pos-notional">$100k notional</div>
+        <div class="pos-prices" id="sol-prices">Entry $180</div>
+        <div class="pos-pnl flat" id="sol-pnl">UPnL: $0</div>
+        <div class="pos-detail" id="sol-detail">Standalone IM: $20k</div>
+      </div>
+    </div>
+
+    <!-- Hedge recognition + PnL flow -->
+    <div class="hedge-bracket">
+      <div class="hedge-line">
+        <div class="hedge-dash" style="border-top:1px dashed var(--tx3);"></div>
+        <div class="hedge-tag inactive" id="hedgeTag">No hedge recognition</div>
+        <div class="hedge-dash" style="border-top:1px dashed var(--tx3);"></div>
+      </div>
+    </div>
+
+    <div class="pnl-flow hidden" id="pnlFlow"></div>
+
+    <div class="arrow-down" id="arrowDown">&darr; margin flows into &darr;</div>
+
+    <div class="eff-grid">
+      <div>
+        <div class="wallet-card">
+          <div class="wallet-label">Collateral Required</div>
+          <div class="wallet-amount" id="walletAmt">$40k</div>
+          <div class="wallet-pct" id="walletPct">100% of standalone IM</div>
+          <div class="wallet-bar"><div class="wallet-bar-fill" id="walletBar" style="width:100%;background:var(--red);"></div></div>
+        </div>
+        <div class="desc-box" id="regimeDesc"></div>
+      </div>
+      <div class="silos" id="silos"></div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-card iso"><div class="compare-name">Isolated</div><div class="compare-val">$40k</div><div class="compare-note">No offsets. Full IM per market.</div></div>
+      <div class="compare-card cross"><div class="compare-name">Cross</div><div class="compare-val">$18k</div><div class="compare-note">Shared pool. Implicit netting.</div></div>
+      <div class="compare-card hybrid"><div class="compare-name">Hybrid</div><div class="compare-val">$25k</div><div class="compare-note">Spread credits + sweeps. Silos kept.</div></div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="panel" id="panel-stress">
+    <div class="scenario-box">
+      <div class="scenario-title">Scenario: All 3 markets crash 40%</div>
+      <div class="trader-grid">
+        <div class="trader-card" style="border-color:var(--green);">
+          <div class="trader-name" style="color:var(--green);">Green (BTC Winner)</div>
+          <div class="trader-pos">Short BTC, $50k collateral<br>Owed $60k profit after crash</div>
+        </div>
+        <div class="trader-card" style="border-color:var(--blue);">
+          <div class="trader-name" style="color:var(--blue);">Blue (ETH Winner)</div>
+          <div class="trader-pos">Short ETH, $50k collateral<br>Owed $40k profit after crash</div>
+        </div>
+        <div class="trader-card" style="border-color:var(--purple);">
+          <div class="trader-name" style="color:var(--purple);">Purple (MON Winner)</div>
+          <div class="trader-pos">Short MON, $50k collateral<br>Owed $70k profit after crash</div>
+        </div>
+        <div class="trader-card" style="border-color:var(--red);">
+          <div class="trader-name" style="color:var(--red);">Red (Big Loser)</div>
+          <div class="trader-pos">Long BTC + Long ETH + Long MON<br>$50k collateral per market. Owes $170k total. Has $150k. <strong style="color:var(--red);">$20k shortfall.</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="crash-controls">
+      <span class="crash-label">Crash order:</span>
+      <div class="crash-order" id="crashOrder"></div>
+      <button class="play-btn" onclick="shuffleOrder()">Shuffle</button>
+      <button class="play-btn go" onclick="runCrash()">Simulate Crash</button>
+    </div>
+
+    <div class="stress-grid">
+      <div class="stress-panel">
+        <div class="stress-title" style="color:var(--red);">Isolated Margin</div>
+        <div class="stress-sub">Per-market silos. No insurance fund sharing. Each market stands alone.</div>
+        <div id="isoSteps"></div>
+        <div class="divider-label">Final Payouts</div>
+        <div id="isoPayouts"></div>
+        <div class="verdict" id="isoVerdict" style="background:#ef44440a;border:1px solid #ef444425;color:#fca5a5;">Press "Simulate Crash"</div>
+      </div>
+      <div class="stress-panel">
+        <div class="stress-title cross-t">Cross Margin</div>
+        <div class="stress-sub">Single shared pool of $300k. Red's $150k is not siloed.</div>
+        <div id="crossSteps"></div>
+        <div class="divider-label">Final Payouts</div>
+        <div id="crossPayouts"></div>
+        <div class="verdict bad" id="crossVerdict">Press "Simulate Crash"</div>
+      </div>
+      <div class="stress-panel">
+        <div class="stress-title hybrid-t">Hybrid Margin</div>
+        <div class="stress-sub">Per-market silos ($100k each). Insurance fund + global overflow.</div>
+        <div id="hybridSteps"></div>
+        <div class="divider-label">Final Payouts</div>
+        <div id="hybridPayouts"></div>
+        <div class="verdict good" id="hybridVerdict">Press "Simulate Crash"</div>
+      </div>
+    </div>
+
+    <div class="order-note" id="orderNote">
+      <strong>Try shuffling the crash order.</strong> In Cross Margin, the sequence determines who gets paid. In Hybrid Margin, the waterfall absorbs shortfalls deterministically regardless of order.
+    </div>
+  </div>
+</div>
+
+<script>
+function switchSec(sec, el) {
+  document.querySelectorAll('.sec-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('panel-' + sec).classList.add('active');
+}
+
+// ═══ SECTION 1 ═══
+var regimes = {
+  iso: {
+    total: 40000, pct: 100,
+    silos: [
+      { market: 'BTC', dir: 'Long 10x', amt: 10000, color: '#f97316', credit: 0 },
+      { market: 'ETH', dir: 'Short 10x', amt: 10000, color: '#8b5cf6', credit: 0 },
+      { market: 'SOL', dir: 'Long 5x', amt: 20000, color: '#06b6d4', credit: 0 }
+    ],
+    desc: '<strong>Isolated Margin:</strong> Full initial margin per market. No hedge recognition. The BTC long and ETH short are a natural hedge, but isolated margin ignores this entirely. Each position stands alone. Safest, but most capital locked.',
+    barColor: 'var(--red)'
+  },
+  cross: {
+    total: 18000, pct: 45,
+    silos: [
+      { market: 'BTC', dir: 'Long 10x', amt: 6000, color: '#f97316', credit: 0, pooled: true },
+      { market: 'ETH', dir: 'Short 10x', amt: 6000, color: '#8b5cf6', credit: 0, pooled: true },
+      { market: 'SOL', dir: 'Long 5x', amt: 6000, color: '#06b6d4', credit: 0, pooled: true }
+    ],
+    desc: '<strong>Cross Margin:</strong> Single shared collateral pool. All $18k is fungible across markets. BTC-ETH hedge is implicitly netted because UPnL flows freely. Most capital efficient. But losses in one market drain resources meant for other markets. Payouts under stress depend on which market liquidates first.',
+    barColor: 'var(--blue)'
+  },
+  hybrid: {
+    total: 25000, pct: 63,
+    silos: [
+      { market: 'BTC', dir: 'Long 10x', amt: 7000, color: '#f97316', credit: 3000 },
+      { market: 'ETH', dir: 'Short 10x', amt: 7000, color: '#8b5cf6', credit: 3000 },
+      { market: 'SOL', dir: 'Long 5x', amt: 11000, color: '#06b6d4', credit: 0 }
+    ],
+    desc: '<strong>Hybrid Margin:</strong> Per-market silos with explicit ICS spread credits. BTC-ETH hedge is recognized at entry (opposite sign, high correlation), reducing IM by $3k each. SOL is uncorrelated, no credit. UPnL sweepable between markets. ~80% of cross efficiency, deterministic payouts under stress.',
+    barColor: 'var(--green)'
+  }
+};
+
+var currentRegime = 'iso';
+var currentScenario = 'entry';
+
+// PnL after the price move: BTC +5%, ETH +4%, SOL -10%
+// Long BTC 10x $100k notional, +5% = +$5k UPnL
+// Short ETH 10x $100k notional, ETH +4% = -$4k UPnL (short loses when price goes up)
+// Long SOL 5x $100k notional, -10% = -$10k UPnL
+var pnlData = {
+  entry: { btc: 0, eth: 0, sol: 0 },
+  move:  { btc: 5000, eth: -4000, sol: -10000 }
+};
+
+function setScenario(s) {
+  currentScenario = s;
+  document.querySelectorAll('.sc-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('sc-' + s).classList.add('active');
+  renderEfficiency();
+}
+
+function switchRegime(r, el) {
+  currentRegime = r;
+  document.querySelectorAll('.reg-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  renderEfficiency();
+}
+
+function fmtPnl(v) {
+  if (v === 0) return '$0';
+  var sign = v > 0 ? '+' : '-';
+  return sign + '$' + (Math.abs(v)/1000) + 'k';
+}
+
+function renderEfficiency() {
+  var reg = regimes[currentRegime];
+  document.getElementById('walletAmt').textContent = '$' + (reg.total / 1000) + 'k';
+  document.getElementById('walletAmt').style.color = reg.barColor;
+  document.getElementById('walletPct').textContent = reg.pct + '% of standalone IM';
+  document.getElementById('walletBar').style.width = (reg.total / 40000 * 100) + '%';
+  document.getElementById('walletBar').style.background = reg.barColor;
+  document.getElementById('regimeDesc').innerHTML = reg.desc;
+
+  var pnl = pnlData[currentScenario];
+  var isMove = currentScenario === 'move';
+  var netPnl = pnl.btc + pnl.eth + pnl.sol;
+
+  // Update PnL on position cards
+  var btcPnl = document.getElementById('btc-pnl');
+  var ethPnl = document.getElementById('eth-pnl');
+  var solPnl = document.getElementById('sol-pnl');
+
+  btcPnl.textContent = 'UPnL: ' + fmtPnl(pnl.btc);
+  btcPnl.className = 'pos-pnl ' + (pnl.btc > 0 ? 'profit' : pnl.btc < 0 ? 'loss' : 'flat');
+  ethPnl.textContent = 'UPnL: ' + fmtPnl(pnl.eth);
+  ethPnl.className = 'pos-pnl ' + (pnl.eth > 0 ? 'profit' : pnl.eth < 0 ? 'loss' : 'flat');
+  solPnl.textContent = 'UPnL: ' + fmtPnl(pnl.sol);
+  solPnl.className = 'pos-pnl ' + (pnl.sol > 0 ? 'profit' : pnl.sol < 0 ? 'loss' : 'flat');
+
+  // Update prices
+  if (isMove) {
+    document.getElementById('btc-prices').textContent = '$100k → $105k (+5%)';
+    document.getElementById('eth-prices').textContent = '$4,000 → $4,160 (+4%)';
+    document.getElementById('sol-prices').textContent = '$180 → $162 (-10%)';
+  } else {
+    document.getElementById('btc-prices').textContent = 'Entry $100k';
+    document.getElementById('eth-prices').textContent = 'Entry $4,000';
+    document.getElementById('sol-prices').textContent = 'Entry $180';
+  }
+
+  // Update position cards based on regime
+  var btc = document.getElementById('pos-btc');
+  var eth = document.getElementById('pos-eth');
+  var sol = document.getElementById('pos-sol');
+  btc.className = 'pos-card';
+  eth.className = 'pos-card';
+  sol.className = 'pos-card';
+
+  var hedgeTag = document.getElementById('hedgeTag');
+  var pnlFlow = document.getElementById('pnlFlow');
+
+  if (currentRegime === 'iso') {
+    hedgeTag.className = 'hedge-tag inactive';
+    hedgeTag.textContent = 'No hedge recognition';
+    document.getElementById('btc-detail').textContent = 'Standalone IM: $10k (no offset)';
+    document.getElementById('eth-detail').textContent = 'Standalone IM: $10k (no offset)';
+    document.getElementById('sol-detail').textContent = 'Standalone IM: $20k (no offset)';
+
+    if (isMove) {
+      pnlFlow.className = 'pnl-flow iso-flow';
+      pnlFlow.innerHTML = 'BTC +$5k profit is <strong>stuck</strong> in BTC silo. Cannot offset ETH -$4k or SOL -$10k losses. Net portfolio: ' + fmtPnl(netPnl) + ', but each position judged alone. SOL at risk of liquidation despite BTC profit.';
+    } else {
+      pnlFlow.className = 'pnl-flow hidden';
+    }
+  } else if (currentRegime === 'cross') {
+    btc.className = 'pos-card pooled-highlight';
+    eth.className = 'pos-card pooled-highlight';
+    sol.className = 'pos-card pooled-highlight';
+    hedgeTag.className = 'hedge-tag pooled';
+    hedgeTag.textContent = 'Implicit netting: all UPnL shared in one pool';
+    document.getElementById('btc-detail').textContent = 'UPnL flows to shared pool automatically';
+    document.getElementById('eth-detail').textContent = 'UPnL flows to shared pool automatically';
+    document.getElementById('sol-detail').textContent = 'UPnL flows to shared pool automatically';
+
+    if (isMove) {
+      pnlFlow.className = 'pnl-flow cross-flow';
+      pnlFlow.innerHTML = 'All UPnL nets in shared pool: BTC +$5k + ETH -$4k + SOL -$10k = <strong>' + fmtPnl(netPnl) + ' net</strong>. BTC profit automatically offsets ETH + SOL losses. No action needed. But the pool is shared: if another trader\'s loss drains it, your BTC profit disappears too.';
+    } else {
+      pnlFlow.className = 'pnl-flow hidden';
+    }
+  } else {
+    btc.className = 'pos-card hedged';
+    eth.className = 'pos-card hedged';
+    sol.className = 'pos-card';
+    hedgeTag.className = 'hedge-tag active';
+    hedgeTag.textContent = 'BTC Long + ETH Short = recognized hedge (ICS credit)';
+    document.getElementById('btc-detail').textContent = 'IM: $7k (ICS credit -$3k from ETH hedge)';
+    document.getElementById('eth-detail').textContent = 'IM: $7k (ICS credit -$3k from BTC hedge)';
+    document.getElementById('sol-detail').textContent = 'IM: $11k (no correlated hedge)';
+
+    if (isMove) {
+      pnlFlow.className = 'pnl-flow hybrid-flow';
+      pnlFlow.innerHTML = 'BTC +$5k can be <strong>swept</strong> to ETH silo to cover -$4k loss (1 tx). Net BTC+ETH: +$1k. SOL -$10k stays in SOL silo. Sweep keeps ETH healthy without pooling solvency. SOL judged independently: may need more collateral or face liquidation.';
+    } else {
+      pnlFlow.className = 'pnl-flow hidden';
+    }
+  }
+
+  // Render silos
+  var el = document.getElementById('silos');
+  el.innerHTML = '';
+
+  // For cross margin, wrap in a shared pool container
+  var isPooled = reg.silos[0] && reg.silos[0].pooled;
+  var container = el;
+  if (isPooled) {
+    var poolWrap = document.createElement('div');
+    poolWrap.style.cssText = 'border:1px dashed #60a5fa44;border-radius:10px;padding:10px;background:#60a5fa06;';
+    poolWrap.innerHTML = '<div style="font-size:9px;color:#60a5fa;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px;">Shared Pool: $' + (reg.total/1000) + 'k (fungible across all markets)</div>';
+    var inner = document.createElement('div');
+    inner.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+    poolWrap.appendChild(inner);
+    el.appendChild(poolWrap);
+    container = inner;
+  }
+
+  for (var i = 0; i < reg.silos.length; i++) {
+    var s = reg.silos[i];
+    var pct = Math.min(100, s.amt / 20000 * 100);
+    var credit = s.credit > 0 ? '<div class="silo-credit">ICS credit: -$' + (s.credit/1000) + 'k (BTC-ETH hedge)</div>' : '';
+    var div = document.createElement('div');
+    div.className = 'silo';
+    if (s.pooled) div.style.borderStyle = 'dashed';
+    div.innerHTML =
+      '<div class="silo-label"><div class="silo-market" style="color:' + s.color + ';">' + s.market + '</div><div class="silo-dir">' + s.dir + '</div></div>' +
+      '<div class="silo-bar-wrap"><div class="silo-bar"><div class="silo-bar-fill" style="width:' + pct + '%;background:' + s.color + '33;border-right:2px solid ' + s.color + '88;"><span class="silo-bar-text">$' + (s.amt/1000) + 'k</span></div></div>' + credit + '</div>' +
+      '<div class="silo-val" style="color:' + s.color + ';">$' + (s.amt/1000) + 'k</div>';
+    container.appendChild(div);
+  }
+
+  if (isPooled) {
+    var note = document.createElement('div');
+    note.style.cssText = 'font-size:10px;color:#60a5fa88;text-align:center;margin-top:4px;';
+    note.textContent = 'All margins drawn from same pool. A loss in BTC drains funds available for ETH and SOL.';
+    container.parentNode.appendChild(note);
+  }
+
+  document.querySelectorAll('.compare-card').forEach(function(c) { c.classList.remove('highlight'); });
+  document.querySelector('.compare-card.' + currentRegime).classList.add('highlight');
+}
+
+renderEfficiency();
+
+// ═══ SECTION 2 ═══
+
+// Per-market data: winner, loser (Red), collateral amounts, amount owed
+var markets = {
+  BTC:  { winner: 'green',  winCol: 50000, loserCol: 50000, owed: 60000, insFund: 8000 },
+  ETH:  { winner: 'blue',   winCol: 50000, loserCol: 50000, owed: 40000, insFund: 6000 },
+  MON:  { winner: 'purple', winCol: 50000, loserCol: 50000, owed: 70000, insFund: 12000 }
+};
+
+var GLOBAL_OVERFLOW = 10000; // F_0
+
+var traders = {
+  green:  { name: 'Green',  color: '#22c55e', role: 'Short BTC' },
+  blue:   { name: 'Blue',   color: '#60a5fa', role: 'Short ETH' },
+  purple: { name: 'Purple', color: '#a78bfa', role: 'Short MON' }
+};
+
+var crashOrder = ['BTC', 'ETH', 'MON'];
+
+function shuffleOrder() {
+  var arr = crashOrder.slice();
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  crashOrder = arr;
+  renderCrashOrder();
+  clearResults();
+}
+
+function renderCrashOrder() {
+  var el = document.getElementById('crashOrder');
+  el.innerHTML = '';
+  for (var i = 0; i < crashOrder.length; i++) {
+    var pill = document.createElement('div');
+    pill.className = 'crash-pill';
+    pill.innerHTML = '<span class="num">' + ['1st','2nd','3rd'][i] + '</span>' + crashOrder[i];
+    el.appendChild(pill);
+  }
+}
+
+function clearResults() {
+  document.getElementById('isoSteps').innerHTML = '';
+  document.getElementById('crossSteps').innerHTML = '';
+  document.getElementById('hybridSteps').innerHTML = '';
+  document.getElementById('isoPayouts').innerHTML = '<div style="font-size:11px;color:var(--tx3);">Waiting...</div>';
+  document.getElementById('crossPayouts').innerHTML = '<div style="font-size:11px;color:var(--tx3);">Waiting...</div>';
+  document.getElementById('hybridPayouts').innerHTML = '<div style="font-size:11px;color:var(--tx3);">Waiting...</div>';
+  document.getElementById('isoVerdict').textContent = 'Press "Simulate Crash"';
+  document.getElementById('crossVerdict').textContent = 'Press "Simulate Crash"';
+  document.getElementById('hybridVerdict').textContent = 'Press "Simulate Crash"';
+}
+
+function runCrash() {
+  // ── ISOLATED MARGIN ──
+  // Each market is fully siloed. Red has $50k per market. No insurance sharing.
+  // Winner gets min(owed, Red's collateral in that silo). No cross-subsidy.
+  var isoResults = {};
+  var isoStepsHtml = '';
+
+  for (var i = 0; i < crashOrder.length; i++) {
+    var m = crashOrder[i];
+    var mk = markets[m];
+    var owed = mk.owed;
+    var available = mk.loserCol; // Red's $50k in this silo
+    var paid = Math.min(owed, available);
+    var shortfall = owed - paid;
+    isoResults[mk.winner] = paid;
+
+    var tag, detail;
+    if (shortfall === 0) {
+      tag = '<span class="step-tag ok">Paid in full</span>';
+      detail = traders[mk.winner].name + ' receives <strong>$' + (paid/1000) + 'k</strong> from ' + m + ' silo.';
+    } else {
+      tag = '<span class="step-tag shortfall">$' + (shortfall/1000) + 'k short</span>';
+      detail = traders[mk.winner].name + ' owed $' + (owed/1000) + 'k but silo only has $' + (available/1000) + 'k. Gets <strong>$' + (paid/1000) + 'k</strong>. No insurance fund, no overflow. <strong style="color:var(--red);">ADL for $' + (shortfall/1000) + 'k.</strong>';
+    }
+
+    isoStepsHtml += '<div class="step-row"><div class="step-header"><span class="step-market">' + m + '</span>' + tag + '</div><div class="step-detail">' + detail + '</div></div>';
+  }
+  document.getElementById('isoSteps').innerHTML = isoStepsHtml;
+
+  // Iso payouts
+  renderPayouts('isoPayouts', isoResults);
+
+  var isoStiffed = [];
+  var allNames = ['green','blue','purple'];
+  for (var i = 0; i < allNames.length; i++) {
+    var t = allNames[i];
+    if ((isoResults[t] || 0) < markets[getMarketFor(t)].owed) isoStiffed.push(traders[t].name);
+  }
+  var iv = document.getElementById('isoVerdict');
+  if (isoStiffed.length === 0) {
+    iv.textContent = 'All winners paid in full from their own market silo. Order does not matter.';
+    iv.className = 'verdict good';
+  } else {
+    var isoTotalAdl = 0;
+    for (var i = 0; i < allNames.length; i++) {
+      isoTotalAdl += Math.max(0, markets[getMarketFor(allNames[i])].owed - (isoResults[allNames[i]] || 0));
+    }
+    iv.textContent = isoStiffed.join(' and ') + ' hit by ADL ($' + (isoTotalAdl/1000) + 'k total). No insurance fund or overflow to absorb shortfalls. Each market is on its own. Order does not matter.';
+    iv.className = 'verdict bad';
+  }
+
+  // ── CROSS MARGIN ──
+  // Red has $150k in a shared pool. Process markets in crash order.
+  var redPool = 150000;
+  var crossResults = {};
+  var crossStepsHtml = '';
+
+  for (var i = 0; i < crashOrder.length; i++) {
+    var m = crashOrder[i];
+    var mk = markets[m];
+    var owed = mk.owed;
+    var paid = Math.min(owed, redPool);
+    redPool -= paid;
+    crossResults[mk.winner] = paid;
+
+    var tag, detail;
+    if (paid >= owed) {
+      tag = '<span class="step-tag ok">Paid in full</span>';
+      detail = mk.winner.charAt(0).toUpperCase() + mk.winner.slice(1) + ' receives <strong>$' + (paid/1000) + 'k</strong> from shared pool. Pool remaining: $' + (redPool/1000) + 'k.';
+    } else if (paid > 0) {
+      tag = '<span class="step-tag shortfall">Partial: $' + ((owed-paid)/1000) + 'k short</span>';
+      detail = 'Only <strong>$' + (paid/1000) + 'k</strong> left in pool. ' + traders[mk.winner].name + ' owed $' + (owed/1000) + 'k but gets $' + (paid/1000) + 'k. <strong style="color:var(--red);">ADL forced.</strong>';
+    } else {
+      tag = '<span class="step-tag adl">$0 paid. Pool drained.</span>';
+      detail = 'Shared pool empty. ' + traders[mk.winner].name + ' gets <strong style="color:var(--red);">nothing</strong>. Entire position ADL\'d at a loss.';
+    }
+
+    crossStepsHtml += '<div class="step-row"><div class="step-header"><span class="step-market">' + ['1st','2nd','3rd'][i] + ': ' + m + ' crashes</span>' + tag + '</div><div class="step-detail">' + detail + '</div></div>';
+  }
+  document.getElementById('crossSteps').innerHTML = crossStepsHtml;
+
+  // ── HYBRID MARGIN ──
+  // Each market has its own silo. Red has $50k per silo.
+  // Waterfall: Red's collateral → Insurance fund (F_j) → Global overflow (F_0) → ADL
+  var f0 = GLOBAL_OVERFLOW;
+  var hybridResults = {};
+  var hybridStepsHtml = '';
+
+  for (var i = 0; i < crashOrder.length; i++) {
+    var m = crashOrder[i];
+    var mk = markets[m];
+    var owed = mk.owed;
+    var fromLoser = Math.min(owed, mk.loserCol);
+    var remaining = owed - fromLoser;
+    var fromIns = Math.min(remaining, mk.insFund);
+    remaining -= fromIns;
+    var fromF0 = Math.min(remaining, f0);
+    f0 -= fromF0;
+    remaining -= fromF0;
+    var adlAmount = remaining;
+    var totalPaid = owed - adlAmount;
+    hybridResults[mk.winner] = totalPaid;
+
+    // Build waterfall bar
+    var wfHtml = '<div class="waterfall">';
+    if (fromLoser > 0) wfHtml += '<div class="wf-seg" style="width:' + (fromLoser/owed*100) + '%;background:#ef444466;">Red $' + (fromLoser/1000) + 'k</div>';
+    if (fromIns > 0) wfHtml += '<div class="wf-seg" style="width:' + (fromIns/owed*100) + '%;background:#eab30855;">F<sub>' + m.toLowerCase() + '</sub> $' + (fromIns/1000) + 'k</div>';
+    if (fromF0 > 0) wfHtml += '<div class="wf-seg" style="width:' + (fromF0/owed*100) + '%;background:#60a5fa44;">F<sub>0</sub> $' + (fromF0/1000) + 'k</div>';
+    if (adlAmount > 0) wfHtml += '<div class="wf-seg" style="width:' + (adlAmount/owed*100) + '%;background:#a78bfa33;">ADL $' + (adlAmount/1000) + 'k</div>';
+    wfHtml += '</div>';
+
+    var tag, detail;
+    if (adlAmount === 0) {
+      tag = '<span class="step-tag ok">Fully covered</span>';
+      detail = traders[mk.winner].name + ' receives full <strong>$' + (owed/1000) + 'k</strong>.';
+      if (fromIns > 0 || fromF0 > 0) {
+        detail += ' Shortfall of $' + ((owed - fromLoser)/1000) + 'k covered by';
+        if (fromIns > 0) detail += ' insurance ($' + (fromIns/1000) + 'k)';
+        if (fromF0 > 0) detail += (fromIns > 0 ? ' +' : '') + ' global overflow ($' + (fromF0/1000) + 'k)';
+        detail += '.';
+        tag = '<span class="step-tag insured">Insured</span>';
+      }
+    } else {
+      tag = '<span class="step-tag adl">ADL: $' + (adlAmount/1000) + 'k clipped</span>';
+      detail = traders[mk.winner].name + ' receives <strong>$' + (totalPaid/1000) + 'k</strong> of $' + (owed/1000) + 'k owed. Insurance + overflow absorbed $' + ((fromIns+fromF0)/1000) + 'k. ADL clips $' + (adlAmount/1000) + 'k as last resort.';
+    }
+
+    hybridStepsHtml += '<div class="step-row"><div class="step-header"><span class="step-market">' + ['1st','2nd','3rd'][i] + ': ' + m + ' crashes</span>' + tag + '</div><div class="step-detail">' + detail + '</div>' + wfHtml + '</div>';
+  }
+  document.getElementById('hybridSteps').innerHTML = hybridStepsHtml;
+
+  // Render payouts
+  renderPayouts('crossPayouts', crossResults);
+  renderPayouts('hybridPayouts', hybridResults);
+
+  // Verdicts
+  var stiffed = [];
+  var allNames = ['green','blue','purple'];
+  for (var i = 0; i < allNames.length; i++) {
+    var t = allNames[i];
+    if ((crossResults[t] || 0) < markets[getMarketFor(t)].owed) stiffed.push(traders[t].name);
+  }
+  var cv = document.getElementById('crossVerdict');
+  if (stiffed.length > 0) {
+    cv.textContent = stiffed.join(' and ') + ' got less than owed. The crash order (' + crashOrder.join(' > ') + ') determined who got paid. Shuffle and re-run to see different losers.';
+    cv.className = 'verdict bad';
+  } else {
+    cv.textContent = 'All winners paid in full.';
+    cv.className = 'verdict good';
+  }
+
+  var hybridStiffed = [];
+  for (var i = 0; i < allNames.length; i++) {
+    var t = allNames[i];
+    if ((hybridResults[t] || 0) < markets[getMarketFor(t)].owed) hybridStiffed.push(traders[t].name);
+  }
+  var hv = document.getElementById('hybridVerdict');
+  if (hybridStiffed.length === 0) {
+    hv.textContent = 'All winners paid in full. Insurance funds and global overflow absorbed all shortfalls. Zero ADL.';
+    hv.className = 'verdict good';
+  } else {
+    var totalAdl = 0;
+    for (var i = 0; i < allNames.length; i++) {
+      var t = allNames[i];
+      totalAdl += Math.max(0, markets[getMarketFor(t)].owed - (hybridResults[t] || 0));
+    }
+    hv.textContent = 'ADL triggered for $' + (totalAdl/1000) + 'k total (' + hybridStiffed.join(', ') + ' clipped). But the waterfall absorbed most shortfalls. Same result regardless of crash order.';
+    hv.className = 'verdict warn';
+  }
+
+  // Order note
+  var isoAdlTotal = 0;
+  var hybAdlTotal = 0;
+  for (var i = 0; i < allNames.length; i++) {
+    isoAdlTotal += Math.max(0, markets[getMarketFor(allNames[i])].owed - (isoResults[allNames[i]] || 0));
+    hybAdlTotal += Math.max(0, markets[getMarketFor(allNames[i])].owed - (hybridResults[allNames[i]] || 0));
+  }
+  document.getElementById('orderNote').innerHTML =
+    '<strong>Crash order: ' + crashOrder.join(' > ') + '</strong><br>' +
+    '<span style="color:var(--red);">Isolated:</span> Each silo stands alone. ADL of $' + (isoAdlTotal/1000) + 'k total. No safety net. Order irrelevant.<br>' +
+    '<span style="color:var(--blue);">Cross:</span> ' + (stiffed.length > 0 ? stiffed.join(' and ') + ' received less because the shared pool was drained by earlier markets. <strong>Shuffle to see different losers.</strong>' : 'All paid.') + '<br>' +
+    '<span style="color:var(--green);">Hybrid:</span> Waterfall (collateral > F<sub>j</sub> > F<sub>0</sub> > ADL) absorbed most shortfalls. ADL of $' + (hybAdlTotal/1000) + 'k. Order irrelevant.';
+}
+
+function getMarketFor(trader) {
+  for (var m in markets) { if (markets[m].winner === trader) return m; }
+  return null;
+}
+
+function renderPayouts(elId, results) {
+  var el = document.getElementById(elId);
+  el.innerHTML = '';
+  var allNames = ['green','blue','purple'];
+  for (var i = 0; i < allNames.length; i++) {
+    var t = allNames[i];
+    var m = getMarketFor(t);
+    var owed = markets[m].owed;
+    var paid = results[t] || 0;
+    var cls = paid === 0 ? 'loss' : paid < owed ? 'partial' : 'gain';
+    var row = document.createElement('div');
+    row.className = 'payout-row';
+    row.innerHTML =
+      '<div class="payout-dot" style="background:' + traders[t].color + ';"></div>' +
+      '<div class="payout-name">' + traders[t].name + ' <span style="color:var(--tx3);">(' + traders[t].role + ')</span></div>' +
+      '<div class="payout-val ' + cls + '">$' + (paid/1000) + 'k' + (paid < owed ? ' / $' + (owed/1000) + 'k' : '') + '</div>';
+    el.appendChild(row);
+  }
+}
+
+renderCrashOrder();
+clearResults();
+</script>
+</body>
+</html>
