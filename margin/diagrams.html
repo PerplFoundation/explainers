@@ -48,8 +48,9 @@
 
   /* Waterfall */
   .wf-stack { display: flex; flex-direction: column; gap: 3px; }
-  .wf-bar { height: 32px; border-radius: 4px; display: flex; align-items: center; padding: 0 12px; font-size: 11px; font-weight: 500; justify-content: space-between; }
-  .wf-bar .wf-step { font-size: 9px; color: rgba(255,255,255,0.5); }
+  .wf-bar { height: 38px; border-radius: 5px; display: flex; align-items: center; padding: 0 14px; font-size: 12px; font-weight: 500; justify-content: space-between; gap: 8px; }
+  .wf-bar .wf-label { flex: 1; }
+  .wf-bar .wf-step { font-size: 10px; color: rgba(255,255,255,0.4); flex-shrink: 0; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 3px; }
 
   /* SRML grid */
   .srml { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -163,19 +164,19 @@
     <div class="card">
       <h3 class="blue">Cross Margin Waterfall</h3>
       <div class="wf-stack">
-        <div class="wf-bar" style="background:#58a6ff33;color:#93c5fd;">Shared pool (all trader collateral) <span class="wf-step">Step 1</span></div>
-        <div class="wf-bar" style="background:#d2992233;color:#fde68a;">Shared insurance fund F <span class="wf-step">Step 2</span></div>
-        <div class="wf-bar" style="background:#f8514933;color:#fca5a5;">ADL (path-dependent) <span class="wf-step">Step 3</span></div>
+        <div class="wf-bar" style="background:#58a6ff22;color:#93c5fd;border:1px solid #58a6ff33;"><span class="wf-label">Shared pool (all trader collateral)</span><span class="wf-step">Step 1</span></div>
+        <div class="wf-bar" style="background:#d2992218;color:#fde68a;border:1px solid #d2992233;"><span class="wf-label">Shared insurance fund</span><span class="wf-step">Step 2</span></div>
+        <div class="wf-bar" style="background:#f8514918;color:#fca5a5;border:1px solid #f8514933;"><span class="wf-label">ADL (path-dependent)</span><span class="wf-step">Step 3</span></div>
       </div>
       <div class="note" style="margin-top:8px;">The shared pool means Step 1 is a race. First market to liquidate takes collateral that other markets needed. Whoever gets there first wins.</div>
     </div>
     <div class="card">
       <h3 class="green">Hybrid Margin Waterfall</h3>
       <div class="wf-stack">
-        <div class="wf-bar" style="background:#3fb95033;color:#86efac;">Loser's collateral (market-local) <span class="wf-step">Step 1</span></div>
-        <div class="wf-bar" style="background:#d2992233;color:#fde68a;">Local insurance fund F<sub>j</sub> <span class="wf-step">Step 2</span></div>
-        <div class="wf-bar" style="background:#bc8cff22;color:#d2a8ff;">Global overflow F<sub>0</sub> (capped) <span class="wf-step">Step 3</span></div>
-        <div class="wf-bar" style="background:#f8514922;color:#fca5a5;">ADL (deterministic, last resort) <span class="wf-step">Step 4</span></div>
+        <div class="wf-bar" style="background:#3fb95018;color:#86efac;border:1px solid #3fb95033;"><span class="wf-label">Loser's collateral (market-local)</span><span class="wf-step">Step 1</span></div>
+        <div class="wf-bar" style="background:#d2992214;color:#fde68a;border:1px solid #d2992228;"><span class="wf-label">Local insurance fund F<sub>j</sub></span><span class="wf-step">Step 2</span></div>
+        <div class="wf-bar" style="background:#bc8cff14;color:#d2a8ff;border:1px solid #bc8cff28;"><span class="wf-label">Global overflow F<sub>0</sub> (capped, explicit)</span><span class="wf-step">Step 3</span></div>
+        <div class="wf-bar" style="background:#f8514914;color:#fca5a5;border:1px solid #f8514928;"><span class="wf-label">ADL (deterministic, last resort)</span><span class="wf-step">Step 4</span></div>
       </div>
       <div class="note" style="margin-top:8px;">Each step is market-local until F<sub>0</sub>. The global overflow is the only shared resource, and it's bounded and published. ADL is genuinely last resort.</div>
     </div>

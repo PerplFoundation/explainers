@@ -182,6 +182,23 @@
   .pos-card.hedged { border-color: #22c55e44; }
   .pos-card.pooled-highlight { border-color: #60a5fa44; border-style: dashed; }
   .pos-card.no-hedge { opacity: 0.6; }
+  .pos-card.danger { border-color: #ef4444; background: #ef44440a; animation: dangerPulse 1.5s ease infinite; }
+  .pos-card.warning { border-color: #eab308; background: #eab30808; }
+  .pos-card.safe { border-color: #22c55e44; }
+  @keyframes dangerPulse {
+    0%, 100% { box-shadow: 0 0 0 0 transparent; }
+    50% { box-shadow: 0 0 16px 0 #ef444433; }
+  }
+  .liq-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-top: 6px; letter-spacing: 0.3px; }
+  .liq-badge.liq { background: #ef444420; color: #ef4444; }
+  .liq-badge.at-risk { background: #eab30818; color: #eab308; }
+  .liq-badge.healthy { background: #22c55e15; color: #22c55e; }
+  .equity-bar { height: 6px; border-radius: 3px; background: #1a1a26; margin-top: 6px; overflow: hidden; position: relative; }
+  .equity-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease, background 0.3s; }
+  .equity-fill.ok { background: #22c55e; }
+  .equity-fill.warn { background: #eab308; }
+  .equity-fill.crit { background: #ef4444; }
+  .equity-labels { display: flex; justify-content: space-between; font-size: 8px; color: var(--tx3); margin-top: 2px; }
 
   .arrow-down { display: flex; justify-content: center; margin: 8px 0; color: var(--tx3); font-size: 16px; }
 </style>
@@ -469,46 +486,78 @@ function renderEfficiency() {
   if (currentRegime === 'iso') {
     hedgeTag.className = 'hedge-tag inactive';
     hedgeTag.textContent = 'No hedge recognition';
-    document.getElementById('btc-detail').textContent = 'Standalone IM: $10k (no offset)';
-    document.getElementById('eth-detail').textContent = 'Standalone IM: $10k (no offset)';
-    document.getElementById('sol-detail').textContent = 'Standalone IM: $20k (no offset)';
 
     if (isMove) {
+      // BTC: $10k collateral + $5k UPnL = $15k equity. IM = $10k. Healthy.
+      btc.className = 'pos-card safe';
+      document.getElementById('btc-detail').innerHTML = 'Equity: $15k (collateral $10k + UPnL $5k)<div class="equity-bar"><div class="equity-fill ok" style="width:100%;"></div></div><div class="equity-labels"><span>MM $5k</span><span>Equity $15k</span></div><div class="liq-badge healthy">HEALTHY</div>';
+
+      // ETH: $10k collateral - $4k UPnL = $6k equity. MM = $5k. Close to breach.
+      eth.className = 'pos-card warning';
+      document.getElementById('eth-detail').innerHTML = 'Equity: $6k (collateral $10k - UPnL $4k)<div class="equity-bar"><div class="equity-fill warn" style="width:40%;"></div></div><div class="equity-labels"><span>MM $5k</span><span>Equity $6k</span></div><div class="liq-badge at-risk">APPROACHING MM</div>';
+
+      // SOL: $20k collateral - $10k UPnL = $10k equity. MM = $10k. At liquidation.
+      sol.className = 'pos-card danger';
+      document.getElementById('sol-detail').innerHTML = 'Equity: $10k (collateral $20k - UPnL $10k)<div class="equity-bar"><div class="equity-fill crit" style="width:12%;"></div></div><div class="equity-labels"><span>MM $10k</span><span>Equity $10k</span></div><div class="liq-badge liq">LIQUIDATION</div>';
+
       pnlFlow.className = 'pnl-flow iso-flow';
-      pnlFlow.innerHTML = 'BTC +$5k profit is <strong>stuck</strong> in BTC silo. Cannot offset ETH -$4k or SOL -$10k losses. Net portfolio: ' + fmtPnl(netPnl) + ', but each position judged alone. SOL at risk of liquidation despite BTC profit.';
+      pnlFlow.innerHTML = 'BTC has +$5k profit <strong>trapped</strong> in its silo. It cannot rescue ETH or SOL. SOL is being <strong>liquidated</strong> and ETH is approaching maintenance margin, even though the portfolio net PnL is only ' + fmtPnl(netPnl) + '. The BTC profit does nothing.';
     } else {
+      document.getElementById('btc-detail').textContent = 'Standalone IM: $10k (no offset)';
+      document.getElementById('eth-detail').textContent = 'Standalone IM: $10k (no offset)';
+      document.getElementById('sol-detail').textContent = 'Standalone IM: $20k (no offset)';
       pnlFlow.className = 'pnl-flow hidden';
     }
   } else if (currentRegime === 'cross') {
-    btc.className = 'pos-card pooled-highlight';
-    eth.className = 'pos-card pooled-highlight';
-    sol.className = 'pos-card pooled-highlight';
     hedgeTag.className = 'hedge-tag pooled';
     hedgeTag.textContent = 'Implicit netting: all UPnL shared in one pool';
-    document.getElementById('btc-detail').textContent = 'UPnL flows to shared pool automatically';
-    document.getElementById('eth-detail').textContent = 'UPnL flows to shared pool automatically';
-    document.getElementById('sol-detail').textContent = 'UPnL flows to shared pool automatically';
 
     if (isMove) {
+      // Cross: shared pool of $18k, net UPnL = -$9k, pool equity = $9k. Shared IM ~$18k.
+      btc.className = 'pos-card pooled-highlight';
+      eth.className = 'pos-card pooled-highlight';
+      sol.className = 'pos-card pooled-highlight';
+      document.getElementById('btc-detail').innerHTML = 'UPnL +$5k flows to shared pool<div class="equity-bar"><div class="equity-fill ok" style="width:100%;"></div></div><div class="equity-labels"><span></span><span>+$5k to pool</span></div><div class="liq-badge healthy">CONTRIBUTING</div>';
+      document.getElementById('eth-detail').innerHTML = 'UPnL -$4k absorbed by shared pool<div class="equity-bar"><div class="equity-fill warn" style="width:60%;"></div></div><div class="equity-labels"><span></span><span>-$4k from pool</span></div><div class="liq-badge healthy">COVERED</div>';
+      document.getElementById('sol-detail').innerHTML = 'UPnL -$10k absorbed by shared pool<div class="equity-bar"><div class="equity-fill warn" style="width:30%;"></div></div><div class="equity-labels"><span></span><span>-$10k from pool</span></div><div class="liq-badge at-risk">POOL STRAINED</div>';
+
       pnlFlow.className = 'pnl-flow cross-flow';
-      pnlFlow.innerHTML = 'All UPnL nets in shared pool: BTC +$5k + ETH -$4k + SOL -$10k = <strong>' + fmtPnl(netPnl) + ' net</strong>. BTC profit automatically offsets ETH + SOL losses. No action needed. But the pool is shared: if another trader\'s loss drains it, your BTC profit disappears too.';
+      pnlFlow.innerHTML = 'Shared pool equity: $18k + $5k - $4k - $10k = <strong>$9k remaining</strong>. All losses netted automatically. No position liquidated yet. But if another trader drains the pool, <strong>all three positions</strong> are at risk simultaneously.';
     } else {
+      btc.className = 'pos-card pooled-highlight';
+      eth.className = 'pos-card pooled-highlight';
+      sol.className = 'pos-card pooled-highlight';
+      document.getElementById('btc-detail').textContent = 'UPnL flows to shared pool automatically';
+      document.getElementById('eth-detail').textContent = 'UPnL flows to shared pool automatically';
+      document.getElementById('sol-detail').textContent = 'UPnL flows to shared pool automatically';
       pnlFlow.className = 'pnl-flow hidden';
     }
   } else {
-    btc.className = 'pos-card hedged';
-    eth.className = 'pos-card hedged';
-    sol.className = 'pos-card';
     hedgeTag.className = 'hedge-tag active';
     hedgeTag.textContent = 'BTC Long + ETH Short = recognized hedge (ICS credit)';
-    document.getElementById('btc-detail').textContent = 'IM: $7k (ICS credit -$3k from ETH hedge)';
-    document.getElementById('eth-detail').textContent = 'IM: $7k (ICS credit -$3k from BTC hedge)';
-    document.getElementById('sol-detail').textContent = 'IM: $11k (no correlated hedge)';
 
     if (isMove) {
+      // Hybrid: BTC silo $7k + $5k = $12k equity, healthy.
+      // ETH silo $7k - $4k = $3k equity, near MM. But can sweep from BTC.
+      // SOL silo $11k - $10k = $1k equity, near liquidation.
+      btc.className = 'pos-card hedged';
+      document.getElementById('btc-detail').innerHTML = 'Equity: $12k (collateral $7k + UPnL $5k)<div class="equity-bar"><div class="equity-fill ok" style="width:100%;"></div></div><div class="equity-labels"><span>MM $3.5k</span><span>Equity $12k</span></div><div class="liq-badge healthy">HEALTHY (sweepable)</div>';
+
+      eth.className = 'pos-card warning';
+      document.getElementById('eth-detail').innerHTML = 'Equity: $3k (collateral $7k - UPnL $4k)<div class="equity-bar"><div class="equity-fill warn" style="width:25%;"></div></div><div class="equity-labels"><span>MM $3.5k</span><span>Equity $3k</span></div><div class="liq-badge at-risk">BELOW MM (sweep needed)</div>';
+
+      sol.className = 'pos-card danger';
+      document.getElementById('sol-detail').innerHTML = 'Equity: $1k (collateral $11k - UPnL $10k)<div class="equity-bar"><div class="equity-fill crit" style="width:5%;"></div></div><div class="equity-labels"><span>MM $5.5k</span><span>Equity $1k</span></div><div class="liq-badge liq">LIQUIDATION (no hedge)</div>';
+
       pnlFlow.className = 'pnl-flow hybrid-flow';
-      pnlFlow.innerHTML = 'BTC +$5k can be <strong>swept</strong> to ETH silo to cover -$4k loss (1 tx). Net BTC+ETH: +$1k. SOL -$10k stays in SOL silo. Sweep keeps ETH healthy without pooling solvency. SOL judged independently: may need more collateral or face liquidation.';
+      pnlFlow.innerHTML = 'BTC +$5k can be <strong>swept</strong> to ETH silo in 1 tx, restoring ETH equity to $8k (healthy). SOL has no correlated hedge and no sweep source: it faces liquidation independently. The BTC-ETH hedge <strong>works</strong>. SOL is correctly judged on its own merits.';
     } else {
+      btc.className = 'pos-card hedged';
+      eth.className = 'pos-card hedged';
+      sol.className = 'pos-card';
+      document.getElementById('btc-detail').textContent = 'IM: $7k (ICS credit -$3k from ETH hedge)';
+      document.getElementById('eth-detail').textContent = 'IM: $7k (ICS credit -$3k from BTC hedge)';
+      document.getElementById('sol-detail').textContent = 'IM: $11k (no correlated hedge)';
       pnlFlow.className = 'pnl-flow hidden';
     }
   }
