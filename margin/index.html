@@ -8,24 +8,27 @@
 <style>
   :root {
     --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
-    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --tx: #e0e0f0; --tx2: #9898b0; --tx3: #8888a0;
     --bd: #1e1e2e; --bd2: #2a2a3a;
     --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
     --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
     --orange: #f97316;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); line-height: 1.6; }
+  :focus-visible { outline: 2px solid #6F5CFF; outline-offset: 2px; }
+  button { font-family: inherit; }
 
-  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
-  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
   .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
   .site-links a:hover { border-color: #444; color: var(--tx); }
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
-  .page { max-width: 1000px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 24px; color: #e0e0f0; font-weight: 600; margin-bottom: 4px; }
   .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
 
   .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
@@ -42,9 +45,9 @@
   .reg-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
   .reg-tab { padding: 8px 18px; font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx3); transition: all 0.15s; user-select: none; }
   .reg-tab:hover { border-color: var(--bd); color: var(--tx2); }
-  .reg-tab.active.iso { border-color: var(--red); color: var(--red); background: #ef44440a; }
+  .reg-tab.active.iso { border-color: var(--orange); color: var(--orange); background: #f973160a; }
   .reg-tab.active.cross { border-color: var(--blue); color: var(--blue); background: #60a5fa0a; }
-  .reg-tab.active.hybrid { border-color: var(--green); color: var(--green); background: #22c55e0a; }
+  .reg-tab.active.hybrid { border-color: #A2A4FF; color: #A2A4FF; background: #A2A4FF0a; }
 
   /* Efficiency section */
   .eff-grid { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; }
@@ -56,7 +59,7 @@
   .wallet-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease, background 0.3s; }
 
   .silos { display: flex; flex-direction: column; gap: 8px; }
-  .silo { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); transition: all 0.4s ease; }
+  .silo { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); transition: all 0.4s ease; min-height: 73px; }
   .silo-label { width: 80px; flex-shrink: 0; }
   .silo-market { font-size: 13px; font-weight: 600; }
   .silo-dir { font-size: 10px; color: var(--tx3); }
@@ -64,7 +67,7 @@
   .silo-bar { height: 28px; border-radius: 4px; background: var(--bg3); position: relative; overflow: hidden; }
   .silo-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; display: flex; align-items: center; padding-left: 10px; }
   .silo-bar-text { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.9); white-space: nowrap; }
-  .silo-credit { font-size: 10px; color: var(--green); margin-top: 3px; }
+  .silo-credit { font-size: 10px; color: #A2A4FF; margin-top: 3px; }
   .silo-val { width: 60px; text-align: right; font-size: 13px; font-weight: 600; font-family: 'SF Mono', monospace; flex-shrink: 0; }
   .silo.pool { border-color: var(--blue); border-style: dashed; }
 
@@ -77,12 +80,12 @@
   .compare-name { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
   .compare-val { font-size: 22px; font-weight: 700; font-family: 'SF Mono', monospace; }
   .compare-note { font-size: 10px; color: var(--tx3); margin-top: 4px; }
-  .compare-card.iso .compare-val { color: var(--red); }
+  .compare-card.iso .compare-val { color: var(--orange); }
   .compare-card.cross .compare-val { color: var(--blue); }
-  .compare-card.hybrid .compare-val { color: var(--green); }
-  .compare-card.iso.highlight { border-color: var(--red); }
+  .compare-card.hybrid .compare-val { color: #A2A4FF; }
+  .compare-card.iso.highlight { border-color: var(--orange); }
   .compare-card.cross.highlight { border-color: var(--blue); }
-  .compare-card.hybrid.highlight { border-color: var(--green); }
+  .compare-card.hybrid.highlight { border-color: #A2A4FF; }
 
   /* Stress section */
   .scenario-box { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
@@ -95,18 +98,20 @@
   .crash-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
   .crash-label { font-size: 11px; color: var(--tx3); }
   .crash-order { display: flex; gap: 4px; }
-  .crash-pill { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); user-select: none; }
+  .crash-pill { padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); user-select: none; cursor: pointer; transition: all 0.15s; }
+  .crash-pill:hover { border-color: var(--bd); color: var(--tx); }
   .crash-pill .num { font-size: 9px; color: var(--tx3); margin-right: 4px; }
   .play-btn { padding: 8px 20px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; }
   .play-btn:hover { border-color: var(--bd); color: var(--tx); }
-  .play-btn.go { background: #22c55e18; border-color: #22c55e44; color: var(--green); }
+  .play-btn.go { background: #eab30818; border-color: #eab30844; color: var(--amber); }
+  .play-btn.go:hover { background: #eab30820; border-color: #eab30866; }
 
   .stress-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
   .stress-panel { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
   .stress-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .stress-title.iso-t { color: var(--red); }
+  .stress-title.iso-t { color: var(--orange); }
   .stress-title.cross-t { color: var(--blue); }
-  .stress-title.hybrid-t { color: var(--green); }
+  .stress-title.hybrid-t { color: #A2A4FF; }
   .stress-sub { font-size: 10px; color: var(--tx3); margin-bottom: 12px; }
 
   .step-row { margin-bottom: 10px; padding: 8px 10px; border-radius: 6px; background: var(--bg3); border: 1px solid transparent; transition: border-color 0.3s; }
@@ -118,8 +123,8 @@
   .step-tag.shortfall { background: #ef444415; color: var(--red); }
   .step-tag.insured { background: #eab30815; color: var(--amber); }
   .step-tag.adl { background: #a78bfa15; color: var(--purple); }
-  .step-detail { font-size: 10px; color: var(--tx3); line-height: 1.5; }
-  .step-detail strong { color: var(--tx2); }
+  .step-detail { font-size: 10px; color: var(--tx2); line-height: 1.5; }
+  .step-detail strong { color: var(--tx); }
 
   .waterfall { margin-top: 6px; display: flex; gap: 3px; height: 18px; border-radius: 3px; overflow: hidden; }
   .wf-seg { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 600; color: rgba(255,255,255,0.8); transition: width 0.4s; min-width: 0; overflow: hidden; }
@@ -139,14 +144,16 @@
   .verdict.bad { background: #ef44440a; border: 1px solid #ef444425; color: #fca5a5; }
   .verdict.good { background: #22c55e0a; border: 1px solid #22c55e25; color: #86efac; }
   .verdict.warn { background: #eab30808; border: 1px solid #eab30825; color: #fde68a; }
+  .verdict.neutral { background: var(--bg3); border: 1px solid var(--bd); color: var(--tx3); }
 
-  .order-note { font-size: 11px; color: var(--tx3); margin-top: 16px; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; line-height: 1.7; }
+  .order-note { font-size: 11px; color: var(--tx2); margin-top: 16px; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; line-height: 1.7; }
   .order-note strong { color: var(--amber); }
 
   /* Position cards */
   .positions-strip { display: flex; gap: 8px; margin-bottom: 16px; }
   .pos-card { flex: 1; padding: 10px 12px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); position: relative; transition: all 0.3s; }
-  .pos-card .pos-market { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .pos-card .pos-market { font-size: 14px; font-weight: 700; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; color: var(--tx); }
+  .pos-card .pos-market img { width: 20px; height: 20px; border-radius: 50%; }
   .pos-card .pos-dir { font-size: 11px; font-weight: 600; }
   .pos-card .pos-dir.long { color: #22c55e; }
   .pos-card .pos-dir.short { color: #ef4444; }
@@ -167,19 +174,19 @@
   .pnl-flow { display: block; margin-bottom: 12px; padding: 10px 14px; border-radius: 6px; font-size: 11px; line-height: 1.7; transition: all 0.3s; }
   .pnl-flow strong { font-weight: 600; }
   .pnl-flow.hidden { display: none; }
-  .pnl-flow.iso-flow { background: #ef44440a; border: 1px solid #ef444420; color: #fca5a5; }
+  .pnl-flow.iso-flow { background: #f973160a; border: 1px solid #f9731620; color: #fdba74; }
   .pnl-flow.cross-flow { background: #60a5fa0a; border: 1px solid #60a5fa20; color: #93c5fd; }
-  .pnl-flow.hybrid-flow { background: #22c55e0a; border: 1px solid #22c55e20; color: #86efac; }
+  .pnl-flow.hybrid-flow { background: #A2A4FF0a; border: 1px solid #A2A4FF20; color: #c8c9ff; }
 
   .hedge-bracket { position: relative; margin-bottom: 16px; }
   .hedge-line { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0; }
   .hedge-dash { height: 1px; flex: 1; max-width: 80px; }
   .hedge-tag { font-size: 9px; font-weight: 600; padding: 3px 10px; border-radius: 4px; white-space: nowrap; transition: all 0.3s; }
-  .hedge-tag.active { background: #22c55e15; border: 1px solid #22c55e30; color: var(--green); }
+  .hedge-tag.active { background: #A2A4FF15; border: 1px solid #A2A4FF30; color: #A2A4FF; }
   .hedge-tag.inactive { background: var(--bg3); border: 1px solid var(--bd); color: var(--tx3); }
   .hedge-tag.pooled { background: #60a5fa10; border: 1px solid #60a5fa30; color: var(--blue); }
 
-  .pos-card.hedged { border-color: #22c55e44; }
+  .pos-card.hedged { border-color: #A2A4FF44; }
   .pos-card.pooled-highlight { border-color: #60a5fa44; border-style: dashed; }
   .pos-card.no-hedge { opacity: 0.6; }
   .pos-card.danger { border-color: #ef4444; background: #ef44440a; animation: dangerPulse 1.5s ease infinite; }
@@ -201,47 +208,67 @@
   .equity-labels { display: flex; justify-content: space-between; font-size: 8px; color: var(--tx3); margin-top: 2px; }
 
   .arrow-down { display: flex; justify-content: center; margin: 8px 0; color: var(--tx3); font-size: 16px; }
+
+  @media (max-width: 768px) {
+    .site-nav { padding: 8px 12px; gap: 8px; }
+    .site-logo img { height: 16px; }
+    .site-links { gap: 4px; }
+    .site-links a { padding: 4px 6px; font-size: 10px; white-space: nowrap; }
+    main { padding: 16px; }
+    h1 { font-size: 20px; }
+    .sec-tabs { flex-wrap: wrap; }
+    .reg-tabs { flex-wrap: wrap; }
+    .eff-grid { grid-template-columns: 1fr; }
+    .compare-row { flex-direction: column; }
+    .positions-strip { flex-direction: column; }
+    .stress-grid { grid-template-columns: 1fr; }
+    .trader-grid { flex-direction: column; }
+    .scenario-toggle { flex-wrap: wrap; }
+    .crash-controls { flex-direction: column; align-items: flex-start; }
+  }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <span class="site-logo">Perpl</span>
+  <a href="overview.html" class="site-logo">
+    <img src="../Colour=Primary_White.svg" alt="Perpl">
+  </a>
   <div class="site-links">
     <a href="overview.html">Overview</a>
-    <a class="active" href="index.html">Interactive Sim</a>
+    <a class="active" href="index.html" aria-current="page">Interactive Sim</a>
     <a href="diagrams.html">Technical Diagrams</a>
   </div>
 </nav>
 
-<div class="page">
+<main>
   <h1>Margin Regimes: Who Pays When It All Goes Wrong?</h1>
   <p class="sub">Same positions, same crash. Different margin regimes, very different outcomes.</p>
 
-  <div class="sec-tabs">
-    <div class="sec-tab active" onclick="switchSec('efficiency',this)"><span class="dot"></span>Capital Efficiency</div>
-    <div class="sec-tab" onclick="switchSec('stress',this)"><span class="dot"></span>Stress / ADL</div>
+  <div class="sec-tabs" role="tablist">
+    <button class="sec-tab active" role="tab" aria-selected="true" onclick="switchSec('efficiency',this)"><span class="dot"></span>Capital Efficiency</button>
+    <button class="sec-tab" role="tab" aria-selected="false" onclick="switchSec('stress',this)"><span class="dot"></span>Stress / ADL</button>
   </div>
 
   <!-- SECTION 1 -->
-  <div class="panel active" id="panel-efficiency">
-    <div class="reg-tabs">
-      <div class="reg-tab iso active" onclick="switchRegime('iso',this)">Isolated</div>
-      <div class="reg-tab cross" onclick="switchRegime('cross',this)">Cross</div>
-      <div class="reg-tab hybrid" onclick="switchRegime('hybrid',this)">Hybrid</div>
+  <div class="panel active" id="panel-efficiency" role="tabpanel">
+    <div class="reg-tabs" role="tablist">
+      <button class="reg-tab iso active" role="tab" aria-selected="true" onclick="switchRegime('iso',this)">Isolated</button>
+      <button class="reg-tab cross" role="tab" aria-selected="false" onclick="switchRegime('cross',this)">Cross</button>
+      <button class="reg-tab hybrid" role="tab" aria-selected="false" onclick="switchRegime('hybrid',this)">Hybrid</button>
     </div>
 
     <!-- Scenario toggle -->
     <div class="scenario-toggle">
       <span class="sc-label">Price scenario:</span>
-      <div class="sc-btn active" id="sc-entry" onclick="setScenario('entry')">At Entry</div>
-      <div class="sc-btn" id="sc-move" onclick="setScenario('move')">After BTC +5%, ETH +4%, SOL -10%</div>
+      <button class="sc-btn active" id="sc-entry" onclick="setScenario('entry')">At Entry</button>
+      <button class="sc-btn" id="sc-move" onclick="setScenario('move')">After BTC +5%, ETH +4%, SOL -10%</button>
     </div>
 
     <!-- Positions visualization -->
     <div class="positions-strip" id="posStrip">
       <div class="pos-card" id="pos-btc">
-        <div class="pos-market" style="color:#f97316;">BTC</div>
+        <div class="pos-market"><img src="../BTCb.svg" alt="">BTC</div>
         <div class="pos-dir long">LONG 10x</div>
         <div class="pos-notional">$100k notional</div>
         <div class="pos-prices" id="btc-prices">Entry $100k</div>
@@ -249,7 +276,7 @@
         <div class="pos-detail" id="btc-detail">Standalone IM: $10k</div>
       </div>
       <div class="pos-card" id="pos-eth">
-        <div class="pos-market" style="color:#8b5cf6;">ETH</div>
+        <div class="pos-market"><img src="../WETH.svg" alt="">ETH</div>
         <div class="pos-dir short">SHORT 10x</div>
         <div class="pos-notional">$100k notional</div>
         <div class="pos-prices" id="eth-prices">Entry $4,000</div>
@@ -257,7 +284,7 @@
         <div class="pos-detail" id="eth-detail">Standalone IM: $10k</div>
       </div>
       <div class="pos-card" id="pos-sol">
-        <div class="pos-market" style="color:#06b6d4;">SOL</div>
+        <div class="pos-market"><img src="../SOL.svg" alt="">SOL</div>
         <div class="pos-dir long">LONG 5x</div>
         <div class="pos-notional">$100k notional</div>
         <div class="pos-prices" id="sol-prices">Entry $180</div>
@@ -277,7 +304,7 @@
 
     <div class="pnl-flow hidden" id="pnlFlow"></div>
 
-    <div class="arrow-down" id="arrowDown">&darr; margin flows into &darr;</div>
+    <div class="arrow-down">↓ margin flows into ↓</div>
 
     <div class="eff-grid">
       <div>
@@ -299,7 +326,7 @@
   </div>
 
   <!-- SECTION 2 -->
-  <div class="panel" id="panel-stress">
+  <div class="panel" id="panel-stress" role="tabpanel">
     <div class="scenario-box">
       <div class="scenario-title">Scenario: All 3 markets crash 40%</div>
       <div class="trader-grid">
@@ -331,12 +358,12 @@
 
     <div class="stress-grid">
       <div class="stress-panel">
-        <div class="stress-title" style="color:var(--red);">Isolated Margin</div>
+        <div class="stress-title iso-t">Isolated Margin</div>
         <div class="stress-sub">Per-market silos. No insurance fund sharing. Each market stands alone.</div>
         <div id="isoSteps"></div>
         <div class="divider-label">Final Payouts</div>
         <div id="isoPayouts"></div>
-        <div class="verdict" id="isoVerdict" style="background:#ef44440a;border:1px solid #ef444425;color:#fca5a5;">Press "Simulate Crash"</div>
+        <div class="verdict neutral" id="isoVerdict">Press "Simulate Crash"</div>
       </div>
       <div class="stress-panel">
         <div class="stress-title cross-t">Cross Margin</div>
@@ -344,7 +371,7 @@
         <div id="crossSteps"></div>
         <div class="divider-label">Final Payouts</div>
         <div id="crossPayouts"></div>
-        <div class="verdict bad" id="crossVerdict">Press "Simulate Crash"</div>
+        <div class="verdict neutral" id="crossVerdict">Press "Simulate Crash"</div>
       </div>
       <div class="stress-panel">
         <div class="stress-title hybrid-t">Hybrid Margin</div>
@@ -352,7 +379,7 @@
         <div id="hybridSteps"></div>
         <div class="divider-label">Final Payouts</div>
         <div id="hybridPayouts"></div>
-        <div class="verdict good" id="hybridVerdict">Press "Simulate Crash"</div>
+        <div class="verdict neutral" id="hybridVerdict">Press "Simulate Crash"</div>
       </div>
     </div>
 
@@ -360,13 +387,14 @@
       <strong>Try shuffling the crash order.</strong> In Cross Margin, the sequence determines who gets paid. In Hybrid Margin, the waterfall absorbs shortfalls deterministically regardless of order.
     </div>
   </div>
-</div>
+</main>
 
 <script>
 function switchSec(sec, el) {
-  document.querySelectorAll('.sec-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.sec-tab').forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
   document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
   el.classList.add('active');
+  el.setAttribute('aria-selected', 'true');
   document.getElementById('panel-' + sec).classList.add('active');
 }
 
@@ -375,19 +403,19 @@ var regimes = {
   iso: {
     total: 40000, pct: 100,
     silos: [
-      { market: 'BTC', dir: 'Long 10x', amt: 10000, color: '#f97316', credit: 0 },
-      { market: 'ETH', dir: 'Short 10x', amt: 10000, color: '#8b5cf6', credit: 0 },
-      { market: 'SOL', dir: 'Long 5x', amt: 20000, color: '#06b6d4', credit: 0 }
+      { market: 'BTC', dir: 'Long 10x', amt: 10000, color: '#8888a0', credit: 0 },
+      { market: 'ETH', dir: 'Short 10x', amt: 10000, color: '#8888a0', credit: 0 },
+      { market: 'SOL', dir: 'Long 5x', amt: 20000, color: '#8888a0', credit: 0 }
     ],
     desc: '<strong>Isolated Margin:</strong> Full initial margin per market. No hedge recognition. The BTC long and ETH short are a natural hedge, but isolated margin ignores this entirely. Each position stands alone. Safest, but most capital locked.',
-    barColor: 'var(--red)'
+    barColor: 'var(--orange)'
   },
   cross: {
     total: 18000, pct: 45,
     silos: [
-      { market: 'BTC', dir: 'Long 10x', amt: 6000, color: '#f97316', credit: 0, pooled: true },
-      { market: 'ETH', dir: 'Short 10x', amt: 6000, color: '#8b5cf6', credit: 0, pooled: true },
-      { market: 'SOL', dir: 'Long 5x', amt: 6000, color: '#06b6d4', credit: 0, pooled: true }
+      { market: 'BTC', dir: 'Long 10x', amt: 6000, color: '#8888a0', credit: 0, pooled: true },
+      { market: 'ETH', dir: 'Short 10x', amt: 6000, color: '#8888a0', credit: 0, pooled: true },
+      { market: 'SOL', dir: 'Long 5x', amt: 6000, color: '#8888a0', credit: 0, pooled: true }
     ],
     desc: '<strong>Cross Margin:</strong> Single shared collateral pool. All $18k is fungible across markets. BTC-ETH hedge is implicitly netted because UPnL flows freely. Most capital efficient. But losses in one market drain resources meant for other markets. Payouts under stress depend on which market liquidates first.',
     barColor: 'var(--blue)'
@@ -395,12 +423,12 @@ var regimes = {
   hybrid: {
     total: 25000, pct: 63,
     silos: [
-      { market: 'BTC', dir: 'Long 10x', amt: 7000, color: '#f97316', credit: 3000 },
-      { market: 'ETH', dir: 'Short 10x', amt: 7000, color: '#8b5cf6', credit: 3000 },
-      { market: 'SOL', dir: 'Long 5x', amt: 11000, color: '#06b6d4', credit: 0 }
+      { market: 'BTC', dir: 'Long 10x', amt: 7000, color: '#8888a0', credit: 3000 },
+      { market: 'ETH', dir: 'Short 10x', amt: 7000, color: '#8888a0', credit: 3000 },
+      { market: 'SOL', dir: 'Long 5x', amt: 11000, color: '#8888a0', credit: 0 }
     ],
     desc: '<strong>Hybrid Margin:</strong> Per-market silos with explicit ICS spread credits. BTC-ETH hedge is recognized at entry (opposite sign, high correlation), reducing IM by $3k each. SOL is uncorrelated, no credit. UPnL sweepable between markets. ~80% of cross efficiency, deterministic payouts under stress.',
-    barColor: 'var(--green)'
+    barColor: '#A2A4FF'
   }
 };
 
@@ -425,8 +453,9 @@ function setScenario(s) {
 
 function switchRegime(r, el) {
   currentRegime = r;
-  document.querySelectorAll('.reg-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.reg-tab').forEach(function(t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
   el.classList.add('active');
+  el.setAttribute('aria-selected', 'true');
   renderEfficiency();
 }
 
@@ -566,19 +595,33 @@ function renderEfficiency() {
   var el = document.getElementById('silos');
   el.innerHTML = '';
 
-  // For cross margin, wrap in a shared pool container
+  // All regimes get a wrapper with consistent dimensions to prevent layout jumps
   var isPooled = reg.silos[0] && reg.silos[0].pooled;
-  var container = el;
+  var poolWrap = document.createElement('div');
+  poolWrap.style.cssText = 'border-radius:10px;padding:10px;' + (isPooled
+    ? 'border:1px dashed #60a5fa44;background:#60a5fa06;'
+    : 'border:1px solid transparent;background:transparent;');
+
+  // Header label — same height reserved for all regimes
+  var headerLabel = document.createElement('div');
+  headerLabel.style.cssText = 'font-size:9px;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px;min-height:14px;';
   if (isPooled) {
-    var poolWrap = document.createElement('div');
-    poolWrap.style.cssText = 'border:1px dashed #60a5fa44;border-radius:10px;padding:10px;background:#60a5fa06;';
-    poolWrap.innerHTML = '<div style="font-size:9px;color:#60a5fa;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px;">Shared Pool: $' + (reg.total/1000) + 'k (fungible across all markets)</div>';
-    var inner = document.createElement('div');
-    inner.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
-    poolWrap.appendChild(inner);
-    el.appendChild(poolWrap);
-    container = inner;
+    headerLabel.style.color = '#60a5fa';
+    headerLabel.textContent = 'Shared Pool: $' + (reg.total/1000) + 'k (fungible across all markets)';
+  } else if (currentRegime === 'hybrid') {
+    headerLabel.style.color = '#A2A4FF88';
+    headerLabel.textContent = 'Per-market silos with ICS spread credits';
+  } else {
+    headerLabel.style.color = 'var(--tx3)';
+    headerLabel.textContent = 'Independent per-market silos';
   }
+  poolWrap.appendChild(headerLabel);
+
+  var inner = document.createElement('div');
+  inner.style.cssText = 'display:flex;flex-direction:column;gap:8px;';
+  poolWrap.appendChild(inner);
+  el.appendChild(poolWrap);
+  var container = inner;
 
   for (var i = 0; i < reg.silos.length; i++) {
     var s = reg.silos[i];
@@ -594,12 +637,17 @@ function renderEfficiency() {
     container.appendChild(div);
   }
 
+  // Footer note — same height reserved for all regimes
+  var note = document.createElement('div');
+  note.style.cssText = 'font-size:10px;text-align:center;margin-top:4px;min-height:16px;';
   if (isPooled) {
-    var note = document.createElement('div');
-    note.style.cssText = 'font-size:10px;color:#60a5fa88;text-align:center;margin-top:4px;';
+    note.style.color = '#60a5fa88';
     note.textContent = 'All margins drawn from same pool. A loss in BTC drains funds available for ETH and SOL.';
-    container.parentNode.appendChild(note);
+  } else {
+    note.style.color = 'transparent';
+    note.innerHTML = '&nbsp;';
   }
+  poolWrap.appendChild(note);
 
   document.querySelectorAll('.compare-card').forEach(function(c) { c.classList.remove('highlight'); });
   document.querySelector('.compare-card.' + currentRegime).classList.add('highlight');
@@ -621,7 +669,7 @@ var GLOBAL_OVERFLOW = 10000; // F_0
 var traders = {
   green:  { name: 'Green',  color: '#22c55e', role: 'Short BTC' },
   blue:   { name: 'Blue',   color: '#60a5fa', role: 'Short ETH' },
-  purple: { name: 'Purple', color: '#a78bfa', role: 'Short MON' }
+  purple: { name: 'Purple', color: '#a78bfa', role: 'Short MON'  }
 };
 
 var crashOrder = ['BTC', 'ETH', 'MON'];
@@ -643,9 +691,21 @@ function renderCrashOrder() {
   for (var i = 0; i < crashOrder.length; i++) {
     var pill = document.createElement('div');
     pill.className = 'crash-pill';
+    pill.setAttribute('title', 'Click to move to 1st');
+    pill.setAttribute('data-market', crashOrder[i]);
     pill.innerHTML = '<span class="num">' + ['1st','2nd','3rd'][i] + '</span>' + crashOrder[i];
+    pill.onclick = (function(market) { return function() { promoteToCrash(market); }; })(crashOrder[i]);
     el.appendChild(pill);
   }
+}
+
+function promoteToCrash(market) {
+  var idx = crashOrder.indexOf(market);
+  if (idx <= 0) return;
+  crashOrder.splice(idx, 1);
+  crashOrder.unshift(market);
+  renderCrashOrder();
+  clearResults();
 }
 
 function clearResults() {
@@ -656,8 +716,11 @@ function clearResults() {
   document.getElementById('crossPayouts').innerHTML = '<div style="font-size:11px;color:var(--tx3);">Waiting...</div>';
   document.getElementById('hybridPayouts').innerHTML = '<div style="font-size:11px;color:var(--tx3);">Waiting...</div>';
   document.getElementById('isoVerdict').textContent = 'Press "Simulate Crash"';
+  document.getElementById('isoVerdict').className = 'verdict neutral';
   document.getElementById('crossVerdict').textContent = 'Press "Simulate Crash"';
+  document.getElementById('crossVerdict').className = 'verdict neutral';
   document.getElementById('hybridVerdict').textContent = 'Press "Simulate Crash"';
+  document.getElementById('hybridVerdict').className = 'verdict neutral';
 }
 
 function runCrash() {
@@ -839,9 +902,9 @@ function runCrash() {
   }
   document.getElementById('orderNote').innerHTML =
     '<strong>Crash order: ' + crashOrder.join(' > ') + '</strong><br>' +
-    '<span style="color:var(--red);">Isolated:</span> Each silo stands alone. ADL of $' + (isoAdlTotal/1000) + 'k total. No safety net. Order irrelevant.<br>' +
+    '<span style="color:var(--orange);">Isolated:</span> Each silo stands alone. ADL of $' + (isoAdlTotal/1000) + 'k total. No safety net. Order irrelevant.<br>' +
     '<span style="color:var(--blue);">Cross:</span> ' + (stiffed.length > 0 ? stiffed.join(' and ') + ' received less because the shared pool was drained by earlier markets. <strong>Shuffle to see different losers.</strong>' : 'All paid.') + '<br>' +
-    '<span style="color:var(--green);">Hybrid:</span> Waterfall (collateral > F<sub>j</sub> > F<sub>0</sub> > ADL) absorbed most shortfalls. ADL of $' + (hybAdlTotal/1000) + 'k. Order irrelevant.';
+    '<span style="color:#A2A4FF;">Hybrid:</span> Waterfall (collateral > F<sub>j</sub> > F<sub>0</sub> > ADL) absorbed most shortfalls. ADL of $' + (hybAdlTotal/1000) + 'k. Order irrelevant.';
 }
 
 function getMarketFor(trader) {

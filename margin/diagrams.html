@@ -7,44 +7,46 @@
 <title>Hybrid Margin: Technical Diagrams</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0d1117; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.5; }
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(8,8,14,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #16161e; }
-  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  body { background: #0a0a0f; color: #c8c8d8; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.6; }
+  :focus-visible { outline: 2px solid #A2A4FF; outline-offset: 2px; }
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
   .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: #ccc; }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-  .content { padding: 40px 60px; max-width: 1100px; margin: 0 auto; }
-  h1 { font-size: 24px; color: #e6edf3; font-weight: 600; margin-bottom: 8px; }
-  .subtitle { font-size: 13px; color: #8b949e; margin-bottom: 40px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #e0e0f0; }
+  .site-links a.active { border-color: #A2A4FF44; background: #A2A4FF12; color: #A2A4FF; }
+  main { padding: 40px 60px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 24px; color: #e0e0f0; font-weight: 600; margin-bottom: 8px; }
+  .subtitle { font-size: 13px; color: #8888a0; margin-bottom: 40px; }
   .figure { margin-bottom: 56px; }
-  .fig-title { font-size: 14px; color: #8b949e; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
-  .fig-title span { color: #58a6ff; }
+  .fig-title { font-size: 14px; color: #9898b0; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .fig-title span { color: #A2A4FF; }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
-  .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
+  .card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 8px; padding: 20px; }
   .card h3 { font-size: 13px; margin-bottom: 12px; font-weight: 600; }
-  .card h3.red { color: #f85149; }
-  .card h3.blue { color: #58a6ff; }
-  .card h3.green { color: #3fb950; }
-  .card ul { list-style: none; font-size: 12px; color: #8b949e; line-height: 2; }
+  .card h3.iso { color: #f97316; }
+  .card h3.cross { color: #58a6ff; }
+  .card h3.hybrid { color: #A2A4FF; }
+  .card ul { list-style: none; font-size: 12px; color: #8888a0; line-height: 2; }
   .card li { padding-left: 12px; position: relative; }
-  .card li:before { content: ''; position: absolute; left: 0; top: 10px; width: 4px; height: 4px; border-radius: 50%; background: #30363d; }
+  .card li:before { content: ''; position: absolute; left: 0; top: 10px; width: 4px; height: 4px; border-radius: 50%; background: #2a2a3a; }
 
   /* Architecture diagrams */
   .arch { display: flex; flex-direction: column; gap: 4px; }
   .arch-row { display: flex; gap: 4px; }
   .arch-box { flex: 1; padding: 10px; border-radius: 6px; text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
-  .arch-box.market { background: #21262d; color: #8b949e; border: 1px solid #30363d; }
+  .arch-box.market { background: #1a1a26; color: #8888a0; border: 1px solid #2a2a3a; }
   .arch-box.pool { background: #1a2a3a; color: #58a6ff; border: 1px dashed #388bfd44; }
   .arch-box.silo { background: #1a2a1a; color: #3fb950; border: 1px solid #23863644; }
   .arch-box.ins { background: #2a2000; color: #d29922; border: 1px solid #9e6a0344; font-size: 9px; }
   .arch-box.overflow { background: #2a1a2a; color: #bc8cff; border: 1px solid #8957e544; font-size: 9px; }
   .arch-box.adl { background: #2a1515; color: #f85149; border: 1px solid #da363344; font-size: 9px; }
-  .arch-label { font-size: 9px; color: #484f58; text-align: center; padding: 2px 0; }
-  .arch-arrow { text-align: center; color: #30363d; font-size: 14px; padding: 2px 0; }
+  .arch-label { font-size: 9px; color: #70708a; text-align: center; padding: 2px 0; }
+  .arch-arrow { text-align: center; color: #2a2a3a; font-size: 14px; padding: 2px 0; }
 
   /* Waterfall */
   .wf-stack { display: flex; flex-direction: column; gap: 3px; }
@@ -54,36 +56,55 @@
 
   /* SRML grid */
   .srml { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .srml-box { padding: 14px; border-radius: 6px; background: #161b22; border: 1px solid #21262d; }
+  .srml-box { padding: 14px; border-radius: 6px; background: #12121a; border: 1px solid #1e1e2e; }
   .srml-box h4 { font-size: 11px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.5px; }
-  .srml-box p { font-size: 11px; color: #8b949e; line-height: 1.6; margin: 0; }
+  .srml-box p { font-size: 11px; color: #8888a0; line-height: 1.6; margin: 0; }
   .srml-box.s h4 { color: #3fb950; }
   .srml-box.r h4 { color: #58a6ff; }
   .srml-box.m h4 { color: #d29922; }
   .srml-box.l h4 { color: #f85149; }
 
-  .note { font-size: 11px; color: #8b949e; margin-top: 12px; padding: 10px; background: #161b22; border-left: 3px solid #30363d; border-radius: 0 4px 4px 0; line-height: 1.6; }
+  .note { font-size: 11px; color: #9898b0; margin-top: 12px; padding: 10px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
 
   .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
-  .compare-table th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .compare-table td { padding: 8px 10px; border-bottom: 1px solid #161b22; color: #8b949e; }
+  .compare-table th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #1e1e2e; color: #8888a0; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .compare-table td { padding: 8px 10px; border-bottom: 1px solid #12121a; color: #8888a0; }
   .compare-table td.red { color: #f85149; }
   .compare-table td.blue { color: #58a6ff; }
   .compare-table td.green { color: #3fb950; }
+
+  @media (max-width: 768px) {
+    .site-nav { padding: 8px 12px; gap: 8px; }
+    .site-logo img { height: 16px; }
+    .site-links { gap: 4px; }
+    .site-links a { padding: 4px 6px; font-size: 10px; white-space: nowrap; }
+    main { padding: 24px 16px; }
+    h1 { font-size: 20px; }
+    .fig-title { font-size: 12px; }
+    .grid3 { grid-template-columns: 1fr; }
+    .grid2 { grid-template-columns: 1fr; }
+    .srml { grid-template-columns: 1fr; }
+    .arch-row { flex-wrap: wrap; }
+    .arch-box { min-width: 60px; font-size: 9px; padding: 8px 4px; min-height: 36px; }
+    .compare-table { font-size: 11px; }
+    .compare-table th, .compare-table td { padding: 6px 6px; }
+  }
 </style>
 </head>
 <body>
 
 <nav class="site-nav">
-  <span class="site-logo">Perpl</span>
+  <a href="overview.html" class="site-logo">
+    <img src="../Colour=Primary_White.svg" alt="Perpl">
+  </a>
   <div class="site-links">
     <a href="overview.html">Overview</a>
     <a href="index.html">Interactive Sim</a>
-    <a class="active" href="diagrams.html">Technical Diagrams</a>
+    <a class="active" href="diagrams.html" aria-current="page">Technical Diagrams</a>
   </div>
 </nav>
 
-<div class="content">
+<main>
 <h1>Hybrid Margin: Technical Diagrams</h1>
 <p class="subtitle">Architecture, waterfall mechanics, and the S/R/M/L decomposition</p>
 
@@ -92,7 +113,7 @@
   <div class="fig-title">Figure 1: <span>Solvency Architecture</span></div>
   <div class="grid3">
     <div class="card">
-      <h3 class="red">Isolated Margin</h3>
+      <h3 class="iso">Isolated Margin</h3>
       <div class="arch">
         <div class="arch-row">
           <div class="arch-box market">BTC<br>Silo</div>
@@ -113,7 +134,7 @@
       </div>
     </div>
     <div class="card">
-      <h3 class="blue">Cross Margin</h3>
+      <h3 class="cross">Cross Margin</h3>
       <div class="arch">
         <div class="arch-row">
           <div class="arch-box pool" style="flex:3;">Shared Pool<br>(BTC + ETH + MON)</div>
@@ -130,7 +151,7 @@
       </div>
     </div>
     <div class="card">
-      <h3 class="green">Hybrid Margin</h3>
+      <h3 class="hybrid">Hybrid Margin</h3>
       <div class="arch">
         <div class="arch-row">
           <div class="arch-box silo">BTC<br>Silo</div>
@@ -162,7 +183,7 @@
   <div class="fig-title">Figure 2: <span>Default Waterfall</span> (what happens when a market has a shortfall)</div>
   <div class="grid2">
     <div class="card">
-      <h3 class="blue">Cross Margin Waterfall</h3>
+      <h3 class="cross">Cross Margin Waterfall</h3>
       <div class="wf-stack">
         <div class="wf-bar" style="background:#58a6ff22;color:#93c5fd;border:1px solid #58a6ff33;"><span class="wf-label">Shared pool (all trader collateral)</span><span class="wf-step">Step 1</span></div>
         <div class="wf-bar" style="background:#d2992218;color:#fde68a;border:1px solid #d2992233;"><span class="wf-label">Shared insurance fund</span><span class="wf-step">Step 2</span></div>
@@ -171,7 +192,7 @@
       <div class="note" style="margin-top:8px;">The shared pool means Step 1 is a race. First market to liquidate takes collateral that other markets needed. Whoever gets there first wins.</div>
     </div>
     <div class="card">
-      <h3 class="green">Hybrid Margin Waterfall</h3>
+      <h3 class="hybrid">Hybrid Margin Waterfall</h3>
       <div class="wf-stack">
         <div class="wf-bar" style="background:#3fb95018;color:#86efac;border:1px solid #3fb95033;"><span class="wf-label">Loser's collateral (market-local)</span><span class="wf-step">Step 1</span></div>
         <div class="wf-bar" style="background:#d2992214;color:#fde68a;border:1px solid #d2992228;"><span class="wf-label">Local insurance fund F<sub>j</sub></span><span class="wf-step">Step 2</span></div>
@@ -251,6 +272,6 @@
   </div>
 </div>
 
-</div>
+</main>
 </body>
 </html>
