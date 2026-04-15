@@ -6,3 +6,4 @@ Technical deep-dives into Perpl's exchange architecture. Hosted at [perplfoundat
 
 - **[Change vs Post/Cancel](https://perplfoundation.github.io/explainers/change-order/)** — How Perpl's native Change order keeps the book full on Monad's parallel execution engine
 - **[Hybrid Margin](https://perplfoundation.github.io/explainers/margin/overview.html)** — Cross margin efficiency without cross margin risk
+- **[Virtualized Funding](https://perplfoundation.github.io/explainers/funding/overview.html)** — How Perpl settles funding for 100,000+ positions with two storage reads instead of 100,000 writes
