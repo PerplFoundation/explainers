@@ -339,12 +339,12 @@
           <div class="trader-pos">Short ETH, $50k collateral<br>Owed $40k profit after crash</div>
         </div>
         <div class="trader-card" style="border-color:var(--purple);">
-          <div class="trader-name" style="color:var(--purple);">Purple (MON Winner)</div>
-          <div class="trader-pos">Short MON, $50k collateral<br>Owed $70k profit after crash</div>
+          <div class="trader-name" style="color:var(--purple);">Purple (SOL Winner)</div>
+          <div class="trader-pos">Short SOL, $50k collateral<br>Owed $70k profit after crash</div>
         </div>
         <div class="trader-card" style="border-color:var(--red);">
           <div class="trader-name" style="color:var(--red);">Red (Big Loser)</div>
-          <div class="trader-pos">Long BTC + Long ETH + Long MON<br>$50k collateral per market. Owes $170k total. Has $150k. <strong style="color:var(--red);">$20k shortfall.</strong></div>
+          <div class="trader-pos">Long BTC + Long ETH + Long SOL<br>$50k collateral per market. Owes $170k total. Has $150k. <strong style="color:var(--red);">$20k shortfall.</strong></div>
         </div>
       </div>
     </div>
@@ -661,7 +661,7 @@ renderEfficiency();
 var markets = {
   BTC:  { winner: 'green',  winCol: 50000, loserCol: 50000, owed: 60000, insFund: 8000 },
   ETH:  { winner: 'blue',   winCol: 50000, loserCol: 50000, owed: 40000, insFund: 6000 },
-  MON:  { winner: 'purple', winCol: 50000, loserCol: 50000, owed: 70000, insFund: 12000 }
+  SOL:  { winner: 'purple', winCol: 50000, loserCol: 50000, owed: 70000, insFund: 12000 }
 };
 
 var GLOBAL_OVERFLOW = 10000; // F_0
@@ -669,10 +669,10 @@ var GLOBAL_OVERFLOW = 10000; // F_0
 var traders = {
   green:  { name: 'Green',  color: '#22c55e', role: 'Short BTC' },
   blue:   { name: 'Blue',   color: '#60a5fa', role: 'Short ETH' },
-  purple: { name: 'Purple', color: '#a78bfa', role: 'Short MON'  }
+  purple: { name: 'Purple', color: '#a78bfa', role: 'Short SOL'  }
 };
 
-var crashOrder = ['BTC', 'ETH', 'MON'];
+var crashOrder = ['BTC', 'ETH', 'SOL'];
 
 function shuffleOrder() {
   var arr = crashOrder.slice();
