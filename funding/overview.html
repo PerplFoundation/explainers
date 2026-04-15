@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Virtualized Funding: Gas-Free Settlement at Any Scale</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; color: #aaa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(8,8,14,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #ccc; }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+  .page { max-width: 680px; margin: 0 auto; padding: 80px 24px 80px; }
+  h1 { font-size: 28px; color: #ddd; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 48px; }
+  h2 { font-size: 16px; color: #bbb; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; font-size: 15px; }
+  strong { color: #ccc; font-weight: 500; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #1a1a2a; border: 1px solid #2a2a3a; border-radius: 3px; padding: 1px 6px; color: #a0c0ff; }
+  .eq { margin: 24px 0; padding: 16px 20px; background: #141420; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 14px; color: #c0d0ff; text-align: center; }
+  .eq .label { font-size: 11px; color: #555; font-family: inherit; margin-top: 8px; display: block; }
+  .callout { margin: 24px 0; padding: 16px 20px; background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 6px; font-size: 14px; color: #7ab; line-height: 1.7; }
+  .callout strong { color: #9cc; }
+  a { color: #88f; text-decoration: none; }
+  a:hover { color: #bbf; }
+  .cta-row { display: flex; gap: 12px; margin-top: 40px; }
+  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .cta-primary { background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9; }
+  .cta-primary:hover { background: #2a3a2a; color: #9cb; }
+  .cta-secondary { background: #1a1a2a; border: 1px solid #3a3a6a; color: #99b; }
+  .cta-secondary:hover { background: #2a2a3a; color: #bbf; }
+  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a1a1a; font-size: 11px; color: #444; text-align: center; }
+  .compare-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 24px 0; }
+  .cm-cell { background: #141414; border: 1px solid #222; border-radius: 6px; padding: 12px; text-align: center; }
+  .cm-name { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .cm-status { font-size: 11px; font-weight: 600; margin-bottom: 4px; }
+  .cm-note { font-size: 10px; color: #555; line-height: 1.4; }
+  .ok .cm-status { color: #3fb950; }
+  .warn .cm-status { color: #d29922; }
+  .bad .cm-status { color: #f85149; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a class="active" href="overview.html">Overview</a>
+    <a href="index.html">Interactive Sim</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <h1>Virtualized Funding: Gas-Free Settlement at Any Scale</h1>
+  <p class="subtitle">How Perpl settles funding payments for 100,000+ positions with two storage reads instead of 100,000 writes.</p>
+
+  <p>Perpetual exchanges use a funding rate to keep the perpetual price anchored to the underlying asset. Periodically — roughly every hour — longs pay shorts (or vice versa) based on the rate and position size. On a centralized exchange this is trivial: a background job debits and credits every account. On a decentralized exchange running on a general-purpose EVM chain, it's a fundamental scaling problem.</p>
+
+  <h2>The Settlement Problem</h2>
+
+  <p>With 100,000 open positions, paying out funding every hour requires 100,000 on-chain state writes per funding event. Each write to a position's storage slot costs at least 5,000 gas. The arithmetic is unforgiving: 100,000 positions × 5,000 gas = 500 million gas — roughly 16 full blocks — just to settle one hour of funding. At Monad's block rate of ~2.5 blocks per second, that's six seconds of block space consumed every hour, purely by bookkeeping.</p>
+
+  <p>In practice it's worse. Each position update involves reads, balance changes, and event emissions. The real cost is closer to 25,000 gas per position. At 100,000 positions that's 2.5 billion gas per event — 83 blocks. This isn't a scalability inconvenience; it's a protocol design constraint that has shaped every decentralized perp that exists.</p>
+
+  <div class="compare-mini">
+    <div class="cm-cell ok">
+      <div class="cm-name">CEX</div>
+      <div class="cm-status">✓ Works</div>
+      <div class="cm-note">Background job, no gas</div>
+    </div>
+    <div class="cm-cell bad">
+      <div class="cm-name">Naive DEX</div>
+      <div class="cm-status">✗ Fails</div>
+      <div class="cm-note">Loop N positions per event</div>
+    </div>
+    <div class="cm-cell warn">
+      <div class="cm-name">Appchain</div>
+      <div class="cm-status">⚠ Costly</div>
+      <div class="cm-note">Custom opcodes, dedicated chain</div>
+    </div>
+    <div class="cm-cell ok">
+      <div class="cm-name">Perpl</div>
+      <div class="cm-status">✓ Works</div>
+      <div class="cm-note">Virtualized, 2 reads at close</div>
+    </div>
+  </div>
+
+  <h2>The Insight: Superposition</h2>
+
+  <p>The key observation is that a position's cumulative funding payment depends only on three things: its lot size, when it was opened, and when it was closed. The lot size and side are fixed between open and close (the contract forces settlement if they change). This means the per-event payment for any position factors cleanly:</p>
+
+  <div class="eq">
+    F<sub>payment</sub>[j] = F<sub>product</sub>[j] × L
+    <span class="label">where F<sub>product</sub>[j] = P<sub>i</sub>[j] × F<sub>rate</sub>[j] — the funding price times the funding rate at event j</span>
+  </div>
+
+  <p>The <strong>funding product</strong> F<sub>product</sub>[j] is entirely market-level data — it doesn't depend on any individual position. So instead of writing to every position at each event, you can store a single running sum: the <strong>funding product sum</strong>, F<sub>sum</sub>.</p>
+
+  <div class="eq">
+    F<sub>sum</sub>[j] = Σ F<sub>product</sub>[k] for all k ≤ j
+    <span class="label">One value, updated once per funding event, regardless of how many positions are open</span>
+  </div>
+
+  <h2>Two Reads, Any History</h2>
+
+  <p>When a position opens, the contract records the current F<sub>sum</sub> as the position's funding checkpoint. Call it F<sub>sum</sub>[m]. When the position closes, the contract reads the current F<sub>sum</sub>[j]. The cumulative funding payment — the position's premium PNL — is:</p>
+
+  <div class="eq">
+    θ<sub>pnl</sub> = (F<sub>sum</sub>[j] − F<sub>sum</sub>[m]) × L
+    <span class="label">Two reads. Any number of funding events in between. Exact to the satoshi.</span>
+  </div>
+
+  <p>It doesn't matter if the position was held through 1 funding event or 1,000. The cumulative effect telescopes into the difference between two stored sums. No loop, no iteration, no per-position writes at event time.</p>
+
+  <div class="callout">
+    <strong>What changes at each funding event:</strong> one write — update F<sub>sum</sub>.<br>
+    <strong>What happens when a position closes:</strong> two reads — fetch F<sub>sum</sub>[j] and the stored F<sub>sum</sub>[m]. Compute. Done.
+  </div>
+
+  <h2>Gas Cost: O(1) Per Event</h2>
+
+  <p>For a naive DEX, settlement gas scales linearly with position count: double the traders, double the gas. Perpl's gas cost for a funding event is constant regardless of how many positions are open. A single storage write to update F<sub>sum</sub>, plus whatever overhead the permissioned rate-setter transaction requires. The protocol never loops over positions.</p>
+
+  <p>The settlement cost is deferred and amortized. Each position pays its cumulative funding when it changes or closes — folded into the settlement transaction the trader was going to execute anyway. The chain never does work for dormant positions.</p>
+
+  <h2>Forced Settlement on Position Change</h2>
+
+  <p>The contract enforces a constraint: any change to a position's lot size or side triggers immediate premium PNL realization. This is what makes the virtualization safe. If a trader could silently grow or shrink their position without settling, the F<sub>sum</sub> checkpoint would become invalid. The forced settlement means the checkpoint is always correct relative to the current position parameters.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">&#9654; Try the interactive simulation</a>
+    <a class="cta cta-secondary" href="diagrams.html">Technical diagrams</a>
+  </div>
+
+  <div class="footer">
+    Perpl: Fully on-chain perpetual DEX on Monad
+  </div>
+
+</div>
+</body>
+</html>

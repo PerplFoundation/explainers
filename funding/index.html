@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Virtualized Funding: Interactive Sim</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
+    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --bd: #1e1e2e; --bd2: #2a2a3a;
+    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
+    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
+    --orange: #f97316;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+
+  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; }
+  .site-links a:hover { border-color: #444; color: var(--tx); }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 1060px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
+
+  .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
+  .sec-tab:hover:not(.active) { border-color: var(--bd); color: var(--tx); }
+  .sec-tab.active { background: #0f172a; border-color: var(--blue); color: var(--blue); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Panel 1: Gas Problem ────────────────────────── */
+  .gas-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+  .gas-left h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .gas-left .hint { font-size: 12px; color: var(--tx3); margin-bottom: 20px; }
+
+  .slider-row { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .slider-row label { font-size: 12px; color: var(--tx2); white-space: nowrap; }
+  .slider-row input[type=range] { flex: 1; accent-color: var(--blue); }
+  .slider-val { font-size: 14px; font-weight: 700; color: var(--tx); font-family: 'SF Mono', monospace; min-width: 80px; text-align: right; }
+
+  .gas-systems { display: flex; flex-direction: column; gap: 10px; }
+  .gs-row { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 12px 16px; }
+  .gs-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .gs-name { font-size: 12px; font-weight: 600; }
+  .gs-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 3px; }
+  .gs-badge.ok { background: #22c55e20; color: var(--green); }
+  .gs-badge.warn { background: #eab30820; color: var(--amber); }
+  .gs-badge.bad { background: #ef444420; color: var(--red); }
+  .gs-bar-wrap { position: relative; height: 22px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .gs-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease, background 0.4s; }
+  .gs-limit-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #f97316; opacity: 0.8; pointer-events: none; }
+  .gs-limit-label { position: absolute; top: -18px; font-size: 9px; color: var(--orange); transform: translateX(-50%); white-space: nowrap; }
+  .gs-gas-text { font-size: 10px; color: var(--tx3); margin-top: 4px; }
+
+  .gas-right { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 20px; }
+  .gas-right h4 { font-size: 12px; color: var(--tx2); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .gas-stat { margin-bottom: 14px; }
+  .gas-stat-label { font-size: 11px; color: var(--tx3); margin-bottom: 3px; }
+  .gas-stat-val { font-size: 18px; font-weight: 700; font-family: 'SF Mono', monospace; }
+  .gas-stat-val.red { color: var(--red); }
+  .gas-stat-val.green { color: var(--green); }
+  .gas-stat-val.amber { color: var(--amber); }
+  .gas-verdict { margin-top: 16px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.6; }
+  .gas-verdict.ok { background: #22c55e0a; border: 1px solid #22c55e22; color: #7cb; }
+  .gas-verdict.bad { background: #ef44440a; border: 1px solid #ef444422; color: #faa; }
+
+  /* ── Panel 2: F_Sum Walkthrough ───────────────────── */
+  .fsim-layout { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
+
+  .timeline { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 20px; }
+  .tl-title { font-size: 12px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 20px; }
+
+  .tl-track { position: relative; margin-bottom: 20px; }
+  .tl-axis { display: flex; justify-content: space-between; align-items: flex-end; height: 120px; padding: 0 8px; gap: 6px; }
+  .tl-event { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tl-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; min-height: 8px; }
+  .tl-bar { width: 100%; border-radius: 3px 3px 0 0; transition: all 0.4s; }
+  .tl-fsum { font-size: 9px; color: var(--tx2); font-family: 'SF Mono', monospace; text-align: center; }
+  .tl-name { font-size: 9px; color: var(--tx3); }
+  .tl-rate { font-size: 8px; }
+
+  .tl-line { height: 2px; background: var(--bg3); position: relative; margin: 0 8px; }
+  .tl-line-fill { height: 100%; background: var(--blue); transition: width 0.4s ease; }
+  .tl-open-marker { position: absolute; top: -6px; width: 14px; height: 14px; background: var(--green); border-radius: 50%; transform: translateX(-50%); display: none; border: 2px solid var(--bg); }
+  .tl-close-marker { position: absolute; top: -6px; width: 14px; height: 14px; background: var(--red); border-radius: 50%; transform: translateX(-50%); display: none; border: 2px solid var(--bg); }
+
+  .tl-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tl-btn { padding: 7px 16px; font-size: 12px; font-weight: 500; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx2); cursor: pointer; transition: all 0.15s; }
+  .tl-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .tl-btn.primary { border-color: var(--blue); background: #60a5fa12; color: var(--blue); }
+  .tl-btn.open-btn { border-color: var(--green); background: #22c55e12; color: var(--green); }
+  .tl-btn.close-btn { border-color: var(--red); background: #ef444412; color: var(--red); }
+  .tl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .tl-event-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; margin-top: 16px; }
+  .tl-ev-card { background: var(--bg3); border: 1px solid var(--bd); border-radius: 5px; padding: 7px 6px; text-align: center; font-size: 10px; opacity: 0.3; transition: all 0.3s; }
+  .tl-ev-card.active { opacity: 1; }
+  .tl-ev-card.is-open { border-color: var(--green); background: #22c55e0a; }
+  .tl-ev-card.is-close { border-color: var(--red); background: #ef44440a; }
+  .tl-ev-name { font-weight: 600; color: var(--tx2); margin-bottom: 3px; }
+  .tl-ev-rate { color: var(--tx3); margin-bottom: 2px; }
+  .tl-ev-prod { font-family: 'SF Mono', monospace; font-size: 9px; }
+  .tl-ev-sum { font-family: 'SF Mono', monospace; font-size: 9px; font-weight: 600; color: var(--blue); }
+
+  .fsim-right { display: flex; flex-direction: column; gap: 12px; }
+
+  .fsim-controls { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
+  .fsim-controls h4 { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  .ctrl-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .ctrl-row label { font-size: 11px; color: var(--tx2); flex: 1; }
+  .ctrl-row input[type=number] { width: 80px; background: var(--bg3); border: 1px solid var(--bd2); border-radius: 4px; padding: 4px 8px; font-size: 12px; color: var(--tx); text-align: right; }
+  .side-btns { display: flex; gap: 4px; }
+  .side-btn { padding: 4px 12px; font-size: 11px; font-weight: 600; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx3); cursor: pointer; }
+  .side-btn.active.long { border-color: var(--green); background: #22c55e18; color: var(--green); }
+  .side-btn.active.short { border-color: var(--red); background: #ef444418; color: var(--red); }
+
+  .fsim-result { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
+  .fsim-result h4 { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 12px; }
+  .result-row:last-child { border: none; }
+  .result-key { color: var(--tx2); }
+  .result-val { font-family: 'SF Mono', monospace; font-weight: 600; }
+  .result-formula { font-size: 11px; color: var(--tx3); padding: 10px; background: var(--bg3); border-radius: 5px; margin-top: 10px; font-family: 'SF Mono', monospace; line-height: 1.8; }
+  .result-pnl { font-size: 20px; font-weight: 700; font-family: 'SF Mono', monospace; margin-top: 8px; }
+
+  .reads-badge { display: inline-flex; align-items: center; gap: 6px; background: #a78bfa18; border: 1px solid #a78bfa44; border-radius: 4px; padding: 6px 10px; font-size: 11px; color: var(--purple); font-weight: 500; margin-top: 10px; }
+
+  /* ── Panel 3: Compare ─────────────────────────────── */
+  .compare-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .cmp-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; position: relative; overflow: hidden; }
+  .cmp-card.highlight { border-color: #22c55e44; }
+  .cmp-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .cmp-type { font-size: 10px; color: var(--tx3); margin-bottom: 14px; }
+  .cmp-row { margin-bottom: 8px; }
+  .cmp-row-label { font-size: 10px; color: var(--tx3); margin-bottom: 2px; }
+  .cmp-row-val { font-size: 12px; font-weight: 500; }
+  .cmp-row-val.good { color: var(--green); }
+  .cmp-row-val.bad { color: var(--red); }
+  .cmp-row-val.warn { color: var(--amber); }
+  .cmp-row-val.neutral { color: var(--tx2); }
+  .cmp-divider { border: none; border-top: 1px solid var(--bd); margin: 10px 0; }
+  .cmp-tag { position: absolute; top: 12px; right: 12px; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+  .tag-cex { background: #60a5fa18; color: #60a5fa; }
+  .tag-bad { background: #ef444418; color: #ef4444; }
+  .tag-app { background: #eab30818; color: #eab308; }
+  .tag-good { background: #22c55e18; color: #22c55e; }
+
+  .compare-note { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 16px; font-size: 12px; color: var(--tx2); line-height: 1.8; }
+  .compare-note strong { color: var(--tx); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html">Interactive Sim</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Virtualized Funding</h1>
+  <p class="sub">Three interactives: the gas problem, how F<sub>sum</sub> works, and how different systems compare.</p>
+
+  <div class="sec-tabs">
+    <div class="sec-tab active" onclick="setPanel('gas')">The Gas Problem</div>
+    <div class="sec-tab" onclick="setPanel('fsim')">F<sub>sum</sub> Walkthrough</div>
+    <div class="sec-tab" onclick="setPanel('compare')">System Comparison</div>
+  </div>
+
+  <!-- ── PANEL 1: Gas Problem ─────────────────────── -->
+  <div class="panel active" id="panel-gas">
+    <div class="gas-layout">
+      <div class="gas-left">
+        <h3>Drag to see how funding settlement scales with position count</h3>
+        <p class="hint">Each approach's gas requirement vs the block gas limit (30M gas). Naive DEX must iterate every position; Perpl always writes a single value.</p>
+
+        <div class="slider-row">
+          <label>Open positions</label>
+          <input type="range" id="posSlider" min="100" max="200000" step="100" value="1000" oninput="updateGas()">
+          <span class="slider-val" id="posVal">1,000</span>
+        </div>
+
+        <div class="gas-systems">
+          <!-- CEX -->
+          <div class="gs-row">
+            <div class="gs-header">
+              <span class="gs-name">CEX (Binance / ByBit)</span>
+              <span class="gs-badge ok" id="badge-cex">✓ NO GAS</span>
+            </div>
+            <div class="gs-bar-wrap">
+              <div class="gs-bar" id="bar-cex" style="width:2%; background:#22c55e40;"></div>
+            </div>
+            <div class="gs-gas-text" id="gas-cex">Background job — zero on-chain cost</div>
+          </div>
+          <!-- Naive DEX -->
+          <div class="gs-row">
+            <div class="gs-header">
+              <span class="gs-name">Naive DEX (loop all positions)</span>
+              <span class="gs-badge" id="badge-naive">✓ OK</span>
+            </div>
+            <div class="gs-bar-wrap" id="naive-wrap">
+              <div class="gs-limit-line" id="limit-line"></div>
+              <div class="gs-bar" id="bar-naive" style="width:0%;"></div>
+            </div>
+            <div class="gs-gas-text" id="gas-naive">—</div>
+          </div>
+          <!-- Appchain -->
+          <div class="gs-row">
+            <div class="gs-header">
+              <span class="gs-name">Appchain (Hyperliquid-style)</span>
+              <span class="gs-badge warn">⚠ APPCHAIN ONLY</span>
+            </div>
+            <div class="gs-bar-wrap">
+              <div class="gs-bar" style="width:3%; background:#eab30840;"></div>
+            </div>
+            <div class="gs-gas-text">Custom opcodes — validators absorb settlement cost (requires dedicated chain)</div>
+          </div>
+          <!-- Perpl -->
+          <div class="gs-row">
+            <div class="gs-header">
+              <span class="gs-name">Perpl (virtualized F<sub>sum</sub>)</span>
+              <span class="gs-badge ok">✓ O(1)</span>
+            </div>
+            <div class="gs-bar-wrap">
+              <div class="gs-bar" style="width:2%; background:#22c55e40;"></div>
+            </div>
+            <div class="gs-gas-text">One storage write per event — ~5k gas, regardless of position count</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gas-right">
+        <h4>Settlement Stats</h4>
+        <div class="gas-stat">
+          <div class="gas-stat-label">Open positions</div>
+          <div class="gas-stat-val" id="stat-pos">1,000</div>
+        </div>
+        <div class="gas-stat">
+          <div class="gas-stat-label">Naive DEX gas required</div>
+          <div class="gas-stat-val" id="stat-gas">25,000,000</div>
+        </div>
+        <div class="gas-stat">
+          <div class="gas-stat-label">Blocks needed (naive)</div>
+          <div class="gas-stat-val red" id="stat-blocks">0.83</div>
+        </div>
+        <div class="gas-stat">
+          <div class="gas-stat-label">Perpl gas per event</div>
+          <div class="gas-stat-val green">~5,000</div>
+        </div>
+        <div class="gas-verdict ok" id="gas-verdict">
+          At this scale, naive settlement fits in a single block — barely.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANEL 2: F_Sum Walkthrough ──────────────── -->
+  <div class="panel" id="panel-fsim">
+    <div class="fsim-layout">
+      <div>
+        <div class="timeline">
+          <div class="tl-title">Funding events — step forward to advance time</div>
+          <div class="tl-track">
+            <div class="tl-axis" id="tl-bars"></div>
+            <div class="tl-line">
+              <div class="tl-line-fill" id="tl-progress" style="width:0%"></div>
+              <div class="tl-open-marker" id="tl-open-dot"></div>
+              <div class="tl-close-marker" id="tl-close-dot"></div>
+            </div>
+          </div>
+          <div class="tl-controls">
+            <button class="tl-btn primary" onclick="tlStep()">→ Next Event</button>
+            <button class="tl-btn open-btn" id="btn-open" onclick="tlSetOpen()" disabled>📍 Mark Open Here</button>
+            <button class="tl-btn close-btn" id="btn-close" onclick="tlSetClose()" disabled>📍 Mark Close Here</button>
+            <button class="tl-btn" onclick="tlReset()">↺ Reset</button>
+          </div>
+          <div class="tl-event-row" id="tl-event-row"></div>
+        </div>
+      </div>
+
+      <div class="fsim-right">
+        <div class="fsim-controls">
+          <h4>Your Position</h4>
+          <div class="ctrl-row">
+            <label>Side</label>
+            <div class="side-btns">
+              <div class="side-btn active long" id="side-long" onclick="setSide('long')">LONG</div>
+              <div class="side-btn" id="side-short" onclick="setSide('short')">SHORT</div>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <label>Lot size (BTC)</label>
+            <input type="number" id="lots-input" value="5" min="1" max="100" oninput="updateResult()">
+          </div>
+        </div>
+
+        <div class="fsim-result">
+          <h4>Premium PNL</h4>
+          <div class="result-row">
+            <span class="result-key">F<sub>sum</sub> at open (m)</span>
+            <span class="result-val" id="r-fsum-open">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-key">F<sub>sum</sub> at close (j)</span>
+            <span class="result-val" id="r-fsum-close">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-key">Funding events held</span>
+            <span class="result-val" id="r-events">—</span>
+          </div>
+          <div class="result-row">
+            <span class="result-key">Lot size</span>
+            <span class="result-val" id="r-lots">5</span>
+          </div>
+          <div class="result-formula" id="r-formula">
+            Set open and close markers<br>to compute premium PNL
+          </div>
+          <div class="result-pnl" id="r-pnl"></div>
+          <div class="reads-badge" id="r-reads" style="display:none">
+            ⚡ Computed in <strong>2 reads</strong> — no matter how many events
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANEL 3: Compare ──────────────────────────── -->
+  <div class="panel" id="panel-compare">
+    <div class="compare-grid">
+      <div class="cmp-card">
+        <div class="cmp-tag tag-cex">CEX</div>
+        <div class="cmp-name" style="color:#60a5fa">Binance / ByBit</div>
+        <div class="cmp-type">Centralized server</div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Settlement method</div>
+          <div class="cmp-row-val neutral">Background job iterates all accounts</div>
+        </div>
+        <hr class="cmp-divider">
+        <div class="cmp-row">
+          <div class="cmp-row-label">Gas per funding event</div>
+          <div class="cmp-row-val good">None (off-chain)</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Scales to 100k positions</div>
+          <div class="cmp-row-val good">✓ Yes</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Trustless / verifiable</div>
+          <div class="cmp-row-val bad">✗ No</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Composable with DeFi</div>
+          <div class="cmp-row-val bad">✗ No</div>
+        </div>
+      </div>
+
+      <div class="cmp-card">
+        <div class="cmp-tag tag-bad">FAILS</div>
+        <div class="cmp-name" style="color:#ef4444">Naive DEX</div>
+        <div class="cmp-type">General EVM smart contract</div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Settlement method</div>
+          <div class="cmp-row-val bad">Loop every position, write each slot</div>
+        </div>
+        <hr class="cmp-divider">
+        <div class="cmp-row">
+          <div class="cmp-row-label">Gas per funding event</div>
+          <div class="cmp-row-val bad">O(N) — grows with position count</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Scales to 100k positions</div>
+          <div class="cmp-row-val bad">✗ 83 blocks at 100k pos</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Trustless / verifiable</div>
+          <div class="cmp-row-val good">✓ Yes</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Composable with DeFi</div>
+          <div class="cmp-row-val good">✓ Yes</div>
+        </div>
+      </div>
+
+      <div class="cmp-card">
+        <div class="cmp-tag tag-app">APPCHAIN</div>
+        <div class="cmp-name" style="color:#eab308">Hyperliquid</div>
+        <div class="cmp-type">Dedicated app-chain</div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Settlement method</div>
+          <div class="cmp-row-val warn">Custom VM opcode — validators settle for free</div>
+        </div>
+        <hr class="cmp-divider">
+        <div class="cmp-row">
+          <div class="cmp-row-label">Gas per funding event</div>
+          <div class="cmp-row-val good">Near-zero (custom opcode)</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Scales to 100k positions</div>
+          <div class="cmp-row-val good">✓ Yes</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Trustless / verifiable</div>
+          <div class="cmp-row-val warn">⚠ Partially (custom chain)</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Composable with DeFi</div>
+          <div class="cmp-row-val bad">✗ No (isolated chain)</div>
+        </div>
+      </div>
+
+      <div class="cmp-card highlight">
+        <div class="cmp-tag tag-good">PERPL</div>
+        <div class="cmp-name" style="color:#22c55e">Perpl</div>
+        <div class="cmp-type">Virtualized F<sub>sum</sub> on EVM</div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Settlement method</div>
+          <div class="cmp-row-val good">Write F<sub>sum</sub> once; positions settle lazily on change/close</div>
+        </div>
+        <hr class="cmp-divider">
+        <div class="cmp-row">
+          <div class="cmp-row-label">Gas per funding event</div>
+          <div class="cmp-row-val good">O(1) — ~5k gas always</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Scales to 100k positions</div>
+          <div class="cmp-row-val good">✓ Yes</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Trustless / verifiable</div>
+          <div class="cmp-row-val good">✓ Fully on-chain</div>
+        </div>
+        <div class="cmp-row">
+          <div class="cmp-row-label">Composable with DeFi</div>
+          <div class="cmp-row-val good">✓ Yes (Monad EVM)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="compare-note">
+      <strong>The key insight:</strong> Perpl decouples the funding <em>event</em> (updating the market-level F<sub>sum</sub> — O(1)) from funding <em>settlement</em> (computing each position's payment — deferred to the next trade or close). Positions never need to be touched at funding time. Their cumulative payment is computed lazily and exactly using just two stored values: F<sub>sum</sub> at open and F<sub>sum</sub> at close.
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Funding event data ──────────────────────────────
+const FE = [
+  { name:'FE1', block:8571,  rate:50,  price:60000 },
+  { name:'FE2', block:17142, rate:80,  price:61000 },
+  { name:'FE3', block:25713, rate:-30, price:60500 },
+  { name:'FE4', block:34284, rate:120, price:62000 },
+  { name:'FE5', block:42855, rate:60,  price:63000 },
+  { name:'FE6', block:51426, rate:-20, price:62000 },
+  { name:'FE7', block:59997, rate:90,  price:64000 },
+  { name:'FE8', block:68568, rate:40,  price:63500 },
+];
+// Compute F_product and F_sum
+let running = 0;
+FE.forEach(e => {
+  e.fProduct = (e.price * e.rate) / 1_000_000;
+  running += e.fProduct;
+  e.fSum = running;
+});
+// fProduct values: 3.0, 4.88, -1.815, 7.44, 3.78, -1.24, 5.76, 2.54
+// fSum values:     3.0, 7.88, 6.065, 13.505, 17.285, 16.045, 21.805, 24.345
+
+// ── Panel state ──────────────────────────────────────
+function setPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  const tabs = document.querySelectorAll('.sec-tab');
+  const idx = ['gas','fsim','compare'].indexOf(id);
+  tabs[idx].classList.add('active');
+}
+
+// ── Panel 1: Gas ─────────────────────────────────────
+const BLOCK_GAS = 30_000_000;
+const GAS_PER_POS = 25_000;
+
+function updateGas() {
+  const pos = parseInt(document.getElementById('posSlider').value);
+  document.getElementById('posVal').textContent = pos.toLocaleString();
+  document.getElementById('stat-pos').textContent = pos.toLocaleString();
+
+  const naiveGas = pos * GAS_PER_POS;
+  const blocks = naiveGas / BLOCK_GAS;
+
+  document.getElementById('stat-gas').textContent = naiveGas.toLocaleString() + ' gas';
+  document.getElementById('stat-gas').className = 'gas-stat-val ' + (naiveGas > BLOCK_GAS ? 'red' : 'green');
+  document.getElementById('stat-blocks').textContent = blocks.toFixed(1) + 'x blocks';
+  document.getElementById('stat-blocks').className = 'gas-stat-val ' + (blocks > 1 ? 'red' : 'green');
+
+  // Bar width (cap at 100% of wrap, limit line at 1/83 of naive at 100k = 1.2% mark at 1200 pos)
+  const maxGas = 200_000 * GAS_PER_POS; // 5B
+  const pct = Math.min((naiveGas / maxGas) * 100, 100);
+  const limitPct = (BLOCK_GAS / maxGas) * 100; // where the limit line sits
+
+  const barNaive = document.getElementById('bar-naive');
+  barNaive.style.width = pct + '%';
+  barNaive.style.background = naiveGas > BLOCK_GAS ? '#ef444460' : '#22c55e40';
+
+  const wrap = document.getElementById('naive-wrap');
+  const ll = document.getElementById('limit-line');
+  ll.style.left = limitPct + '%';
+
+  // Badge
+  const badge = document.getElementById('badge-naive');
+  if (naiveGas <= BLOCK_GAS) {
+    badge.textContent = '✓ FITS'; badge.className = 'gs-badge ok';
+  } else if (blocks < 5) {
+    badge.textContent = `✗ ${blocks.toFixed(1)}× LIMIT`; badge.className = 'gs-badge bad';
+  } else {
+    badge.textContent = `✗ ${Math.round(blocks)} BLOCKS`; badge.className = 'gs-badge bad';
+  }
+
+  document.getElementById('gas-naive').textContent =
+    naiveGas.toLocaleString() + ' gas — ' + (blocks > 1 ? blocks.toFixed(1) + '× the block limit' : 'within block limit');
+
+  const verdict = document.getElementById('gas-verdict');
+  if (naiveGas <= BLOCK_GAS) {
+    verdict.textContent = 'At this scale, naive settlement fits in a single block — barely.';
+    verdict.className = 'gas-verdict ok';
+  } else {
+    verdict.textContent = `At ${pos.toLocaleString()} positions, naive settlement requires ${Math.round(blocks)} consecutive blocks. Funding events happen every ~hour — this is impossible.`;
+    verdict.className = 'gas-verdict bad';
+  }
+}
+updateGas();
+
+// Render limit line label
+document.getElementById('limit-line').innerHTML =
+  '<span class="gs-limit-label">Block gas limit</span>';
+
+// ── Panel 2: F_Sum Walkthrough ────────────────────────
+let tlCurrent = -1; // index of last revealed event (-1 = none)
+let tlOpenIdx = null;
+let tlCloseIdx = null;
+let positionSide = 'long';
+
+function setSide(s) {
+  positionSide = s;
+  document.getElementById('side-long').className = 'side-btn' + (s === 'long' ? ' active long' : '');
+  document.getElementById('side-short').className = 'side-btn' + (s === 'short' ? ' active short' : '');
+  updateResult();
+}
+
+function tlReset() {
+  tlCurrent = -1; tlOpenIdx = null; tlCloseIdx = null;
+  renderTimeline(); updateResult();
+}
+
+function tlStep() {
+  if (tlCurrent < FE.length - 1) {
+    tlCurrent++;
+    renderTimeline();
+  }
+}
+
+function tlSetOpen() {
+  if (tlCurrent < 0) return;
+  tlOpenIdx = tlCurrent;
+  tlCloseIdx = null;
+  renderTimeline(); updateResult();
+}
+
+function tlSetClose() {
+  if (tlCurrent < 0 || tlOpenIdx === null) return;
+  if (tlCurrent <= tlOpenIdx) return;
+  tlCloseIdx = tlCurrent;
+  renderTimeline(); updateResult();
+}
+
+function renderTimeline() {
+  // Bars
+  const container = document.getElementById('tl-bars');
+  const maxProd = Math.max(...FE.map(e => Math.abs(e.fProduct)));
+  const maxSum = Math.max(...FE.map(e => e.fSum));
+  container.innerHTML = FE.map((e, i) => {
+    const visible = i <= tlCurrent;
+    const barH = visible ? Math.round((e.fSum / maxSum) * 90) : 0;
+    const barColor = e.fProduct >= 0 ? '#60a5fa' : '#ef4444';
+    return `<div class="tl-event">
+      <div class="tl-bar-wrap"><div class="tl-bar" style="height:${barH}px;background:${visible ? barColor + '60' : 'transparent'};border-top: ${visible ? '2px solid '+barColor : 'none'}"></div></div>
+      <div class="tl-fsum" style="opacity:${visible?1:0.15}">${visible ? e.fSum.toFixed(2) : '—'}</div>
+      <div class="tl-name" style="opacity:${visible?0.8:0.3}">${e.name}</div>
+      <div class="tl-rate" style="color:${e.rate>=0?'#60a5fa80':'#ef444480'};opacity:${visible?1:0.2};font-size:9px">${e.rate>=0?'+':''}${(e.rate/10000).toFixed(3)}%</div>
+    </div>`;
+  }).join('');
+
+  // Progress line
+  const pct = tlCurrent < 0 ? 0 : ((tlCurrent + 0.5) / FE.length * 100);
+  document.getElementById('tl-progress').style.width = pct + '%';
+
+  // Open/close dots
+  const openDot = document.getElementById('tl-open-dot');
+  const closeDot = document.getElementById('tl-close-dot');
+  if (tlOpenIdx !== null) {
+    openDot.style.display = 'block';
+    openDot.style.left = ((tlOpenIdx + 0.5) / FE.length * 100) + '%';
+  } else { openDot.style.display = 'none'; }
+  if (tlCloseIdx !== null) {
+    closeDot.style.display = 'block';
+    closeDot.style.left = ((tlCloseIdx + 0.5) / FE.length * 100) + '%';
+  } else { closeDot.style.display = 'none'; }
+
+  // Event cards
+  document.getElementById('tl-event-row').innerHTML = FE.map((e, i) => {
+    let cls = 'tl-ev-card';
+    if (i <= tlCurrent) cls += ' active';
+    if (i === tlOpenIdx) cls += ' is-open';
+    if (i === tlCloseIdx) cls += ' is-close';
+    const prod = e.fProduct;
+    const prodColor = prod >= 0 ? '#60a5fa' : '#ef4444';
+    return `<div class="${cls}">
+      <div class="tl-ev-name">${e.name}</div>
+      <div class="tl-ev-rate" style="color:${e.rate>=0?'#60a5fa':'#ef4444'}">${e.rate>=0?'+':''}${(e.rate/10000).toFixed(3)}%</div>
+      <div class="tl-ev-prod" style="color:${prodColor}">${prod>=0?'+':''}${prod.toFixed(3)}</div>
+      <div class="tl-ev-sum">Σ ${i<=tlCurrent ? e.fSum.toFixed(2) : '?'}</div>
+    </div>`;
+  }).join('');
+
+  // Button states
+  document.getElementById('btn-open').disabled = tlCurrent < 0;
+  document.getElementById('btn-close').disabled = tlCurrent < 0 || tlOpenIdx === null || tlCurrent <= tlOpenIdx;
+}
+
+function updateResult() {
+  const lots = parseFloat(document.getElementById('lots-input').value) || 5;
+  document.getElementById('r-lots').textContent = lots;
+
+  if (tlOpenIdx === null) {
+    document.getElementById('r-fsum-open').textContent = '—';
+    document.getElementById('r-fsum-close').textContent = '—';
+    document.getElementById('r-events').textContent = '—';
+    document.getElementById('r-formula').textContent = 'Open and close a position to compute premium PNL';
+    document.getElementById('r-pnl').textContent = '';
+    document.getElementById('r-reads').style.display = 'none';
+    return;
+  }
+
+  // F_sum at open = F_sum at the event BEFORE open (or 0 if first)
+  const fsumAtOpen = tlOpenIdx > 0 ? FE[tlOpenIdx - 1].fSum : 0;
+  document.getElementById('r-fsum-open').textContent = fsumAtOpen.toFixed(3);
+
+  if (tlCloseIdx === null) {
+    document.getElementById('r-fsum-close').textContent = '—';
+    document.getElementById('r-events').textContent = `${tlOpenIdx + 1} event${tlOpenIdx !== 0 ? 's' : ''} recorded at open`;
+    document.getElementById('r-formula').textContent = 'Close the position to finalize';
+    document.getElementById('r-pnl').textContent = '';
+    document.getElementById('r-reads').style.display = 'none';
+    return;
+  }
+
+  const fsumAtClose = FE[tlCloseIdx].fSum;
+  const diff = fsumAtClose - fsumAtOpen;
+  const eventCount = tlCloseIdx - tlOpenIdx + 1;
+  // Long: pays when diff > 0 (premium flows to shorts); short: receives when diff > 0
+  const side = positionSide === 'long' ? -1 : 1;
+  const premiumPnl = diff * lots * side;
+
+  document.getElementById('r-fsum-close').textContent = fsumAtClose.toFixed(3);
+  document.getElementById('r-events').textContent = eventCount;
+  document.getElementById('r-formula').innerHTML =
+    `θ_pnl = (F_sum[j] − F_sum[m]) × L × side\n` +
+    `     = (${fsumAtClose.toFixed(3)} − ${fsumAtOpen.toFixed(3)}) × ${lots}\n` +
+    `     = ${diff.toFixed(3)} × ${lots} × ${side === 1 ? '+1 (short)' : '-1 (long)'}\n` +
+    `     = ${premiumPnl >= 0 ? '+' : ''}${premiumPnl.toFixed(2)} USDC`;
+
+  const pnlEl = document.getElementById('r-pnl');
+  pnlEl.textContent = (premiumPnl >= 0 ? '+' : '') + premiumPnl.toFixed(2) + ' USDC';
+  pnlEl.style.color = premiumPnl >= 0 ? '#22c55e' : '#ef4444';
+
+  document.getElementById('r-reads').style.display = 'inline-flex';
+}
+
+// Init timeline
+renderTimeline();
+</script>
+</body>
+</html>
