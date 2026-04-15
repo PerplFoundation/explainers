@@ -58,6 +58,9 @@
   .gs-limit-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #f97316; opacity: 0.8; pointer-events: none; }
   .gs-limit-label { position: absolute; top: -18px; font-size: 9px; color: var(--orange); transform: translateX(-50%); white-space: nowrap; }
   .gs-gas-text { font-size: 10px; color: var(--tx3); margin-top: 4px; }
+  .gs-row.perpl-row { border-color: #22c55e44; background: #0a1a0a; box-shadow: 0 0 0 1px #22c55e22, inset 0 0 20px #22c55e08; }
+  .gs-row.perpl-row .gs-name { color: #4ade80; }
+  .perpl-bar-glow { height: 100%; border-radius: 4px; background: #22c55e; box-shadow: 0 0 8px #22c55e80; width: 14px; transition: none; }
 
   .gas-right { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 20px; }
   .gas-right h4 { font-size: 12px; color: var(--tx2); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.6px; }
@@ -186,7 +189,8 @@
 
         <div class="slider-row">
           <label>Open positions</label>
-          <input type="range" id="posSlider" min="100" max="200000" step="100" value="1000" oninput="updateGas()">
+          <button id="play-btn" onclick="togglePlay()" style="padding:5px 14px;font-size:12px;font-weight:600;border-radius:5px;border:1px solid var(--blue);background:#60a5fa12;color:var(--blue);cursor:pointer;white-space:nowrap;flex-shrink:0;">▶ Play</button>
+          <input type="range" id="posSlider" min="100" max="200000" step="100" value="1000" oninput="onSliderInput()">
           <span class="slider-val" id="posVal">1,000</span>
         </div>
 
@@ -226,15 +230,15 @@
             <div class="gs-gas-text">Custom opcodes — validators absorb settlement cost (requires dedicated chain)</div>
           </div>
           <!-- Perpl -->
-          <div class="gs-row">
+          <div class="gs-row perpl-row">
             <div class="gs-header">
               <span class="gs-name">Perpl (virtualized F<sub>sum</sub>)</span>
-              <span class="gs-badge ok">✓ O(1)</span>
+              <span class="gs-badge ok" style="font-size:11px;padding:3px 10px;">✓ O(1) — ALWAYS ~5k GAS</span>
             </div>
-            <div class="gs-bar-wrap">
-              <div class="gs-bar" style="width:2%; background:#22c55e40;"></div>
+            <div class="gs-bar-wrap" style="height:26px;">
+              <div class="perpl-bar-glow"></div>
             </div>
-            <div class="gs-gas-text">One storage write per event — ~5k gas, regardless of position count</div>
+            <div class="gs-gas-text" style="color:#4ade8099;">One storage write per event — ~5k gas, regardless of position count</div>
           </div>
         </div>
       </div>
@@ -269,7 +273,10 @@
     <div class="fsim-layout">
       <div>
         <div class="timeline">
-          <div class="tl-title">Funding events — step forward to advance time</div>
+          <div class="tl-title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Funding events — step through time</span>
+            <span id="tl-step-hint" style="font-size:11px;color:var(--blue);background:#60a5fa10;border:1px solid #60a5fa30;border-radius:4px;padding:3px 10px;">Step 1: click → Next Event</span>
+          </div>
           <div class="tl-track">
             <div class="tl-axis" id="tl-bars"></div>
             <div class="tl-line">
@@ -488,6 +495,62 @@ function setPanel(id) {
 const BLOCK_GAS = 30_000_000;
 const GAS_PER_POS = 25_000;
 
+let playInterval = null;
+function togglePlay() {
+  const btn = document.getElementById('play-btn');
+  if (playInterval) {
+    clearInterval(playInterval);
+    playInterval = null;
+    btn.textContent = '▶ Play';
+    btn.style.borderColor = 'var(--blue)';
+    btn.style.color = 'var(--blue)';
+    btn.style.background = '#60a5fa12';
+    return;
+  }
+  // Reset slider to start
+  const slider = document.getElementById('posSlider');
+  slider.value = 100;
+  updateGas();
+  btn.textContent = '⏸ Pause';
+  btn.style.borderColor = 'var(--amber)';
+  btn.style.color = 'var(--amber)';
+  btn.style.background = '#eab30812';
+
+  const steps = 120;
+  const maxVal = 200000;
+  let step = 0;
+  playInterval = setInterval(() => {
+    step++;
+    // Ease-out curve so it slows down at high values
+    const t = step / steps;
+    const eased = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+    const val = Math.round(100 + eased * (maxVal - 100));
+    slider.value = val;
+    updateGas();
+    if (step >= steps) {
+      clearInterval(playInterval);
+      playInterval = null;
+      btn.textContent = '↺ Replay';
+      btn.style.borderColor = 'var(--green)';
+      btn.style.color = 'var(--green)';
+      btn.style.background = '#22c55e12';
+    }
+  }, 40);
+}
+
+function onSliderInput() {
+  if (playInterval) {
+    clearInterval(playInterval);
+    playInterval = null;
+    const btn = document.getElementById('play-btn');
+    btn.textContent = '↺ Replay';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green)';
+    btn.style.background = '#22c55e12';
+  }
+  updateGas();
+}
+
 function updateGas() {
   const pos = parseInt(document.getElementById('posSlider').value);
   document.getElementById('posVal').textContent = pos.toLocaleString();
@@ -633,6 +696,20 @@ function renderTimeline() {
   // Button states
   document.getElementById('btn-open').disabled = tlCurrent < 0;
   document.getElementById('btn-close').disabled = tlCurrent < 0 || tlOpenIdx === null || tlCurrent <= tlOpenIdx;
+
+  // Step hint
+  const hint = document.getElementById('tl-step-hint');
+  if (tlCloseIdx !== null) {
+    hint.textContent = '✓ Done — try different open/close points'; hint.style.color = 'var(--green)'; hint.style.borderColor = '#22c55e44'; hint.style.background = '#22c55e08';
+  } else if (tlOpenIdx !== null && tlCurrent > tlOpenIdx) {
+    hint.textContent = 'Step 3: click Mark Close Here'; hint.style.color = 'var(--red)'; hint.style.borderColor = '#ef444444'; hint.style.background = '#ef444408';
+  } else if (tlOpenIdx !== null) {
+    hint.textContent = 'Step 3: advance past open event first'; hint.style.color = 'var(--amber)'; hint.style.borderColor = '#eab30844'; hint.style.background = '#eab30808';
+  } else if (tlCurrent >= 0) {
+    hint.textContent = 'Step 2: click Mark Open Here'; hint.style.color = 'var(--green)'; hint.style.borderColor = '#22c55e44'; hint.style.background = '#22c55e08';
+  } else {
+    hint.textContent = 'Step 1: click → Next Event'; hint.style.color = 'var(--blue)'; hint.style.borderColor = '#60a5fa44'; hint.style.background = '#60a5fa08';
+  }
 }
 
 function updateResult() {
@@ -643,20 +720,23 @@ function updateResult() {
     document.getElementById('r-fsum-open').textContent = '—';
     document.getElementById('r-fsum-close').textContent = '—';
     document.getElementById('r-events').textContent = '—';
-    document.getElementById('r-formula').textContent = 'Open and close a position to compute premium PNL';
+    document.getElementById('r-formula').innerHTML = '<span style="color:var(--tx3)">Step 1: advance to an event →<br>Step 2: click "Mark Open Here" →<br>Step 3: advance further →<br>Step 4: click "Mark Close Here"</span>';
     document.getElementById('r-pnl').textContent = '';
     document.getElementById('r-reads').style.display = 'none';
     return;
   }
 
-  // F_sum at open = F_sum at the event BEFORE open (or 0 if first)
-  const fsumAtOpen = tlOpenIdx > 0 ? FE[tlOpenIdx - 1].fSum : 0;
+  // F_sum checkpoint = the fSum AT the open event (what the contract stores)
+  const fsumAtOpen = FE[tlOpenIdx].fSum;
   document.getElementById('r-fsum-open').textContent = fsumAtOpen.toFixed(3);
 
   if (tlCloseIdx === null) {
     document.getElementById('r-fsum-close').textContent = '—';
-    document.getElementById('r-events').textContent = `${tlOpenIdx + 1} event${tlOpenIdx !== 0 ? 's' : ''} recorded at open`;
-    document.getElementById('r-formula').textContent = 'Close the position to finalize';
+    const eventsHeld = tlCurrent - tlOpenIdx;
+    document.getElementById('r-events').textContent = eventsHeld > 0
+      ? `${eventsHeld} event${eventsHeld !== 1 ? 's' : ''} since open — advance more, then close`
+      : 'advance past this event, then mark close';
+    document.getElementById('r-formula').innerHTML = '<span style="color:var(--amber)">→ Advance to a later event,<br>then click "Mark Close Here"</span>';
     document.getElementById('r-pnl').textContent = '';
     document.getElementById('r-reads').style.display = 'none';
     return;
@@ -664,7 +744,7 @@ function updateResult() {
 
   const fsumAtClose = FE[tlCloseIdx].fSum;
   const diff = fsumAtClose - fsumAtOpen;
-  const eventCount = tlCloseIdx - tlOpenIdx + 1;
+  const eventCount = tlCloseIdx - tlOpenIdx;
   // Long: pays when diff > 0 (premium flows to shorts); short: receives when diff > 0
   const side = positionSide === 'long' ? -1 : 1;
   const premiumPnl = diff * lots * side;
