@@ -7,7 +7,7 @@
 <title>Number Systems — Perpl</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0d0d12; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
+  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
   .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
   .site-logo { display: flex; align-items: center; text-decoration: none; }
   .site-logo img { height: 18px; display: block; }
@@ -17,109 +17,109 @@
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
   .content { max-width: 860px; margin: 0 auto; padding: 48px 32px 100px; }
-  h1 { font-size: 30px; color: #e6edf3; font-weight: 700; margin-bottom: 10px; }
-  .lead { font-size: 15px; color: #8b949e; margin-bottom: 44px; line-height: 1.8; }
-  h2 { font-size: 20px; color: #e6edf3; font-weight: 600; margin: 44px 0 14px; }
+  h1 { font-size: 30px; color: #e0e0f0; font-weight: 700; margin-bottom: 10px; }
+  .lead { font-size: 15px; color: #9090a8; margin-bottom: 44px; line-height: 1.8; }
+  h2 { font-size: 20px; color: #e0e0f0; font-weight: 600; margin: 44px 0 14px; }
   h3 { font-size: 15px; color: #c9d1d9; font-weight: 600; margin: 28px 0 10px; }
-  p { color: #8b949e; margin-bottom: 16px; font-size: 14px; }
+  p { color: #9090a8; margin-bottom: 16px; font-size: 14px; }
   strong { color: #c9d1d9; }
 
   .divider { border: none; border-top: 1px solid #1e1e2e; margin: 40px 0; }
 
-  .eq { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 20px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; margin: 16px 0; line-height: 2; }
-  .eq .label { display: block; font-size: 11px; color: #484f58; margin-top: 4px; font-style: italic; }
+  .eq { background: #0a0a0f; border: 1px solid #1e1e2e; border-radius: 6px; padding: 14px 20px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; margin: 16px 0; line-height: 2; }
+  .eq .label { display: block; font-size: 11px; color: #606078; margin-top: 4px; font-style: italic; }
 
-  .callout { background: #161b22; border-left: 3px solid #58a6ff; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #8b949e; line-height: 1.8; }
+  .callout { background: #12121a; border-left: 3px solid #58a6ff; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #9090a8; line-height: 1.8; }
   .callout strong { color: #c9d1d9; }
   .callout.green { border-color: #3fb950; }
   .callout.amber { border-color: #d29922; }
 
   /* Figure wrapper */
   .figure { margin: 28px 0 36px; }
-  .fig-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .fig-label { font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
   .fig-label span { color: #58a6ff; font-weight: 600; }
-  .box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
-  .fig-note { font-size: 11px; color: #8b949e; margin-top: 10px; padding: 10px 14px; background: #161b22; border-left: 3px solid #30363d; border-radius: 0 4px 4px 0; line-height: 1.6; }
+  .box { background: #12121a; border: 1px solid #1e1e2e; border-radius: 8px; padding: 20px; }
+  .fig-note { font-size: 11px; color: #9090a8; margin-top: 10px; padding: 10px 14px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
 
   /* NS grid */
   .ns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
-  .ns-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; }
+  .ns-card { background: #12121a; border: 1px solid #1e1e2e; border-radius: 8px; padding: 16px; }
   .ns-card-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .ns-card-full { font-size: 11px; color: #484f58; margin-bottom: 10px; }
-  .ns-card-row { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+  .ns-card-full { font-size: 11px; color: #606078; margin-bottom: 10px; }
+  .ns-card-row { font-size: 12px; color: #9090a8; margin-bottom: 4px; }
   .ns-card-row span { color: #c9d1d9; }
 
   /* Figure 1: Bit widths */
   .bw-row { display: grid; grid-template-columns: 70px 1fr 170px; align-items: center; gap: 14px; margin-bottom: 14px; }
   .bw-label { font-size: 13px; font-weight: 700; text-align: right; }
-  .bw-bar-wrap { height: 28px; background: #0d1117; border-radius: 5px; overflow: hidden; border: 1px solid #21262d; }
+  .bw-bar-wrap { height: 28px; background: #0a0a0f; border-radius: 5px; overflow: hidden; border: 1px solid #1e1e2e; }
   .bw-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 10px; }
   .bw-bits { font-size: 11px; font-weight: 600; }
-  .bw-info { font-size: 11px; color: #8b949e; line-height: 1.5; }
+  .bw-info { font-size: 11px; color: #9090a8; line-height: 1.5; }
   .bw-info b { color: #c9d1d9; }
-  .bw-ref { margin-top: 8px; padding-top: 8px; border-top: 1px solid #21262d; }
+  .bw-ref { margin-top: 8px; padding-top: 8px; border-top: 1px solid #1e1e2e; }
   .bw-ref-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 14px; margin-bottom: 6px; }
-  .bw-ref-bar { height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
-  .bw-ref-fill { height: 100%; border-radius: 3px; background: #484f58; }
+  .bw-ref-bar { height: 6px; background: #1e1e2e; border-radius: 3px; overflow: hidden; }
+  .bw-ref-fill { height: 100%; border-radius: 3px; background: #606078; }
 
   /* Figure 2: Precision budget derivation */
   .eq-flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-bottom: 20px; }
-  .eq-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 20px; text-align: center; font-family: 'SF Mono', monospace; }
+  .eq-box { background: #0a0a0f; border: 1px solid #1e1e2e; border-radius: 6px; padding: 14px 20px; text-align: center; font-family: 'SF Mono', monospace; }
   .eq-box .big { font-size: 16px; font-weight: 700; }
-  .eq-box .lbl { font-size: 10px; color: #484f58; margin-top: 4px; }
-  .eq-op { font-size: 22px; color: #484f58; padding: 0 16px; }
+  .eq-box .lbl { font-size: 10px; color: #606078; margin-top: 4px; }
+  .eq-op { font-size: 22px; color: #606078; padding: 0 16px; }
   .eq-result { background: #0d2a1a; border: 1px solid #3fb95033; border-radius: 6px; padding: 14px 20px; text-align: center; font-family: 'SF Mono', monospace; }
 
   /* Figure 3: ONS range table */
   .range-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .range-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .range-table td { padding: 8px 12px; border-bottom: 1px solid #161b22; font-family: 'SF Mono', monospace; font-size: 11px; }
-  .range-table tr:hover td { background: #161b22; }
-  td.blue { color: #58a6ff; } td.green { color: #3fb950; } td.red { color: #f85149; } td.amber { color: #d29922; } td.gray { color: #8b949e; }
+  .range-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #1e1e2e; color: #606078; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .range-table td { padding: 8px 12px; border-bottom: 1px solid #12121a; font-family: 'SF Mono', monospace; font-size: 11px; }
+  .range-table tr:hover td { background: #12121a; }
+  td.blue { color: #58a6ff; } td.green { color: #3fb950; } td.red { color: #f85149; } td.amber { color: #d29922; } td.gray { color: #9090a8; }
   .range-table tr.btc-row td { background: #0d1a2a18; }
   .range-table tr.mon-row td { background: #0a1a0a18; }
-  .rbar { height: 10px; border-radius: 3px; background: #21262d; overflow: hidden; }
+  .rbar { height: 10px; border-radius: 3px; background: #1e1e2e; overflow: hidden; }
   .rbar-fill { height: 100%; border-radius: 3px; }
 
   /* Figure 4: ONS/PNS relationship */
   .ons-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .ons-diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 16px; }
+  .ons-diagram { background: #0a0a0f; border: 1px solid #1e1e2e; border-radius: 6px; padding: 16px; }
   .ons-title { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
-  .price-line { position: relative; height: 32px; background: #161b22; border-radius: 4px; margin: 8px 0; border: 1px solid #21262d; overflow: hidden; }
+  .price-line { position: relative; height: 32px; background: #12121a; border-radius: 4px; margin: 8px 0; border: 1px solid #1e1e2e; overflow: hidden; }
   .price-ons { position: absolute; top: 0; bottom: 0; background: #58a6ff20; border-right: 2px solid #58a6ff; display: flex; align-items: center; justify-content: center; }
   .price-marker { position: absolute; top: 0; bottom: 0; width: 2px; background: #f97316; }
-  .price-label { font-size: 10px; color: #8b949e; margin-bottom: 4px; font-family: 'SF Mono', monospace; }
-  .price-lsub { font-size: 9px; color: #484f58; margin-top: 8px; }
+  .price-label { font-size: 10px; color: #9090a8; margin-bottom: 4px; font-family: 'SF Mono', monospace; }
+  .price-lsub { font-size: 9px; color: #606078; margin-top: 8px; }
 
   /* Figure 5: Full comparison table */
   .full-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .full-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #21262d; color: #8b949e; font-size: 11px; }
+  .full-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #1e1e2e; color: #9090a8; font-size: 11px; }
   .full-table th.btc-th { color: #58a6ff; background: #0d1a2a; border-bottom: 2px solid #58a6ff33; }
   .full-table th.mon-th { color: #3fb950; background: #0a1a0a; border-bottom: 2px solid #3fb95044; }
-  .full-table td { padding: 9px 12px; border-bottom: 1px solid #161b22; }
-  .full-table tr:hover td { background: #161b22; }
+  .full-table td { padding: 9px 12px; border-bottom: 1px solid #12121a; }
+  .full-table tr:hover td { background: #12121a; }
   td.g { color: #3fb950; } td.r { color: #f85149; } td.b { color: #58a6ff; } td.y { color: #d29922; }
   .full-table td.btc-col { background: #0d1a2a08; border-left: 1px solid #58a6ff15; }
   .full-table td.mon-col { background: #0a1a0a08; border-left: 1px solid #3fb95015; }
 
   /* Budget visual */
-  .budget-visual { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; margin: 20px 0; }
-  .bv-title { font-size: 11px; color: #484f58; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+  .budget-visual { background: #12121a; border: 1px solid #1e1e2e; border-radius: 8px; padding: 20px; margin: 20px 0; }
+  .bv-title { font-size: 11px; color: #606078; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
   .bv-row { display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; gap: 10px; margin-bottom: 14px; }
-  .bv-label { font-size: 11px; color: #8b949e; text-align: right; }
+  .bv-label { font-size: 11px; color: #9090a8; text-align: right; }
   .bv-bar { height: 24px; border-radius: 4px; display: flex; overflow: hidden; }
   .bv-price { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
   .bv-size { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
-  .bv-note { font-size: 11px; color: #484f58; }
+  .bv-note { font-size: 11px; color: #606078; }
 
   /* CTA */
   .cta-row { display: flex; gap: 12px; margin: 36px 0 0; flex-wrap: wrap; }
   .cta { padding: 10px 22px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
   .cta-primary { background: #6F5CFF; color: #fff; border: 1px solid #6F5CFF; }
   .cta-primary:hover { background: #5a4ae6; }
-  .cta-secondary { background: transparent; color: #8b949e; border: 1px solid #30363d; }
+  .cta-secondary { background: transparent; color: #9090a8; border: 1px solid #2a2a3a; }
   .cta-secondary:hover { border-color: #58a6ff; color: #58a6ff; }
-  .footer { margin-top: 60px; font-size: 11px; color: #30363d; }
+  .footer { margin-top: 60px; font-size: 11px; color: #606078; }
 </style>
 </head>
 <body>
@@ -204,10 +204,10 @@
     </div>
     <div class="bw-ref">
       <div class="bw-ref-row">
-        <span style="font-size:11px;color:#484f58;text-align:right">EVM word</span>
+        <span style="font-size:11px;color:#606078;text-align:right">EVM word</span>
         <div class="bw-ref-bar"><div class="bw-ref-fill" style="width:100%;"></div></div>
       </div>
-      <div style="font-size:10px;color:#484f58;padding-left:84px;">256-bit reference (1 storage slot)</div>
+      <div style="font-size:10px;color:#606078;padding-left:84px;">256-bit reference (1 storage slot)</div>
     </div>
   </div>
   <div class="fig-note">LNS is wider than PNS (40 vs 32 bits) because lot counts can be vastly larger than prices — a trader holding billions of a near-zero-price token needs more range than any realistic price. All four types are chosen to pack tightly into EVM storage words, minimising gas cost per operation.</div>
@@ -255,9 +255,9 @@
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div style="background:#0d1117;border-radius:6px;padding:14px;border:1px solid #21262d;">
+      <div style="background:#0a0a0f;border-radius:6px;padding:14px;border:1px solid #1e1e2e;">
         <div style="font-size:11px;color:#58a6ff;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">BTC example (1 + 5 = 6)</div>
-        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#8b949e;line-height:2.0;">
+        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#9090a8;line-height:2.0;">
           price = $95,000.1 → PNS = 950,001<br>
           size = 2.50000 BTC → LNS = 250,000<br>
           raw product = 950,001 × 250,000<br>
@@ -265,9 +265,9 @@
           ÷ 10<sup>6</sup> = <span style="color:#3fb950">$237,500.25 USDC ✓</span>
         </div>
       </div>
-      <div style="background:#0d1117;border-radius:6px;padding:14px;border:1px solid #21262d;">
+      <div style="background:#0a0a0f;border-radius:6px;padding:14px;border:1px solid #1e1e2e;">
         <div style="font-size:11px;color:#3fb950;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">MON example (6 + 0 = 6)</div>
-        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#8b949e;line-height:2.0;">
+        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#9090a8;line-height:2.0;">
           price = $0.040000 → PNS = 40,000<br>
           size = 5,000 MON → LNS = 5,000<br>
           raw product = 40,000 × 5,000<br>
@@ -284,7 +284,7 @@
   <div class="bv-title">How the 6 decimal budget is split — live perps</div>
   <div class="bv-row">
     <span class="bv-label" style="color:#58a6ff">BTC-PERP</span>
-    <div class="bv-bar" style="background:#0d1117;border:1px solid #21262d;">
+    <div class="bv-bar" style="background:#0a0a0f;border:1px solid #1e1e2e;">
       <div class="bv-price" style="width:16.7%;background:#58a6ff20;border-right:2px solid #58a6ff;color:#58a6ff;">1</div>
       <div class="bv-size" style="width:83.3%;background:#3fb95014;color:#3fb950;">5</div>
     </div>
@@ -292,7 +292,7 @@
   </div>
   <div class="bv-row">
     <span class="bv-label" style="color:#3fb950">MON-PERP</span>
-    <div class="bv-bar" style="background:#0d1117;border:1px solid #21262d;">
+    <div class="bv-bar" style="background:#0a0a0f;border:1px solid #1e1e2e;">
       <div class="bv-price" style="width:100%;background:#58a6ff20;border-right:2px solid #58a6ff;color:#58a6ff;">6</div>
     </div>
     <span class="bv-note">6 price + 0 size</span>
@@ -308,7 +308,7 @@
 <!-- Figure 5: Full comparison table -->
 <div class="figure">
   <div class="fig-label">Figure 3: <span>BTC vs MON — Full Configuration Comparison</span></div>
-  <div style="background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden;">
+  <div style="background:#12121a;border:1px solid #1e1e2e;border-radius:8px;overflow:hidden;">
     <table class="full-table">
       <thead>
         <tr>
@@ -318,21 +318,21 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td style="color:#8b949e">Market price</td><td class="btc-col b">~$95,000</td><td class="mon-col g">~$0.04</td></tr>
-        <tr><td style="color:#8b949e">price_decimals</td><td class="btc-col b">1</td><td class="mon-col b">6</td></tr>
-        <tr><td style="color:#8b949e">size_decimals</td><td class="btc-col g">5</td><td class="mon-col g">0</td></tr>
-        <tr><td style="color:#8b949e">Price tick size</td><td class="btc-col">$0.10</td><td class="mon-col">$0.000001</td></tr>
-        <tr><td style="color:#8b949e">Tick as % of price</td><td class="btc-col g">0.000105%</td><td class="mon-col g">0.0025%</td></tr>
-        <tr><td style="color:#8b949e">Min lot size</td><td class="btc-col">0.00001 BTC</td><td class="mon-col">1 MON</td></tr>
-        <tr><td style="color:#8b949e">Min trade value</td><td class="btc-col g">~$0.95</td><td class="mon-col g">~$0.04</td></tr>
-        <tr><td style="color:#8b949e">Max lot size</td><td class="btc-col">~10.9B BTC</td><td class="mon-col">~1.1T MON</td></tr>
-        <tr><td style="color:#8b949e">ONS price range</td><td class="btc-col g">$0 – $1,677,721</td><td class="mon-col y">$0 – $16.78</td></tr>
-        <tr><td style="color:#8b949e">Rally headroom (ONS)</td><td class="btc-col g">17.7× current price</td><td class="mon-col g">419× current price</td></tr>
-        <tr><td style="color:#8b949e">Base price update risk</td><td class="btc-col g">Very low (wide window)</td><td class="mon-col y">Needed above ~$16</td></tr>
-        <tr><td style="color:#8b949e">Max PNS price</td><td class="btc-col g">$429,496,729</td><td class="mon-col y">$4,294.97</td></tr>
-        <tr><td style="color:#8b949e">PNS for current price</td><td class="btc-col">950,000</td><td class="mon-col">40,000</td></tr>
-        <tr><td style="color:#8b949e">price_dec + size_dec</td><td class="btc-col g">1 + 5 = 6 ✓</td><td class="mon-col g">6 + 0 = 6 ✓</td></tr>
-        <tr><td style="color:#8b949e">Design priority</td><td class="btc-col b">Fine size granularity</td><td class="mon-col b">Fine price granularity</td></tr>
+        <tr><td style="color:#9090a8">Market price</td><td class="btc-col b">~$95,000</td><td class="mon-col g">~$0.04</td></tr>
+        <tr><td style="color:#9090a8">price_decimals</td><td class="btc-col b">1</td><td class="mon-col b">6</td></tr>
+        <tr><td style="color:#9090a8">size_decimals</td><td class="btc-col g">5</td><td class="mon-col g">0</td></tr>
+        <tr><td style="color:#9090a8">Price tick size</td><td class="btc-col">$0.10</td><td class="mon-col">$0.000001</td></tr>
+        <tr><td style="color:#9090a8">Tick as % of price</td><td class="btc-col g">0.000105%</td><td class="mon-col g">0.0025%</td></tr>
+        <tr><td style="color:#9090a8">Min lot size</td><td class="btc-col">0.00001 BTC</td><td class="mon-col">1 MON</td></tr>
+        <tr><td style="color:#9090a8">Min trade value</td><td class="btc-col g">~$0.95</td><td class="mon-col g">~$0.04</td></tr>
+        <tr><td style="color:#9090a8">Max lot size</td><td class="btc-col">~10.9B BTC</td><td class="mon-col">~1.1T MON</td></tr>
+        <tr><td style="color:#9090a8">ONS price range</td><td class="btc-col g">$0 – $1,677,721</td><td class="mon-col y">$0 – $16.78</td></tr>
+        <tr><td style="color:#9090a8">Rally headroom (ONS)</td><td class="btc-col g">17.7× current price</td><td class="mon-col g">419× current price</td></tr>
+        <tr><td style="color:#9090a8">Base price update risk</td><td class="btc-col g">Very low (wide window)</td><td class="mon-col y">Needed above ~$16</td></tr>
+        <tr><td style="color:#9090a8">Max PNS price</td><td class="btc-col g">$429,496,729</td><td class="mon-col y">$4,294.97</td></tr>
+        <tr><td style="color:#9090a8">PNS for current price</td><td class="btc-col">950,000</td><td class="mon-col">40,000</td></tr>
+        <tr><td style="color:#9090a8">price_dec + size_dec</td><td class="btc-col g">1 + 5 = 6 ✓</td><td class="mon-col g">6 + 0 = 6 ✓</td></tr>
+        <tr><td style="color:#9090a8">Design priority</td><td class="btc-col b">Fine size granularity</td><td class="mon-col b">Fine price granularity</td></tr>
       </tbody>
     </table>
   </div>
@@ -436,7 +436,7 @@
         <div class="price-ons" style="left:0%;width:39%;"></div>
         <div class="price-marker" style="left:22%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#606078;margin-bottom:12px;">
         <span>$0</span><span style="color:#58a6ff">ONS spans $0 → $1,677,721 (39% of PNS)</span><span>$429M</span>
       </div>
       <div class="price-label">ONS window detail (24-bit)</div>
@@ -444,7 +444,7 @@
         <div class="price-ons" style="left:0%;width:100%;border-color:#58a6ff;"></div>
         <div class="price-marker" style="left:56.6%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#606078;margin-top:4px;">
         <span>$0</span>
         <span style="color:#f97316">▲ $95,000 (56.6% of window)</span>
         <span>$1,677,721</span>
@@ -458,7 +458,7 @@
         <div class="price-ons" style="left:0%;width:0.04%;"></div>
         <div class="price-marker" style="left:0.001%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#606078;margin-bottom:12px;">
         <span>$0</span><span style="color:#eab308">ONS spans $0 → $16.78 (0.4% of PNS)</span><span>$4,295</span>
       </div>
       <div class="price-label">ONS window detail (24-bit)</div>
@@ -466,7 +466,7 @@
         <div class="price-ons" style="left:0%;width:100%;border-color:#eab308;background:#eab30810;"></div>
         <div class="price-marker" style="left:0.24%;"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#606078;margin-top:4px;">
         <span>$0</span>
         <span style="color:#f97316">▲ $0.04 (0.24%)</span>
         <span>$16.78</span>
