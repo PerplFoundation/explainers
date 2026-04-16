@@ -118,9 +118,18 @@
   .detail-block-lbl { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
   .detail-block-body { font-size: 12px; color: var(--tx2); line-height: 1.7; }
 
-  /* ── Panel 4: Funding Rounding ── */
-  .fund-top { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
-  .fund-layout { display: grid; grid-template-columns: 1fr 280px; gap: 24px; }
+  /* ── Panel 4: Funding Precision ── */
+  .fund-controls { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .fund-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .fund-col-head { padding: 12px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: baseline; }
+  .fund-col-head.btc { background: #0d1a2a; border: 1px solid #58a6ff30; border-bottom: none; color: #58a6ff; }
+  .fund-col-head.mon { background: #0a1a0a; border: 1px solid #22c55e30; border-bottom: none; color: #3fb950; }
+  .fund-col-meta { font-size: 10px; font-weight: 400; font-family: 'SF Mono', monospace; opacity: 0.7; }
+  .fund-col-body { background: var(--bg2); border: 1px solid var(--bd); border-radius: 0 0 8px 8px; padding: 14px; }
+  .fund-summary-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding: 10px 12px; border-radius: 6px; background: var(--bg3); font-size: 11px; gap: 8px; }
+  .fund-summary-row .fs-cur { color: var(--tx2); }
+  .fund-summary-row .fs-fix { color: var(--green); font-weight: 600; font-family: 'SF Mono', monospace; }
+  .fund-summary-row .fs-status { font-weight: 700; font-size: 12px; }
   .fund-slider-wrap { padding: 4px 0; }
   .fund-slider-wrap input[type=range] { width: 100%; margin: 6px 0 2px; }
   .fund-slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--tx3); }
@@ -188,7 +197,7 @@
     <div class="sec-tab active" onclick="setPanel('budget')">Precision Budget</div>
     <div class="sec-tab" onclick="setPanel('systems')">Number Systems</div>
     <div class="sec-tab" onclick="setPanel('compare')">BTC vs MON</div>
-    <div class="sec-tab" onclick="setPanel('funding')">Funding Rounding</div>
+    <div class="sec-tab" onclick="setPanel('funding')">Funding Precision</div>
   </div>
 
   <!-- ── PANEL 1 ── -->
@@ -377,19 +386,10 @@
       </div>
     </div>
   </div>
-  <!-- ── PANEL 4: FUNDING ROUNDING ── -->
+  <!-- ── PANEL 4: FUNDING PRECISION ── -->
   <div class="panel" id="panel-funding">
 
-    <div class="fund-top">
-      <div class="stat-card">
-        <h4>Asset &amp; Config</h4>
-        <div class="stat-row"><span class="stat-key">Asset</span><span class="stat-val" id="f-asset" style="color:var(--blue)">BTC</span></div>
-        <div class="stat-row"><span class="stat-key">Price</span><span class="stat-val" id="f-price">$95,000</span></div>
-        <div class="stat-row"><span class="stat-key">price_dec</span><span class="stat-val" id="f-pdec">1</span></div>
-        <div class="stat-row" style="border:none"><span class="stat-key">PNS</span><span class="stat-val" id="f-pns" style="color:var(--blue)">950,000</span></div>
-        <div style="font-size:10px;color:var(--tx3);margin-top:6px;">← set on Precision Budget tab</div>
-      </div>
-
+    <div class="fund-controls">
       <div class="stat-card">
         <h4>Market Funding Rate</h4>
         <div class="fund-slider-wrap">
@@ -400,7 +400,7 @@
             <span>10 bps</span>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:4px;">Typical range: 0.1–2 bps. MON was ~0.3 bps.</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:4px;">Typical: 0.1–2 bps. MON was ~0.3 bps.</div>
       </div>
 
       <div class="stat-card">
@@ -417,45 +417,43 @@
       </div>
 
       <div class="stat-card">
-        <h4>Position Size</h4>
+        <h4>Position Size (shared)</h4>
         <div class="fund-slider-wrap">
           <input type="range" id="f-lots" min="1" max="5" step="1" value="3" oninput="fundLotsExp=+this.value;refreshFunding()" style="accent-color:var(--green)">
           <div class="fund-slider-row">
-            <span>1</span>
+            <span>10</span>
             <span style="font-size:16px;font-weight:700;color:var(--green)" id="f-lots-v">1,000 lots</span>
             <span>100k</span>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--tx3);margin-top:4px;" id="f-lots-usd">Position value: —</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:4px;line-height:1.6" id="f-lots-note"></div>
       </div>
     </div>
 
-    <div class="fund-layout">
+    <div class="fund-dual">
+      <!-- BTC column -->
       <div>
-        <div class="sec-label">Step-by-step: how funding reaches your account</div>
-        <div class="pipeline" id="f-pipeline"></div>
+        <div class="fund-col-head btc">
+          <span>BTC-PERP</span>
+          <span class="fund-col-meta">price_dec=1 · PNS=<span id="fb-pns">950,000</span></span>
+        </div>
+        <div class="fund-col-body">
+          <div class="sec-label" style="margin-bottom:8px;">Step-by-step funding pipeline</div>
+          <div class="pipeline" id="f-btc-pipeline"></div>
+          <div class="fund-summary-row" id="fb-summary"></div>
+        </div>
       </div>
 
-      <div class="fund-compare">
-        <div class="fund-compare-card">
-          <h4>Current Math — per lot, then multiply</h4>
-          <div class="stat-row"><span class="stat-key">Payment per lot</span><span class="stat-val" id="fc-per-lot">—</span></div>
-          <div class="stat-row"><span class="stat-key">Position payment</span><span class="stat-val" id="fc-position">—</span></div>
-          <div class="fund-big" id="fc-usd">$0.00</div>
-          <div class="stat-row" style="border:none;padding-top:0"><span class="stat-key">Status</span><span class="stat-val" id="fc-status">—</span></div>
+      <!-- MON column -->
+      <div>
+        <div class="fund-col-head mon">
+          <span>MON-PERP</span>
+          <span class="fund-col-meta">price_dec=6 · PNS=<span id="fm-pns">400,000</span></span>
         </div>
-
-        <div class="fund-compare-card" style="border-color:#22c55e30;">
-          <h4>Fixed Math (Step 2) — multiply first, then divide</h4>
-          <div class="stat-row"><span class="stat-key">PNS × rate × lots</span><span class="stat-val" id="ff-product">—</span></div>
-          <div class="stat-row"><span class="stat-key">÷ 100,000</span><span class="stat-val" id="ff-div">—</span></div>
-          <div class="fund-big" id="ff-usd" style="color:var(--green)">$0.00</div>
-          <div class="stat-row" style="border:none;padding-top:0"><span class="stat-key">Status</span><span class="stat-val" id="ff-status">—</span></div>
-        </div>
-
-        <div class="fund-compare-card" style="border-color:#a78bfa30;">
-          <h4>Thresholds</h4>
-          <div class="fund-threshold" id="f-thresholds"></div>
+        <div class="fund-col-body">
+          <div class="sec-label" style="margin-bottom:8px;">Step-by-step funding pipeline</div>
+          <div class="pipeline" id="f-mon-pipeline"></div>
+          <div class="fund-summary-row" id="fm-summary"></div>
         </div>
       </div>
     </div>
@@ -742,152 +740,126 @@ function renderNS() {
     </div>`;
 }
 
-// ── Funding Rounding ──────────────────────────────────
+// ── Funding Precision ────────────────────────────────
 function syncFundSlider() {
   document.getElementById('f-rate-v').textContent  = fundRate.toFixed(1)  + ' bps';
   document.getElementById('f-clamp-v').textContent = fundClamp.toFixed(1) + ' bps';
 }
 
-function refreshFunding() {
-  const price = getPrice();
-  const sym   = getSym();
-  const ptick = Math.pow(10, -pDec);
-  const sDec  = TOTAL - pDec;
-
-  // PNS for current price / decimal config
-  const PNS = Math.round(price / ptick);
-
-  // Rate integers (1 unit = 0.1 bps)
-  const rateInt  = Math.round(fundRate  * 10);
-  const clampInt = Math.round(fundClamp * 10);
-  const effInt   = Math.min(rateInt, clampInt);
-  const clamped  = rateInt > clampInt;
-
-  // Lot count from slider (10^1 … 10^5)
-  const lots = Math.pow(10, fundLotsExp);
-  const lotLabel = lots >= 1e6 ? (lots/1e6).toFixed(0)+'M' :
-                   lots >= 1e3 ? (lots/1e3).toFixed(0)+'k'  : lots;
-
-  // Current math: truncate per-lot, then multiply
-  const raw        = PNS * effInt;               // numerator
-  const perLotCNS  = Math.floor(raw / 100000);   // per-lot in CNS units (6 dec)
-  const curTotalCNS = perLotCNS * lots;
-  const curUSD     = curTotalCNS / 1e6;
-
-  // Fixed math: multiply all first, then truncate once
-  const fixRaw      = PNS * effInt * lots;       // may be large; JS floats ok up to 9e15
-  const fixTotalCNS = Math.floor(fixRaw / 100000);
-  const fixUSD      = fixTotalCNS / 1e6;
-
+// Compute funding figures for one asset
+function computeFund(price, aPdec, effInt, lots) {
+  const PNS        = Math.round(price * Math.pow(10, aPdec));
+  const raw        = PNS * effInt;
+  const perLotCNS  = Math.floor(raw / 100000);
+  const curTotal   = perLotCNS * lots;
+  const curUSD     = curTotal / 1e6;
+  const fixTotal   = Math.floor(PNS * effInt * lots / 100000);
+  const fixUSD     = fixTotal / 1e6;
   const isTruncZero = (perLotCNS === 0 && effInt > 0);
-  const hasDiff     = (fixTotalCNS !== curTotalCNS);
-
-  // Threshold: minimum rate_int so per-lot ≥ 1
+  const hasDiff    = (fixTotal !== curTotal);
   const minRateInt = PNS > 0 ? Math.ceil(100000 / PNS) : 0;
-  const minBps     = minRateInt / 10;
+  const breakEven  = effInt > 0 ? (100000 / (effInt * Math.pow(10, aPdec))) : Infinity;
+  const lotUSD     = Math.pow(10, -(6 - aPdec)) * price;
+  return { PNS, raw, perLotCNS, curTotal, curUSD, fixTotal, fixUSD, isTruncZero, hasDiff, minRateInt, breakEven, lotUSD };
+}
 
-  // Break-even price at current effective rate
-  const breakEvenPrice = effInt > 0 ? (100000 / (effInt * Math.pow(10, pDec))) : Infinity;
-
-  // Position value
-  const lotSize    = Math.pow(10, -sDec);          // asset units per lot
-  const posUSD     = lots * lotSize * price;
-
-  // ── Update asset info card ─────────────────────────
-  document.getElementById('f-asset').textContent = sym;
-  document.getElementById('f-price').textContent = fmtP(price);
-  document.getElementById('f-pdec').textContent  = pDec;
-  document.getElementById('f-pns').textContent   = PNS.toLocaleString();
-
-  // ── Lots card ──────────────────────────────────────
-  document.getElementById('f-lots-v').textContent = lotLabel + ' lots';
-  document.getElementById('f-lots-usd').textContent = 'Position value: ' + fmtP(posUSD);
-
-  // ── Pipeline ───────────────────────────────────────
-  const rawDecimal = (raw / 100000).toFixed(4);
+// Render a pipeline into a container
+function renderFundPipeline(containerId, d, sym, effInt, clamped, lots, lotLabel) {
+  const rawDecimal = (d.raw / 100000).toFixed(4);
   const steps = [
     {
-      label: 'Input — rate clamping',
-      calc:  'Market rate: ' + fundRate.toFixed(1) + ' bps → rate_int = ' + rateInt +
-             (clamped ? '<br>Clamp: ' + fundClamp.toFixed(1) + ' bps → clamp_int = ' + clampInt + ' &nbsp;<em>(clamped ↓)</em>' : ''),
-      result: 'Effective rate_int = <strong>' + effInt + '</strong>',
-      badge:  clamped ? 'CLAMPED' : 'PASS',
-      bCls:   clamped ? 'badge-warn' : 'badge-ok',
-      cls:    clamped ? 'warn' : '',
+      label: 'Rate applied',
+      calc:  effInt > 0
+        ? (clamped ? 'Rate clamped to ' + (effInt/10).toFixed(1) + ' bps → rate_int = <strong>' + effInt + '</strong>' :
+                     'rate_int = <strong>' + effInt + '</strong> (' + (effInt/10).toFixed(1) + ' bps, not clamped)')
+        : 'rate_int = 0 — no funding this period',
+      badge: clamped ? 'CLAMPED ↓' : 'PASS',
+      bCls:  clamped ? 'badge-warn' : 'badge-ok',
+      cls:   clamped ? 'warn' : '',
+      result: '',
     },
     {
-      label: 'Per-lot payment (current math)',
-      calc:  'floor( ' + PNS.toLocaleString() + ' × ' + effInt + ' / 100,000 )' +
-             ' = floor( ' + rawDecimal + ' )',
-      result: isTruncZero
-        ? '<span style="color:var(--red)">0 CNS per lot — truncated to zero!</span>'
-        : perLotCNS + ' CNS per lot = ' + fmtP(perLotCNS / 1e6),
-      badge:  isTruncZero ? 'TRUNCATED TO ZERO ✗' : '= ' + perLotCNS + ' CNS ✓',
-      bCls:   isTruncZero ? 'badge-bad' : 'badge-ok',
-      cls:    isTruncZero ? 'broken' : '',
+      label: 'Per-lot · floor( ' + d.PNS.toLocaleString() + ' × ' + effInt + ' / 100,000 ) = floor( ' + rawDecimal + ' )',
+      calc:  '',
+      result: d.isTruncZero
+        ? '<span style="color:var(--red);font-weight:700">0 CNS — truncated to zero!</span>'
+        : '<strong>' + d.perLotCNS + '</strong> CNS = ' + fmtP(d.perLotCNS / 1e6) + ' per lot',
+      badge: d.isTruncZero ? 'TRUNCATED ✗' : d.perLotCNS + ' CNS ✓',
+      bCls:  d.isTruncZero ? 'badge-bad' : 'badge-ok',
+      cls:   d.isTruncZero ? 'broken' : '',
     },
     {
-      label: 'Position total · ' + lotLabel + ' lots (current math)',
-      calc:  perLotCNS + ' CNS/lot × ' + lots.toLocaleString() + ' lots',
-      result: curTotalCNS.toLocaleString() + ' CNS = <strong>' + fmtP(curUSD) + '</strong>',
-      badge:  isTruncZero ? 'FUNDING LOST ✗' : hasDiff ? 'ROUNDING LOSS ⚠' : 'CORRECT ✓',
-      bCls:   isTruncZero ? 'badge-bad' : hasDiff ? 'badge-warn' : 'badge-ok',
-      cls:    isTruncZero ? 'broken' : hasDiff ? 'warn' : '',
+      label: 'Position · ' + d.perLotCNS + ' CNS/lot × ' + lots.toLocaleString() + ' lots',
+      calc:  '',
+      result: '<strong>' + fmtP(d.curUSD) + '</strong> (current math)',
+      badge: d.isTruncZero ? 'FUNDING LOST ✗' : d.hasDiff ? 'ROUNDING LOSS ⚠' : '✓',
+      bCls:  d.isTruncZero ? 'badge-bad' : d.hasDiff ? 'badge-warn' : 'badge-ok',
+      cls:   d.isTruncZero ? 'broken' : d.hasDiff ? 'warn' : '',
     },
   ];
 
   let html = '';
   steps.forEach((s, i) => {
-    html += `<div class="pipe-step ${s.cls}">
+    html += `<div class="pipe-step ${s.cls}" style="padding:10px 12px;">
       <div class="pipe-step-label">${s.label}</div>
-      <div class="pipe-step-calc">${s.calc}</div>
-      <div class="pipe-step-result" style="font-size:14px;margin-top:6px;">${s.result}</div>
+      ${s.calc ? '<div class="pipe-step-calc" style="font-size:11px;">' + s.calc + '</div>' : ''}
+      ${s.result ? '<div class="pipe-step-result" style="font-size:13px;margin-top:4px;">' + s.result + '</div>' : ''}
       <span class="pipe-step-badge ${s.bCls}">${s.badge}</span>
     </div>`;
-    if (i < steps.length - 1) html += '<div class="pipe-arrow">▼</div>';
+    if (i < steps.length - 1) html += '<div class="pipe-arrow" style="padding:4px 0;">▼</div>';
   });
 
-  // Step 2 fix box
-  html += `<div class="pipe-arrow" style="color:var(--green)">— Step 2 fix: multiply first, then divide once —</div>
-  <div class="pipe-step fixed">
-    <div class="pipe-step-label">Fixed math — aggregate then truncate</div>
-    <div class="pipe-step-calc">floor( ${PNS.toLocaleString()} × ${effInt} × ${lots.toLocaleString()} / 100,000 ) = floor( ${(fixRaw/100000).toFixed(2)} )</div>
-    <div class="pipe-step-result" style="font-size:14px;margin-top:6px;"><strong style="color:var(--green)">${fmtP(fixUSD)}</strong></div>
+  html += `<div class="pipe-arrow" style="color:var(--green);padding:4px 0;font-size:10px;">— fixed math: multiply first —</div>
+  <div class="pipe-step fixed" style="padding:10px 12px;">
+    <div class="pipe-step-label">floor( ${d.PNS.toLocaleString()} × ${effInt} × ${lots.toLocaleString()} / 100,000 )</div>
+    <div class="pipe-step-result" style="font-size:13px;margin-top:4px;"><strong style="color:var(--green)">${fmtP(d.fixUSD)}</strong></div>
     <span class="pipe-step-badge badge-ok">ACCURATE ✓</span>
   </div>`;
 
-  document.getElementById('f-pipeline').innerHTML = html;
+  document.getElementById(containerId).innerHTML = html;
+}
 
-  // ── Right panel ────────────────────────────────────
-  document.getElementById('fc-per-lot').textContent  = perLotCNS + ' CNS (' + fmtP(perLotCNS/1e6) + '/lot)';
-  document.getElementById('fc-position').textContent = curTotalCNS.toLocaleString() + ' CNS';
-  document.getElementById('fc-usd').textContent      = fmtP(curUSD);
-  document.getElementById('fc-usd').style.color      = isTruncZero ? 'var(--red)' : hasDiff ? 'var(--amber)' : 'var(--tx)';
-  document.getElementById('fc-status').textContent   = isTruncZero ? '✗ Funding lost to truncation' :
-                                                        hasDiff ? '⚠ Slight rounding loss' : '✓ Correct';
-  document.getElementById('fc-status').style.color   = isTruncZero ? 'var(--red)' : hasDiff ? 'var(--amber)' : 'var(--green)';
+function refreshFunding() {
+  const rateInt  = Math.round(fundRate  * 10);
+  const clampInt = Math.round(fundClamp * 10);
+  const effInt   = Math.min(rateInt, clampInt);
+  const clamped  = rateInt > clampInt;
+  const lots     = Math.pow(10, fundLotsExp);
+  const lotLabel = lots >= 1e6 ? (lots/1e6).toFixed(0)+'M' :
+                   lots >= 1e3 ? (lots/1e3).toFixed(0)+'k'  : String(lots);
 
-  document.getElementById('ff-product').textContent  = fixRaw.toLocaleString();
-  document.getElementById('ff-div').textContent      = fixTotalCNS.toLocaleString() + ' CNS';
-  document.getElementById('ff-usd').textContent      = fmtP(fixUSD);
-  document.getElementById('ff-status').textContent   = fixTotalCNS > 0 ? '✓ Accurate' : '✓ Truly zero (rate too low)';
-  document.getElementById('ff-status').style.color   = 'var(--green)';
+  syncFundSlider();
+  document.getElementById('f-lots-v').textContent = lotLabel + ' lots';
 
-  // Thresholds
-  const diffUSD = Math.abs(fixUSD - curUSD);
-  document.getElementById('f-thresholds').innerHTML =
-    '<strong>Break-even price:</strong><br>' +
-    (effInt > 0
-      ? 'Per-lot truncates to 0 when price &lt; ' + fmtP(breakEvenPrice) + '<br>(at ' + (effInt/10).toFixed(1) + ' bps effective rate)<br><br>'
-      : 'Rate is 0 — no funding<br><br>') +
-    '<strong>Min rate for non-zero per-lot:</strong><br>' +
-    'rate_int ≥ ' + minRateInt + '  (≥ ' + minBps.toFixed(1) + ' bps)<br><br>' +
-    '<strong>Rounding loss vs fixed math:</strong><br>' +
-    (diffUSD > 0 ? '<span style="color:var(--amber)">' + fmtP(diffUSD) + ' per period</span>' :
-                   '<span style="color:var(--green)">$0 — no loss</span>') +
-    '<br><br><strong>Effective rate:</strong><br>' +
-    (effInt/10).toFixed(1) + ' bps' +
-    (clamped ? ' <span style="color:var(--amber)">(clamped from ' + fundRate.toFixed(1) + ' bps)</span>' : '');
+  // Compute both assets
+  const btc = computeFund(95000, 1, effInt, lots);
+  const mon = computeFund(0.40,  6, effInt, lots);
+
+  // Header PNS labels
+  document.getElementById('fb-pns').textContent = btc.PNS.toLocaleString();
+  document.getElementById('fm-pns').textContent = mon.PNS.toLocaleString();
+
+  // Lots note (position value per asset)
+  const btcPosUSD = lots * btc.lotUSD;
+  const monPosUSD = lots * mon.lotUSD;
+  document.getElementById('f-lots-note').innerHTML =
+    'BTC pos: <strong>' + fmtP(btcPosUSD) + '</strong> &nbsp;·&nbsp; MON pos: <strong>' + fmtP(monPosUSD) + '</strong>';
+
+  // Render pipelines
+  renderFundPipeline('f-btc-pipeline', btc, 'BTC', effInt, clamped, lots, lotLabel);
+  renderFundPipeline('f-mon-pipeline', mon, 'MON', effInt, clamped, lots, lotLabel);
+
+  // Summary rows
+  function summaryHTML(d, color) {
+    const statusTxt = d.isTruncZero ? '✗ Lost' : d.hasDiff ? '⚠ Loss' : '✓';
+    const statusColor = d.isTruncZero ? 'var(--red)' : d.hasDiff ? 'var(--amber)' : 'var(--green)';
+    const diffUSD = Math.abs(d.fixUSD - d.curUSD);
+    return `<span class="fs-cur">Current: <span style="color:${d.isTruncZero?'var(--red)':'var(--tx)'}">${fmtP(d.curUSD)}</span></span>
+            <span class="fs-fix">Fixed: ${fmtP(d.fixUSD)}</span>
+            <span class="fs-status" style="color:${statusColor}">${statusTxt}${diffUSD > 0 ? ' (−'+fmtP(diffUSD)+')' : ''}</span>`;
+  }
+  document.getElementById('fb-summary').innerHTML = summaryHTML(btc, 'var(--blue)');
+  document.getElementById('fm-summary').innerHTML = summaryHTML(mon, 'var(--green)');
 }
 
 // ── Init ──────────────────────────────────────────────

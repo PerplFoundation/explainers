@@ -32,7 +32,7 @@
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
   .page {
-    max-width: 680px;
+    max-width: 860px;
     margin: 0 auto;
     padding: 80px 24px 80px;
   }
@@ -121,32 +121,19 @@
     font-size: 11px; color: #444; text-align: center;
   }
 
-  /* ── Figure / diagram styles ── */
-  .figure-section {
-    margin: 48px -180px;
-    padding: 0 20px;
-  }
-  @media (max-width: 1000px) {
-    .figure-section {
-      margin: 48px -24px;
-      padding: 0 16px;
-    }
-  }
-
+  /* ── Figure styles ── */
   .figure {
-    margin-bottom: 40px;
+    margin: 40px 0;
   }
   .figure-title {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 16px;
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 14px;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
     font-weight: 500;
   }
-  .figure-title span {
-    color: #58a6ff;
-  }
+  .figure-title span { color: #58a6ff; }
   .figure-sep {
     font-size: 12px; color: #444; font-weight: 600;
     text-transform: uppercase; letter-spacing: 1px;
@@ -156,338 +143,156 @@
   .figure-sep::before, .figure-sep::after {
     content: ''; flex: 1; height: 1px; background: #1e1e1e;
   }
+  .fig-note {
+    font-size: 12px; color: #666; margin-top: 12px;
+    padding: 10px 14px; background: #151515;
+    border-left: 3px solid #2a2a2a; border-radius: 0 4px 4px 0;
+    line-height: 1.6;
+  }
 
+  /* timeline */
   .timeline {
-    display: flex;
-    gap: 0;
-    position: relative;
-    overflow-x: auto;
+    display: flex; gap: 0; position: relative; overflow-x: auto;
   }
   .block {
-    flex: 1;
-    min-width: 160px;
-    border-left: 1px solid #21262d;
-    padding: 0 12px;
-    position: relative;
+    flex: 1; min-width: 160px;
+    border-left: 1px solid #21262d; padding: 0 12px; position: relative;
   }
-  .block:last-child {
-    border-right: 1px solid #21262d;
-  }
+  .block:last-child { border-right: 1px solid #21262d; }
   .block-header {
-    text-align: center;
-    padding: 8px 0;
-    font-size: 12px;
-    color: #8b949e;
-    border-bottom: 1px solid #21262d;
-    margin-bottom: 12px;
-    font-weight: 500;
+    text-align: center; padding: 8px 0; font-size: 12px;
+    color: #8b949e; border-bottom: 1px solid #21262d;
+    margin-bottom: 12px; font-weight: 500;
   }
   .block-header .time {
-    display: block;
-    font-size: 10px;
-    color: #484f58;
-    margin-top: 2px;
+    display: block; font-size: 10px; color: #484f58; margin-top: 2px;
   }
   .block-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-bottom: 16px;
-    min-height: 200px;
+    display: flex; flex-direction: column; gap: 8px;
+    padding-bottom: 16px; min-height: 200px;
   }
   .op {
-    padding: 8px 10px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 500;
-    text-align: center;
-    position: relative;
+    padding: 8px 10px; border-radius: 6px;
+    font-size: 11px; font-weight: 500; text-align: center; position: relative;
   }
-  .op .label {
-    font-size: 10px;
-    opacity: 0.7;
-    display: block;
-    margin-top: 2px;
-  }
-  .op-cancel {
-    background: #2a1515;
-    border: 1px solid #f85149;
-    color: #f85149;
-  }
-  .op-post {
-    background: #151f15;
-    border: 1px solid #3fb950;
-    color: #3fb950;
-  }
-  .op-change {
-    background: #151e2a;
-    border: 1px solid #58a6ff;
-    color: #58a6ff;
-  }
-  .op-oracle {
-    background: #1e1800;
-    border: 1px solid #d29922;
-    color: #d29922;
-  }
-  .op-taker {
-    background: #1e1520;
-    border: 1px solid #bc8cff;
-    color: #bc8cff;
-  }
-  .op-settle {
-    background: #151e1e;
-    border: 1px solid #56d4dd;
-    color: #56d4dd;
-  }
-  .op-empty {
-    background: #151515;
-    border: 1px dashed #2a2a2a;
-    color: #444;
-  }
+  .op .label { font-size: 10px; opacity: 0.7; display: block; margin-top: 2px; }
+  .op-cancel { background: #2a1515; border: 1px solid #f85149; color: #f85149; }
+  .op-post   { background: #151f15; border: 1px solid #3fb950; color: #3fb950; }
+  .op-change { background: #151e2a; border: 1px solid #58a6ff; color: #58a6ff; }
+  .op-oracle { background: #1e1800; border: 1px solid #d29922; color: #d29922; }
+  .op-taker  { background: #1e1520; border: 1px solid #bc8cff; color: #bc8cff; }
+  .op-empty  { background: #151515; border: 1px dashed #2a2a2a; color: #444; }
   .status-bar {
-    margin-top: 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    text-align: center;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    margin-top: 8px; padding: 6px 8px; border-radius: 4px;
+    font-size: 10px; text-align: center; font-weight: 600; letter-spacing: 0.5px;
   }
-  .status-on {
-    background: #151f15;
-    color: #3fb950;
-    border: 1px solid #238636;
-  }
-  .status-off {
-    background: #2a1515;
-    color: #f85149;
-    border: 1px solid #da3633;
-  }
-  .status-stale {
-    background: #1e1800;
-    color: #d29922;
-    border: 1px solid #9e6a03;
-  }
-  .status-partial {
-    background: #1e1200;
-    color: #db6d28;
-    border: 1px solid #8a4c1e;
-  }
+  .status-on     { background: #151f15; color: #3fb950; border: 1px solid #238636; }
+  .status-off    { background: #2a1515; color: #f85149; border: 1px solid #da3633; }
+  .status-stale  { background: #1e1800; color: #d29922; border: 1px solid #9e6a03; }
+  .status-partial{ background: #1e1200; color: #db6d28; border: 1px solid #8a4c1e; }
   .mm-label {
-    font-size: 10px;
-    color: #484f58;
-    text-align: center;
-    margin-bottom: 6px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: 10px; color: #484f58; text-align: center;
+    margin-bottom: 6px; font-weight: 600; letter-spacing: 0.5px;
   }
   .mm-group {
-    border: 1px solid #21262d;
-    border-radius: 8px;
-    padding: 8px;
-    margin-bottom: 6px;
-    background: #151515;
+    border: 1px solid #21262d; border-radius: 8px;
+    padding: 8px; margin-bottom: 6px; background: #151515;
   }
   .mm-group.mm-a { border-left: 3px solid #58a6ff; }
   .mm-group.mm-b { border-left: 3px solid #bc8cff; }
   .mm-group.mm-c { border-left: 3px solid #3fb950; }
-  .divider {
-    height: 1px;
-    background: #21262d;
-    margin: 12px 0;
-  }
+  .divider { height: 1px; background: #21262d; margin: 12px 0; }
   .book-depth {
-    display: flex;
-    gap: 2px;
-    justify-content: center;
-    margin-top: 4px;
-    height: 24px;
-    align-items: flex-end;
+    display: flex; gap: 2px; justify-content: center;
+    margin-top: 4px; height: 24px; align-items: flex-end;
   }
-  .depth-bar {
-    width: 16px;
-    border-radius: 2px 2px 0 0;
-    transition: height 0.3s;
-  }
-  .depth-bar.full { background: #3fb950; }
-  .depth-bar.empty { background: #21262d; border: 1px dashed #30363d; }
-  .depth-bar.stale { background: #9e6a03; }
-  .depth-bar.new { background: #58a6ff; }
-  .depth-label {
-    font-size: 9px;
-    color: #484f58;
-    text-align: center;
-    margin-top: 2px;
-  }
+  .depth-bar { width: 16px; border-radius: 2px 2px 0 0; transition: height 0.3s; }
+  .depth-bar.full   { background: #3fb950; }
+  .depth-bar.empty  { background: #21262d; border: 1px dashed #30363d; }
+  .depth-bar.stale  { background: #9e6a03; }
+  .depth-bar.new    { background: #58a6ff; }
+  .depth-label { font-size: 9px; color: #484f58; text-align: center; margin-top: 2px; }
+
+  /* contention / parallel grids */
   .contention-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 16px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px;
   }
   .contention-panel {
-    background: #151515;
-    border: 1px solid #1e1e1e;
-    border-radius: 8px;
-    padding: 20px;
+    background: #151515; border: 1px solid #1e1e1e;
+    border-radius: 8px; padding: 20px;
   }
-  .contention-panel h3 {
-    font-size: 13px;
-    margin-bottom: 16px;
-    font-weight: 600;
-  }
+  .contention-panel h3 { font-size: 13px; margin-bottom: 16px; font-weight: 600; }
   .contention-panel h3.bad { color: #b77; }
   .contention-panel h3.good { color: #7a9; }
-  .slot-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 11px;
-  }
-  .slot-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .slot-dot.shared { background: #f85149; }
+  .slot-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+  .slot-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .slot-dot.shared  { background: #f85149; }
   .slot-dot.private { background: #3fb950; }
-  .slot-dot.none { background: #21262d; border: 1px solid #30363d; }
+  .slot-dot.none    { background: #21262d; border: 1px solid #30363d; }
   .slot-name { color: #8b949e; flex: 1; }
-  .slot-who { font-size: 10px; color: #484f58; }
+  .slot-who  { font-size: 10px; color: #484f58; }
   .conflict-line {
-    text-align: center;
-    padding: 8px;
-    margin-top: 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 600;
+    text-align: center; padding: 8px; margin-top: 8px;
+    border-radius: 4px; font-size: 11px; font-weight: 600;
   }
-  .conflict-serial {
-    background: #2a1515;
-    color: #f85149;
-    border: 1px solid #da3633;
-  }
-  .conflict-parallel {
-    background: #151f15;
-    color: #3fb950;
-    border: 1px solid #238636;
-  }
-  .gas-bar-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .gas-bar-label {
-    font-size: 10px;
-    color: #8b949e;
-    width: 80px;
-    text-align: right;
-  }
-  .gas-bar-track {
-    flex: 1;
-    height: 20px;
-    background: #1e1e1e;
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-  }
+  .conflict-serial   { background: #2a1515; color: #f85149; border: 1px solid #da3633; }
+  .conflict-parallel { background: #151f15; color: #3fb950; border: 1px solid #238636; }
+
+  /* gas bars */
+  .gas-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .gas-bar-label { font-size: 10px; color: #8b949e; width: 80px; text-align: right; }
+  .gas-bar-track { flex: 1; height: 20px; background: #1e1e1e; border-radius: 4px; overflow: hidden; }
   .gas-bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    padding-left: 8px;
-    font-size: 10px;
-    font-weight: 600;
+    height: 100%; border-radius: 4px; display: flex;
+    align-items: center; padding-left: 8px; font-size: 10px; font-weight: 600;
   }
-  .gas-bar-fill.red { background: linear-gradient(90deg, #f85149, #da3633); color: #fff; }
-  .gas-bar-fill.blue { background: linear-gradient(90deg, #58a6ff, #388bfd); color: #fff; }
+  .gas-bar-fill.red   { background: linear-gradient(90deg, #f85149, #da3633); color: #fff; }
   .gas-bar-fill.green { background: linear-gradient(90deg, #3fb950, #238636); color: #fff; }
-  .parallel-viz {
-    margin-top: 16px;
-  }
-  .exec-row {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
-    align-items: center;
-  }
-  .exec-label {
-    font-size: 9px;
-    color: #484f58;
-    width: 28px;
-    text-align: right;
-  }
+
+  /* parallel exec viz */
+  .parallel-viz { margin-top: 16px; }
+  .exec-row { display: flex; gap: 4px; margin-bottom: 4px; align-items: center; }
+  .exec-label { font-size: 9px; color: #484f58; width: 28px; text-align: right; }
   .exec-block {
-    height: 22px;
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9px;
-    font-weight: 600;
-    flex: 1;
+    height: 22px; border-radius: 3px; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 600; flex: 1;
   }
-  .exec-block.serial { background: #2a1515; color: #f85149; border: 1px solid #da3633; }
+  .exec-block.serial     { background: #2a1515; color: #f85149; border: 1px solid #da3633; }
   .exec-block.parallel-a { background: #151e2a; color: #58a6ff; border: 1px solid #1f6feb; }
   .exec-block.parallel-b { background: #1a152a; color: #bc8cff; border: 1px solid #8957e5; }
   .exec-block.parallel-c { background: #151f15; color: #3fb950; border: 1px solid #238636; }
-  .exec-block.reexec { background: #1e1800; color: #d29922; border: 1px solid #9e6a03; }
-  .exec-block.empty { background: transparent; border: none; }
-  .arrow-right {
-    display: inline-block;
-    margin: 0 4px;
-    color: #30363d;
-  }
+  .exec-block.reexec     { background: #1e1800; color: #d29922; border: 1px solid #9e6a03; }
+  .exec-block.empty      { background: transparent; border: none; }
+
+  /* other */
+  .arrow-right { display: inline-block; margin: 0 4px; color: #30363d; }
   .note {
-    font-size: 11px;
-    color: #888;
-    margin-top: 12px;
-    padding: 10px;
-    background: #151515;
-    border-left: 3px solid #2a2a2a;
-    border-radius: 0 4px 4px 0;
+    font-size: 11px; color: #888; margin-top: 12px;
+    padding: 10px; background: #151515;
+    border-left: 3px solid #2a2a2a; border-radius: 0 4px 4px 0;
   }
-  .legend {
-    display: flex;
-    gap: 16px;
-    margin: 12px 0;
-    flex-wrap: wrap;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #666;
-  }
-  .legend-swatch {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-  }
+  .legend { display: flex; gap: 16px; margin: 12px 0; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666; }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; }
   .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    margin-left: 8px;
+    display: inline-block; padding: 2px 8px; border-radius: 12px;
+    font-size: 10px; font-weight: 600; margin-left: 8px;
   }
-  .badge-serial { background: #2a1515; color: #f85149; }
+  .badge-serial   { background: #2a1515; color: #f85149; }
   .badge-parallel { background: #151f15; color: #3fb950; }
 
   .sources {
     margin-top: 48px; padding: 16px;
     background: #151515; border-radius: 8px; border: 1px solid #1e1e1e;
   }
-  .sources-text {
-    font-size: 12px; color: #555;
-  }
+  .sources-text { font-size: 12px; color: #555; }
   .sources-text strong { color: #777; }
+
+  @media (max-width: 640px) {
+    .contention-grid { grid-template-columns: 1fr; }
+    .compare { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -511,97 +316,15 @@
 
   <p>On every on-chain order book today, requoting works the same way: cancel your old order, post a new one. Two operations. This seems fine until you look at what actually happens inside the EVM.</p>
 
-  <p>Cancel deallocates an order ID. Post allocates a new one. Both write to the same global data structure, an index that tracks which IDs are in use. When ten market makers requote in the same block, all ten of them write to this same storage slot. On a parallel-execution chain like Monad, this creates a bottleneck: the execution engine detects the conflict, throws out its parallel work, and runs every requote one after another. Serial. Slow.</p>
+  <p>Cancel deallocates an order ID. Post allocates a new one. Both write to the same global data structure — an index that tracks which IDs are in use. When ten market makers requote in the same block, all ten of them write to this same storage slot. On a parallel-execution chain like Monad, this creates a bottleneck: the execution engine detects the conflict, throws out its parallel work, and runs every requote one after another. Serial. Slow.</p>
 
-  <p>Worse, each cancel <em>removes</em> that market maker's liquidity before the post <em>restores</em> it at the new price. During the cascade, the book thins out. A taker arriving mid-block might see 40% of normal depth, wide spreads, and bad fills, exactly when volatility is highest and liquidity matters most.</p>
+  <p>Worse, each Cancel <em>removes</em> that market maker's liquidity before the Post <em>restores</em> it at the new price. During the cascade, the book thins out. A taker arriving mid-block might see 40% of normal depth, wide spreads, and bad fills — exactly when volatility is highest and liquidity matters most.</p>
 
-  <h2>What Perpl Does Differently</h2>
+  <p>The block-by-block sequence makes this concrete. Three market makers receive the same oracle update and race to requote. Because all three touch the global ID index, Monad serializes them — each re-executed after the previous one commits:</p>
 
-  <p>Perpl's exchange contract has a native <strong>Change</strong> operation. Instead of cancel + post, a market maker submits a single transaction that modifies their order in place: new price, new size, same order ID.</p>
-
-  <p>This sounds like a small optimization. It isn't.</p>
-
-  <p>Because Change reuses the existing order ID, it never touches the global ID index. It never increments or decrements the order counter. The only storage it writes to is the market maker's own order slot and the price level it's moving to. Each market maker's Change is completely independent of every other market maker's Change.</p>
-
-  <p>On Monad, this means they all execute in parallel. No conflicts. No re-execution. No serial bottleneck.</p>
-
-</div>
-
-<!-- Figure 3: State Contention Map — placed after "What Perpl Does Differently" -->
-<div class="figure-section">
+  <!-- Figure 1: Post/Cancel Timeline -->
   <div class="figure">
-    <div class="figure-title">Figure 3.0 : <span>State Contention Map</span> — why Change is parallel</div>
-    <div class="contention-grid">
-      <div class="contention-panel">
-        <h3 class="bad">Post/Cancel : Shared State Conflicts</h3>
-        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">A, B, C all write</div></div>
-        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">A, B, C write (varies)</div></div>
-        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">A, B, C all write</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>orderLockMap[lockId]</code></div><div class="slot-who">per-MM (private)</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
-        <div class="conflict-line conflict-serial">
-          3 global conflict points &rarr; FULLY SERIAL execution
-        </div>
-      </div>
-
-      <div class="contention-panel">
-        <h3 class="good">Change : No Shared State</h3>
-        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">NOT TOUCHED</div></div>
-        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">NOT TOUCHED</div></div>
-        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">NOT TOUCHED</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>account.lockedBalCNS</code></div><div class="slot-who">per-MM (private)</div></div>
-        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
-        <div class="conflict-line conflict-parallel">
-          0 global conflict points &rarr; FULLY PARALLEL execution
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="page" style="padding-top: 0;">
-
-  <h2>What This Looks Like</h2>
-
-  <div class="compare">
-    <div class="compare-card bad">
-      <h3>Cancel / Post</h3>
-      <ul>
-        <li>10 steps to requote 5 MMs</li>
-        <li>Executed serially <span>(state conflicts)</span></li>
-        <li>Depth drops to ~60%</li>
-        <li>Each MM absent for 2 steps</li>
-        <li>~120&ndash;160k gas per requote</li>
-      </ul>
-    </div>
-    <div class="compare-card good">
-      <h3>Change</h3>
-      <ul>
-        <li>1 step to requote 5 MMs</li>
-        <li>Executed in parallel <span>(no conflicts)</span></li>
-        <li>Depth stays at 100%</li>
-        <li>No MM ever absent</li>
-        <li>~50&ndash;70k gas per requote</li>
-      </ul>
-    </div>
-  </div>
-
-  <p>With ten market makers, cancel/post drops depth below 40%. Change still holds at 100%.</p>
-
-  <div class="cta-row">
-    <a class="cta cta-primary" href="interactive.html">&#9654; Run the simulation</a>
-  </div>
-
-</div>
-
-<!-- Figures 1 & 2: Post/Cancel and Change timelines -->
-<div class="figure-section">
-  <div class="figure-sep">Timeline Diagrams</div>
-
-  <div class="figure">
-    <div class="figure-title">Figure 1.0 : <span>Post/Cancel Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-serial">SERIAL</span></div>
+    <div class="figure-title">Figure 1 : <span>Post/Cancel Regime</span> — 3 MMs requoting after oracle move <span class="badge badge-serial">SERIAL</span></div>
 
     <div class="legend">
       <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
@@ -611,7 +334,6 @@
     </div>
 
     <div class="timeline">
-      <!-- Block N -->
       <div class="block">
         <div class="block-header">Block N <span class="time">t = 0ms</span></div>
         <div class="block-content">
@@ -623,15 +345,14 @@
           <div class="divider"></div>
           <div class="depth-label">Bid Depth</div>
           <div class="book-depth">
-            <div class="depth-bar stale" style="height:20px;" title="MM-A"></div>
-            <div class="depth-bar stale" style="height:18px;" title="MM-B"></div>
-            <div class="depth-bar stale" style="height:16px;" title="MM-C"></div>
+            <div class="depth-bar stale" style="height:20px;"></div>
+            <div class="depth-bar stale" style="height:18px;"></div>
+            <div class="depth-bar stale" style="height:16px;"></div>
           </div>
           <div class="depth-label">3/3 MMs quoting (stale)</div>
         </div>
       </div>
 
-      <!-- Block N+1 (TX1 lands) -->
       <div class="block">
         <div class="block-header">Block N+1, TX1 <span class="time">t = 400ms</span></div>
         <div class="block-content">
@@ -655,7 +376,6 @@
         </div>
       </div>
 
-      <!-- Block N+1 (TX2 lands - re-executed) -->
       <div class="block">
         <div class="block-header">Block N+1, TX2 <span class="time">re-executed (conflict)</span></div>
         <div class="block-content">
@@ -678,7 +398,6 @@
         </div>
       </div>
 
-      <!-- Block N+1 (TX3 lands - re-executed again) -->
       <div class="block">
         <div class="block-header">Block N+1, TX3 <span class="time">re-executed (conflict)</span></div>
         <div class="block-content">
@@ -702,16 +421,25 @@
     </div>
 
     <div class="note">
-      <strong>Taker arriving mid-block</strong> (between TX1 and TX3): sees only 1-2 stale bids, wide spread, degraded depth.
+      <strong>Taker arriving mid-block</strong> (between TX1 and TX3): sees only 1–2 stale bids, wide spread, degraded depth.
       Each Cancel removes an MM from the book before its Post restores it at the new price.
-      All 3 MMs serialized through <code>Index16Bit.root</code> and <code>numOrders</code> conflicts.
+      All 3 MMs are serialized through <code>Index16Bit.root</code> and <code>numOrders</code> conflicts.
     </div>
   </div>
 
-  <div class="figure-sep">vs</div>
+  <h2>What Perpl Does Differently</h2>
 
+  <p>Perpl's exchange contract has a native <strong>Change</strong> operation. Instead of cancel + post, a market maker submits a single transaction that modifies their order in place: new price, new size, same order ID.</p>
+
+  <p>This sounds like a small optimization. It isn't.</p>
+
+  <p>Because Change reuses the existing order ID, it never touches the global ID index. It never increments or decrements the order counter. The only storage it writes to is the market maker's own order slot and the price level it's moving to. Each market maker's Change is completely independent of every other market maker's Change.</p>
+
+  <p>On Monad, this means they all execute in parallel — and because no MM ever leaves the book, a taker sees an atomic transition from old prices to new prices with zero intermediate state:</p>
+
+  <!-- Figure 2: Change Timeline -->
   <div class="figure">
-    <div class="figure-title">Figure 2.0 : <span>Change Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-parallel">PARALLEL</span></div>
+    <div class="figure-title">Figure 2 : <span>Change Regime</span> — 3 MMs requoting after oracle move <span class="badge badge-parallel">PARALLEL</span></div>
 
     <div class="legend">
       <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
@@ -720,7 +448,6 @@
     </div>
 
     <div class="timeline">
-      <!-- Block N -->
       <div class="block">
         <div class="block-header">Block N <span class="time">t = 0ms</span></div>
         <div class="block-content">
@@ -740,9 +467,8 @@
         </div>
       </div>
 
-      <!-- Block N+1 (all execute in parallel) -->
-      <div class="block" style="min-width: 320px;">
-        <div class="block-header">Block N+1 <span class="time">t = 400ms : all execute in parallel</span></div>
+      <div class="block" style="min-width: 280px;">
+        <div class="block-header">Block N+1 <span class="time">t = 400ms &mdash; all execute in parallel</span></div>
         <div class="block-content">
           <div style="display:flex; gap:8px;">
             <div class="mm-group mm-a" style="flex:1;">
@@ -772,7 +498,6 @@
         </div>
       </div>
 
-      <!-- Block N+2 -->
       <div class="block">
         <div class="block-header">Block N+2 <span class="time">t = 800ms</span></div>
         <div class="block-content">
@@ -794,44 +519,78 @@
     </div>
 
     <div class="note">
-      <strong>Taker arriving at any point</strong>: sees either full old book or full new book. Never a partially-drained state.
-      No MM is ever absent from the book. Zero <code>Index16Bit</code> or <code>numOrders</code> contention &mdash; all MMs execute in true parallel.
+      <strong>Taker arriving at any point:</strong> sees either the full old book or the full new book. Never a partially-drained state.
+      No MM is ever absent from the book. Zero <code>Index16Bit</code> or <code>numOrders</code> contention — all MMs execute in true parallel.
     </div>
   </div>
-</div>
 
-<div class="page" style="padding-top: 0;">
+  <p>The reason lies in which storage slots each operation touches. Post/Cancel conflicts on three global structures shared across all market makers. Change touches only the market maker's own private slot:</p>
 
-  <h2>Why This Matters</h2>
+  <!-- Figure 3: State Contention Map -->
+  <div class="figure">
+    <div class="figure-title">Figure 3 : <span>State Contention Map</span> — why Change is parallel</div>
+    <div class="contention-grid">
+      <div class="contention-panel">
+        <h3 class="bad">Post/Cancel : Shared State Conflicts</h3>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">A, B, C all write</div></div>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">A, B, C write (varies)</div></div>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">A, B, C all write</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>orderLockMap[lockId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
+        <div class="conflict-line conflict-serial">
+          3 global conflict points &rarr; FULLY SERIAL execution
+        </div>
+      </div>
 
-  <p>Monad's architecture (400ms blocks, <a href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution" target="_blank" rel="noopener">parallel execution</a>, 200M gas per block) is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
-
-  <p>Change is designed for this architecture. It keeps each market maker's state isolated, letting Monad do what it's built to do: run everything at once.</p>
-
-  <p>The result is an order book that stays deep through volatility, gives takers better fills, and lets market makers quote tighter spreads with lower gas costs. Not because of a faster chain, but because the contract was designed to use the chain correctly.</p>
-
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>Metric</th><th>Post/Cancel</th><th>Change</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Execution</td><td class="bad">Serial (1 MM at a time)</td><td class="good">Parallel (all at once)</td></tr>
-        <tr><td>Depth during requote</td><td class="bad">40&ndash;80%</td><td class="good">100%</td></tr>
-        <tr><td>Steps for 5 MMs</td><td class="bad">10</td><td class="good">1</td></tr>
-        <tr><td>Gas per requote (Monad)</td><td class="bad">~120&ndash;160k</td><td class="good">~50&ndash;70k</td></tr>
-        <tr><td>State conflicts</td><td class="bad">N (fully connected)</td><td class="good">0 (disconnected)</td></tr>
-        <tr><td>Liquidity gap</td><td class="bad">Yes</td><td class="good">Never</td></tr>
-      </tbody>
-    </table>
+      <div class="contention-panel">
+        <h3 class="good">Change : No Shared State</h3>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>account.lockedBalCNS</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
+        <div class="conflict-line conflict-parallel">
+          0 global conflict points &rarr; FULLY PARALLEL execution
+        </div>
+      </div>
+    </div>
+    <div class="fig-note">Red dots are storage slots shared across all market makers — any write creates a conflict that forces Monad to re-execute the conflicting transactions serially. Green dots are per-market-maker private slots that can be written simultaneously with no conflict.</div>
   </div>
 
-</div>
+  <h2>What This Looks Like</h2>
 
-<!-- Figures 4 & 5: after the comparison table -->
-<div class="figure-section">
+  <div class="compare">
+    <div class="compare-card bad">
+      <h3>Cancel / Post</h3>
+      <ul>
+        <li>10 steps to requote 5 MMs</li>
+        <li>Executed serially <span>(state conflicts)</span></li>
+        <li>Depth drops to ~60%</li>
+        <li>Each MM absent for 2 steps</li>
+        <li>~120&ndash;160k gas per requote</li>
+      </ul>
+    </div>
+    <div class="compare-card good">
+      <h3>Change</h3>
+      <ul>
+        <li>1 step to requote 5 MMs</li>
+        <li>Executed in parallel <span>(no conflicts)</span></li>
+        <li>Depth stays at 100%</li>
+        <li>No MM ever absent</li>
+        <li>~50&ndash;70k gas per requote</li>
+      </ul>
+    </div>
+  </div>
+
+  <p>With ten market makers, cancel/post drops depth below 40%. Change still holds at 100%.</p>
+
+  <p>The gap compounds with scale. At 10 MMs and 20 requotes per block, post/cancel forces each transaction to wait behind all the ones that conflicted before it — 20 sequential re-executions at worst. Change batches them all into a handful of parallel passes:</p>
+
+  <!-- Figure 4: Parallel Executor Timeline -->
   <div class="figure">
-    <div class="figure-title">Figure 4.0 : <span>Parallel Executor Timeline</span> (10 MMs, 20 requotes per block)</div>
+    <div class="figure-title">Figure 4 : <span>Parallel Executor Timeline</span> — 10 MMs, 20 requotes per block</div>
 
     <div class="contention-grid">
       <div class="contention-panel">
@@ -842,7 +601,7 @@
           <div class="exec-row"><div class="exec-label">t=1</div><div class="exec-block reexec">TX2 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
           <div class="exec-row"><div class="exec-label">t=2</div><div class="exec-block reexec">TX3 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
           <div class="exec-row"><div class="exec-label">t=3</div><div class="exec-block reexec">TX4 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
-          <div class="exec-row"><div class="exec-label">...</div><div class="exec-block serial" style="opacity:0.5;">TX5-TX20</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+          <div class="exec-row"><div class="exec-label">...</div><div class="exec-block serial" style="opacity:0.5;">TX5–TX20</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
         </div>
         <div style="margin-top:12px;">
           <div class="gas-bar-row">
@@ -886,10 +645,14 @@
         </div>
       </div>
     </div>
+    <div class="fig-note">The throughput gap is not additive — it grows with market maker count. At 5 MMs the post/cancel overhead is annoying; at 50 it saturates the block.</div>
   </div>
 
+  <p>For a taker watching from the outside, the serial drain of post/cancel looks like temporary illiquidity during every volatility event. Change eliminates the intermediate state entirely:</p>
+
+  <!-- Figure 5: Book Depth During Requote Storm -->
   <div class="figure">
-    <div class="figure-title">Figure 5.0 : <span>Book Depth During Requote Storm</span> (taker perspective)</div>
+    <div class="figure-title">Figure 5 : <span>Book Depth During Requote Storm</span> — taker perspective</div>
 
     <div class="contention-grid">
       <div class="contention-panel">
@@ -972,17 +735,38 @@
         </div>
       </div>
     </div>
+    <div class="fig-note">Post/cancel creates a predictable illiquidity window during every oracle move. The worse the volatility, the more MMs requote simultaneously, and the deeper the liquidity trough. Change makes the trough impossible by construction.</div>
   </div>
-</div>
 
-<div class="page" style="padding-top: 0;">
-  <p>The difference compounds as market maker count grows. At 10 MMs, cancel/post means 20 serial re-executions in the worst case. Change means 1 parallel pass. The throughput gap is not additive — it's multiplicative with market depth.</p>
-</div>
+  <h2>Why This Matters</h2>
 
-<!-- Figure 6: MM React Pipeline — after "Why This Matters" -->
-<div class="figure-section">
+  <p>Monad's architecture (400ms blocks, <a href="https://docs.monad.xyz/monad-arch/consensus/asynchronous-execution" target="_blank" rel="noopener">parallel execution</a>, 200M gas per block) is built for high-throughput applications. But parallel execution only helps when transactions don't fight over shared state. Cancel/post turns every requote into a fight over the same global storage slots, collapsing Monad's parallelism back to serial execution.</p>
+
+  <p>Change is designed for this architecture. It keeps each market maker's state isolated, letting Monad do what it's built to do: run everything at once.</p>
+
+  <p>The result is an order book that stays deep through volatility, gives takers better fills, and lets market makers quote tighter spreads with lower gas costs. Not because of a faster chain, but because the contract was designed to use the chain correctly.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>Post/Cancel</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Execution</td><td class="bad">Serial (1 MM at a time)</td><td class="good">Parallel (all at once)</td></tr>
+        <tr><td>Depth during requote</td><td class="bad">40&ndash;80%</td><td class="good">100%</td></tr>
+        <tr><td>Steps for 5 MMs</td><td class="bad">10</td><td class="good">1</td></tr>
+        <tr><td>Gas per requote (Monad)</td><td class="bad">~120&ndash;160k</td><td class="good">~50&ndash;70k</td></tr>
+        <tr><td>State conflicts</td><td class="bad">N (fully connected)</td><td class="good">0 (disconnected)</td></tr>
+        <tr><td>Liquidity gap</td><td class="bad">Yes</td><td class="good">Never</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The operational impact extends beyond on-chain execution. When a market maker builds a post/cancel transaction, they face a dependency problem: the Post can't be assembled until the Cancel's outcome is known — which balance will be freed, which order ID will be allocated. Change has no such dependency. The order ID is unchanged and the locked balance stays put. The market maker builds and fires in fewer steps with a tighter gas estimate:</p>
+
+  <!-- Figure 6: MM React Pipeline -->
   <div class="figure">
-    <div class="figure-title">Figure 6.0 : <span>MM React Pipeline</span> (speculative execution window)</div>
+    <div class="figure-title">Figure 6 : <span>MM React Pipeline</span> — transaction construction dependency chain</div>
 
     <div class="contention-grid">
       <div class="contention-panel">
@@ -1042,10 +826,12 @@
         </div>
       </div>
     </div>
+    <div class="fig-note">The dependency chain in post/cancel also introduces a race condition: if the Cancel lands but the Post is outbid or reverts, the market maker is momentarily unhedged with no quote on the book. Change is atomic — either the order moves to the new price or nothing happens.</div>
   </div>
-</div>
 
-<div class="page" style="padding-top: 0;">
+  <div class="cta-row">
+    <a class="cta cta-primary" href="interactive.html">&#9654; Run the simulation</a>
+  </div>
 
   <div class="sources">
     <div class="sources-text">
