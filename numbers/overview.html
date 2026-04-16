@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Number Systems: Overview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d12; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
+  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; }
+  .site-links a:hover { border-color: #444; color: #ccc; }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .content { max-width: 740px; margin: 0 auto; padding: 48px 32px 80px; }
+  h1 { font-size: 28px; color: #e6edf3; font-weight: 700; margin-bottom: 8px; }
+  .lead { font-size: 15px; color: #8b949e; margin-bottom: 40px; line-height: 1.7; }
+  h2 { font-size: 18px; color: #e6edf3; font-weight: 600; margin: 36px 0 12px; }
+  p { color: #8b949e; margin-bottom: 16px; font-size: 14px; }
+  strong { color: #c9d1d9; }
+
+  .eq { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 20px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; margin: 16px 0; line-height: 2; }
+  .eq .label { display: block; font-size: 11px; color: #484f58; margin-top: 4px; font-style: italic; }
+
+  .ns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .ns-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; }
+  .ns-card-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .ns-card-full { font-size: 11px; color: #484f58; margin-bottom: 10px; }
+  .ns-card-row { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+  .ns-card-row span { color: #c9d1d9; }
+
+  .callout { background: #161b22; border-left: 3px solid #58a6ff; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #8b949e; line-height: 1.8; }
+  .callout strong { color: #c9d1d9; }
+
+  .budget-visual { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; margin: 20px 0; }
+  .bv-title { font-size: 11px; color: #484f58; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+  .bv-row { display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .bv-label { font-size: 11px; color: #8b949e; text-align: right; }
+  .bv-bar { height: 24px; border-radius: 4px; display: flex; overflow: hidden; position: relative; }
+  .bv-price { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .bv-size { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+  .bv-note { font-size: 11px; color: #484f58; }
+
+  .example-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 20px 0; }
+  .example-table th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .example-table td { padding: 8px 10px; border-bottom: 1px solid #161b22; font-family: 'SF Mono', monospace; }
+  .example-table tr.highlight td { background: #1a2a1a22; }
+  td.blue { color: #58a6ff; } td.green { color: #3fb950; } td.red { color: #f85149; } td.gray { color: #8b949e; }
+
+  .cta-row { display: flex; gap: 12px; margin: 36px 0 0; flex-wrap: wrap; }
+  .cta { padding: 10px 22px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
+  .cta-primary { background: #6F5CFF; color: #fff; border: 1px solid #6F5CFF; }
+  .cta-primary:hover { background: #5a4ae6; }
+  .cta-secondary { background: transparent; color: #8b949e; border: 1px solid #30363d; }
+  .cta-secondary:hover { border-color: #58a6ff; color: #58a6ff; }
+  .footer { margin-top: 60px; font-size: 11px; color: #30363d; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a class="active" href="overview.html">Overview</a>
+    <a href="index.html">Interactive</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="content">
+
+<h1>Number Systems</h1>
+<p class="lead">Perpl uses four purpose-built integer representations — each sized exactly for its job. The choice of decimal split between price and size is a fundamental tradeoff that shapes every market on the exchange.</p>
+
+<h2>Why integers?</h2>
+<p>EVM smart contracts don't have floating point. Every price, size, and balance is an unsigned integer. The question is how many of those integers represent whole units versus fractional parts — the decimal placement is a design choice baked into the contract at deployment time.</p>
+<p>A naive approach uses one representation for everything. Perpl uses four, each with the right bit width and decimal precision for its specific role.</p>
+
+<h2>The four number systems</h2>
+
+<div class="ns-grid">
+  <div class="ns-card">
+    <div class="ns-card-name" style="color:#bc8cff">CNS — Collateral</div>
+    <div class="ns-card-full">Collateral Number System</div>
+    <div class="ns-card-row">Storage: <span>80-bit unsigned</span></div>
+    <div class="ns-card-row">Decimals: <span>6 (fixed — always USDC)</span></div>
+    <div class="ns-card-row">Max: <span>~$1.2 trillion USDC</span></div>
+    <div class="ns-card-row">Used for: <span>balances, fees, PnL, margins</span></div>
+  </div>
+  <div class="ns-card">
+    <div class="ns-card-name" style="color:#58a6ff">PNS — Price</div>
+    <div class="ns-card-full">Price Number System</div>
+    <div class="ns-card-row">Storage: <span>32-bit unsigned</span></div>
+    <div class="ns-card-row">Decimals: <span>0–6, per-perp</span></div>
+    <div class="ns-card-row">Max: <span>$429M at 1 decimal</span></div>
+    <div class="ns-card-row">Used for: <span>mark price, oracle, entry price</span></div>
+  </div>
+  <div class="ns-card">
+    <div class="ns-card-name" style="color:#3fb950">LNS — Lot Size</div>
+    <div class="ns-card-full">Lot Number System</div>
+    <div class="ns-card-row">Storage: <span>40-bit unsigned</span></div>
+    <div class="ns-card-row">Decimals: <span>0–6, per-perp</span></div>
+    <div class="ns-card-row">Max: <span>1.1 trillion units</span></div>
+    <div class="ns-card-row">Used for: <span>position sizes, order sizes</span></div>
+  </div>
+  <div class="ns-card">
+    <div class="ns-card-name" style="color:#d29922">ONS — Orderbook</div>
+    <div class="ns-card-full">Orderbook Number System</div>
+    <div class="ns-card-row">Storage: <span>24-bit unsigned</span></div>
+    <div class="ns-card-row">Decimals: <span>0 (tick offsets only)</span></div>
+    <div class="ns-card-row">Max: <span>16,777,215 ticks from base</span></div>
+    <div class="ns-card-row">Used for: <span>orderbook price slots</span></div>
+  </div>
+</div>
+
+<h2>The precision budget</h2>
+<p>CNS (collateral) is always 6 decimal places — USDC has 6 decimals, and that's fixed. When the contract computes PnL as <strong>price × size</strong>, the result must land exactly in CNS. That requires:</p>
+
+<div class="eq">
+  price_decimals + size_decimals = 6
+  <span class="label">Every perp uses all 6 decimal places, split between price precision and size precision.</span>
+</div>
+
+<p>This means every market is making a tradeoff: more price precision means less size precision, and vice versa. The split is chosen once at market creation and can't change.</p>
+
+<div class="budget-visual">
+  <div class="bv-title">How the 6 decimal budget is split — live perps</div>
+  <div class="bv-row">
+    <span class="bv-label" style="color:#58a6ff">BTC-PERP</span>
+    <div class="bv-bar" style="background:#0d1117;border:1px solid #21262d;">
+      <div class="bv-price" style="width:16.7%;background:#58a6ff20;border-right:2px solid #58a6ff;color:#58a6ff;">1</div>
+      <div class="bv-size" style="width:83.3%;background:#3fb95014;color:#3fb950;">5</div>
+    </div>
+    <span class="bv-note">1 price + 5 size</span>
+  </div>
+  <div class="bv-row">
+    <span class="bv-label" style="color:#3fb950">MON-PERP</span>
+    <div class="bv-bar" style="background:#0d1117;border:1px solid #21262d;">
+      <div class="bv-price" style="width:100%;background:#58a6ff20;border-right:2px solid #58a6ff;color:#58a6ff;">6</div>
+      <div class="bv-size" style="width:0%;background:#3fb95014;color:#3fb950;"></div>
+    </div>
+    <span class="bv-note">6 price + 0 size</span>
+  </div>
+</div>
+
+<h2>Why BTC and MON look so different</h2>
+<p>At ~$95,000, Bitcoin needs fine size granularity — you want to let traders buy $1 worth of BTC, which means 0.00001 BTC minimum lots (5 size decimals). Price ticks of $0.10 are more than adequate at that scale. So BTC uses <strong>1 price decimal, 5 size decimals</strong>.</p>
+<p>Monad at ~$0.40 has the opposite problem. A $0.10 price tick would be 25% of the entire asset price — you could only represent $0.00, $0.10, $0.20, $0.30, $0.40. That's useless. You need $0.000001 ticks to express meaningful price moves. And whole-MON lot sizes ($0.40 each) are still small enough for retail. So MON uses <strong>6 price decimals, 0 size decimals</strong>.</p>
+
+<table class="example-table">
+  <thead>
+    <tr>
+      <th>Asset</th><th>Price</th><th>Price dec</th><th>Size dec</th><th>Price tick</th><th>Min lot</th><th>Min trade</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="highlight">
+      <td class="blue">BTC</td><td class="gray">~$95,000</td><td class="blue">1</td><td class="green">5</td>
+      <td class="gray">$0.10</td><td class="gray">0.00001 BTC</td><td class="green">~$0.95</td>
+    </tr>
+    <tr class="highlight">
+      <td class="green">MON</td><td class="gray">~$0.40</td><td class="blue">6</td><td class="green">0</td>
+      <td class="gray">$0.000001</td><td class="gray">1 MON</td><td class="green">~$0.40</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>The ONS range tradeoff</h2>
+<p>Prices in the orderbook are stored as 24-bit offsets (ONS) from a base price. This caps the total representable price range at <strong>16,777,215 ticks</strong>. More price decimals means smaller ticks, which means the total range shrinks:</p>
+<p>BTC at 1 price decimal: each tick is $0.10, so the range spans $1,677,721 — enough to cover BTC from near zero to multiples of today's price. MON at 6 price decimals: each tick is $0.000001, so the range spans $16.78 — fine at $0.40 but requires a base price update if MON ever rallies significantly above ~$16.</p>
+
+<div class="callout">
+  <strong>The key insight:</strong> There's no universally optimal decimal split. It depends on the asset's price magnitude. Low-price tokens need fine price precision; high-price tokens need fine size precision. The 6-decimal budget forces a choice that has to match the asset's characteristics.
+</div>
+
+<div class="cta-row">
+  <a class="cta cta-primary" href="index.html">&#9654; Try the interactive explorer</a>
+  <a class="cta cta-secondary" href="diagrams.html">Technical diagrams</a>
+</div>
+
+<div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+</div>
+</body>
+</html>

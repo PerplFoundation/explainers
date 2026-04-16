@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Number Systems: Interactive</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
+    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --bd: #1e1e2e; --bd2: #2a2a3a;
+    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
+    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+
+  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
+  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; }
+  .site-links a:hover { border-color: #444; color: var(--tx); }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 1060px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
+
+  .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
+  .sec-tab:hover:not(.active) { border-color: var(--bd); color: var(--tx); }
+  .sec-tab.active { background: #0f172a; border-color: var(--blue); color: var(--blue); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Panel 1: Precision Budget ── */
+  .budget-layout { display: grid; grid-template-columns: 1fr 300px; gap: 24px; }
+
+  .sec-label { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 10px; }
+
+  .asset-chips { display: flex; gap: 8px; margin-bottom: 20px; }
+  .asset-chip { padding: 6px 18px; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .asset-chip:hover { border-color: var(--bd); color: var(--tx); }
+  .asset-chip.active { border-color: var(--blue); background: #60a5fa12; color: var(--blue); }
+
+  .custom-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .custom-row label { font-size: 12px; color: var(--tx2); }
+  .custom-row input { width: 130px; background: var(--bg3); border: 1px solid var(--bd2); border-radius: 4px; padding: 5px 10px; font-size: 13px; color: var(--tx); font-family: 'SF Mono', monospace; }
+
+  /* Split bar */
+  .split-wrap { margin-bottom: 24px; }
+  .split-legend { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px; }
+  .split-bar { position: relative; height: 44px; background: var(--bg3); border-radius: 8px; border: 1px solid var(--bd); cursor: ew-resize; user-select: none; overflow: hidden; }
+  .split-price-fill { position: absolute; left: 0; top: 0; bottom: 0; background: #60a5fa1a; border-right: 3px solid var(--blue); display: flex; align-items: center; justify-content: center; transition: width 0.1s; min-width: 0; }
+  .split-size-fill { position: absolute; right: 0; top: 0; bottom: 0; background: #22c55e10; display: flex; align-items: center; justify-content: center; transition: left 0.1s; min-width: 0; }
+  .split-fill-label { font-size: 12px; font-weight: 700; pointer-events: none; white-space: nowrap; padding: 0 6px; }
+  .split-handle { position: absolute; top: 50%; transform: translate(-50%, -50%); width: 18px; height: 32px; background: var(--blue); border-radius: 4px; cursor: ew-resize; z-index: 2; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px #60a5fa50; transition: left 0.1s; }
+  .split-handle::after { content: '||'; color: rgba(255,255,255,0.5); font-size: 9px; letter-spacing: 1px; }
+  .split-footer { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; color: var(--tx3); }
+  .split-total { color: var(--blue); font-weight: 600; }
+
+  /* Quick pills */
+  .pills { display: flex; gap: 4px; margin-bottom: 20px; }
+  .pill { flex: 1; padding: 6px 4px; text-align: center; border-radius: 4px; border: 1px solid var(--bd); background: var(--bg3); font-size: 10px; cursor: pointer; transition: all 0.15s; color: var(--tx3); }
+  .pill:hover { color: var(--tx2); border-color: var(--bd2); }
+  .pill.p-active { border-color: var(--blue); background: #60a5fa10; color: var(--blue); }
+  .pill.s-active { border-color: var(--green); background: #22c55e10; color: var(--green); }
+
+  /* Checks */
+  .checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+  .check { background: var(--bg2); border: 1px solid var(--bd); border-radius: 6px; padding: 10px 12px; }
+  .check-label { font-size: 10px; color: var(--tx3); margin-bottom: 4px; }
+  .check-val { font-size: 12px; font-weight: 600; font-family: 'SF Mono', monospace; }
+  .ok { color: var(--green); }
+  .warn { color: var(--amber); }
+  .bad { color: var(--red); }
+
+  .verdict { padding: 10px 14px; border-radius: 6px; font-size: 12px; line-height: 1.6; }
+  .verdict.ok { background: #22c55e08; border: 1px solid #22c55e20; color: #7cb; }
+  .verdict.warn { background: #eab30808; border: 1px solid #eab30820; color: #ca8; }
+  .verdict.bad { background: #ef444408; border: 1px solid #ef444420; color: #faa; }
+
+  /* Stats sidebar */
+  .stat-cards { display: flex; flex-direction: column; gap: 10px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 14px; }
+  .stat-card h4 { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+  .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--bd); font-size: 11px; }
+  .stat-row:last-child { border: none; }
+  .stat-key { color: var(--tx2); }
+  .stat-val { font-family: 'SF Mono', monospace; font-weight: 600; font-size: 12px; }
+
+  /* ── Panel 2: Number Systems ── */
+  .ns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  .ns-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.15s; }
+  .ns-card.sel { border-color: var(--blue); background: #60a5fa06; }
+  .ns-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .ns-abbr { font-size: 18px; font-weight: 800; }
+  .ns-full-name { font-size: 10px; color: var(--tx3); margin-top: 2px; }
+  .ns-badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 4px; font-family: 'SF Mono', monospace; }
+  .b80 { color: var(--purple); background: #a78bfa12; border: 1px solid #a78bfa30; }
+  .b40 { color: var(--green); background: #22c55e12; border: 1px solid #22c55e30; }
+  .b32 { color: var(--blue); background: #60a5fa12; border: 1px solid #60a5fa30; }
+  .b24 { color: var(--amber); background: #eab30812; border: 1px solid #eab30830; }
+  .bit-bar { height: 6px; background: var(--bg3); border-radius: 3px; margin-bottom: 10px; overflow: hidden; }
+  .bit-bar-fill { height: 100%; border-radius: 3px; }
+  .ns-prop { font-size: 11px; color: var(--tx2); margin-bottom: 4px; }
+  .ns-prop b { color: var(--tx); font-weight: 500; }
+
+  .ns-detail { background: var(--bg2); border: 1px solid var(--bd2); border-radius: 10px; padding: 20px; }
+  .ns-detail h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+  .detail-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  .detail-cell { background: var(--bg3); border-radius: 6px; padding: 12px; }
+  .detail-lbl { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .detail-v { font-size: 13px; font-weight: 700; font-family: 'SF Mono', monospace; }
+  .detail-text { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .detail-block { background: var(--bg3); border-radius: 6px; padding: 12px; }
+  .detail-block-lbl { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+  .detail-block-body { font-size: 12px; color: var(--tx2); line-height: 1.7; }
+
+  /* ── Panel 3: BTC vs MON ── */
+  .compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .cmp { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; overflow: hidden; }
+  .cmp-head { padding: 16px 20px; border-bottom: 1px solid var(--bd); }
+  .cmp-asset { font-size: 22px; font-weight: 700; margin-bottom: 3px; }
+  .cmp-desc { font-size: 12px; color: var(--tx3); }
+  .cmp-body { padding: 4px 0; }
+  .cmp-row { display: flex; justify-content: space-between; align-items: baseline; padding: 9px 20px; border-bottom: 1px solid var(--bd); font-size: 12px; }
+  .cmp-row:last-child { border: none; }
+  .cmp-key { color: var(--tx2); }
+  .cmp-val { font-family: 'SF Mono', monospace; font-weight: 600; }
+  .cmp-note { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 16px 20px; font-size: 13px; color: var(--tx2); line-height: 1.8; }
+
+  /* Wrong config callout */
+  .wrong-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 20px; }
+  .wrong-card { background: var(--bg2); border: 1px solid #ef444420; border-radius: 8px; padding: 14px; }
+  .wrong-title { font-size: 12px; font-weight: 600; color: var(--red); margin-bottom: 10px; }
+  .wrong-row { font-size: 11px; color: var(--tx3); margin-bottom: 5px; }
+  .wrong-row b { color: var(--red); }
+  .wrong-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <span class="site-logo">Perpl</span>
+  <div class="site-links">
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html">Interactive</a>
+    <a href="diagrams.html">Technical Diagrams</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Number Systems</h1>
+  <p class="sub">How Perpl represents prices, sizes, and collateral on-chain — and the tradeoffs behind each choice.</p>
+
+  <div class="sec-tabs">
+    <div class="sec-tab active" onclick="setPanel('budget')">Precision Budget</div>
+    <div class="sec-tab" onclick="setPanel('systems')">Number Systems</div>
+    <div class="sec-tab" onclick="setPanel('compare')">BTC vs MON</div>
+  </div>
+
+  <!-- ── PANEL 1 ── -->
+  <div class="panel active" id="panel-budget">
+    <div class="budget-layout">
+      <div>
+        <div class="sec-label">Select asset</div>
+        <div class="asset-chips">
+          <div class="asset-chip active" id="chip-BTC" onclick="setAsset('BTC',this)">BTC</div>
+          <div class="asset-chip" id="chip-MON" onclick="setAsset('MON',this)">MON</div>
+          <div class="asset-chip" id="chip-custom" onclick="setAsset('custom',this)">Custom</div>
+        </div>
+        <div class="custom-row" id="custom-row" style="display:none">
+          <label>Price ($)</label>
+          <input type="number" id="custom-price" value="5.00" step="0.01" min="0.000001" oninput="refresh()">
+          <label>Symbol</label>
+          <input type="text" id="custom-sym" value="TOKEN" style="width:80px" oninput="refresh()">
+        </div>
+
+        <div class="sec-label">Drag to split 6 decimal places between price and size</div>
+        <div class="split-wrap">
+          <div class="split-legend">
+            <span style="color:var(--blue)">← PRICE decimals</span>
+            <span style="color:var(--green)">SIZE decimals →</span>
+          </div>
+          <div class="split-bar" id="split-bar" onmousedown="dragStart(event)" ontouchstart="dragStart(event)">
+            <div class="split-price-fill" id="sp-fill">
+              <span class="split-fill-label" style="color:var(--blue)" id="sp-num">1</span>
+            </div>
+            <div class="split-size-fill" id="ss-fill">
+              <span class="split-fill-label" style="color:var(--green)" id="ss-num">5</span>
+            </div>
+            <div class="split-handle" id="sp-handle"></div>
+          </div>
+          <div class="split-footer">
+            <span id="ft-price">tick: $0.10</span>
+            <span class="split-total" id="ft-total">1 + 5 = 6 ✓</span>
+            <span id="ft-size">tick: 0.00001 BTC</span>
+          </div>
+        </div>
+
+        <div class="sec-label">Quick select</div>
+        <div class="pills" id="pills"></div>
+
+        <div class="sec-label" style="margin-top:16px">Configuration checks</div>
+        <div class="checks">
+          <div class="check"><div class="check-label">Price tick resolution</div><div class="check-val" id="ck-res">—</div></div>
+          <div class="check"><div class="check-label">Min trade value</div><div class="check-val" id="ck-trade">—</div></div>
+          <div class="check"><div class="check-label">Price fits in ONS (24-bit)</div><div class="check-val" id="ck-ons">—</div></div>
+          <div class="check"><div class="check-label">Rally headroom</div><div class="check-val" id="ck-room">—</div></div>
+        </div>
+        <div class="verdict" id="verdict"></div>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <h4>Price System (PNS · 32-bit)</h4>
+          <div class="stat-row"><span class="stat-key">Decimals</span><span class="stat-val" id="s-pdec" style="color:var(--blue)">—</span></div>
+          <div class="stat-row"><span class="stat-key">Tick size</span><span class="stat-val" id="s-ptick">—</span></div>
+          <div class="stat-row"><span class="stat-key">Current PNS</span><span class="stat-val" id="s-pns">—</span></div>
+          <div class="stat-row"><span class="stat-key">ONS range (24-bit)</span><span class="stat-val" id="s-ons">—</span></div>
+          <div class="stat-row"><span class="stat-key">Max PNS price</span><span class="stat-val" id="s-pmax">—</span></div>
+        </div>
+        <div class="stat-card">
+          <h4>Size System (LNS · 40-bit)</h4>
+          <div class="stat-row"><span class="stat-key">Decimals</span><span class="stat-val" id="s-sdec" style="color:var(--green)">—</span></div>
+          <div class="stat-row"><span class="stat-key">Min lot size</span><span class="stat-val" id="s-stick">—</span></div>
+          <div class="stat-row"><span class="stat-key">Min trade value</span><span class="stat-val" id="s-smin">—</span></div>
+          <div class="stat-row"><span class="stat-key">Max position</span><span class="stat-val" id="s-smax">—</span></div>
+        </div>
+        <div class="stat-card">
+          <h4>Collateral (CNS · 80-bit · fixed)</h4>
+          <div class="stat-row"><span class="stat-key">Decimals</span><span class="stat-val" style="color:var(--purple)">6 (USDC)</span></div>
+          <div class="stat-row"><span class="stat-key">Max balance</span><span class="stat-val">~$1.2T</span></div>
+          <div class="stat-row"><span class="stat-key">price_dec + size_dec</span><span class="stat-val" style="color:var(--green)">= 6 ✓</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PANEL 2 ── -->
+  <div class="panel" id="panel-systems">
+    <div class="ns-grid">
+      <div class="ns-card sel" id="nsc-CNS" onclick="pickNS('CNS')">
+        <div class="ns-card-top">
+          <div><div class="ns-abbr" style="color:var(--purple)">CNS</div><div class="ns-full-name">Collateral Number System</div></div>
+          <span class="ns-badge b80">80-bit</span>
+        </div>
+        <div class="bit-bar"><div class="bit-bar-fill" style="width:100%;background:var(--purple);opacity:0.4;"></div></div>
+        <div class="ns-prop">Decimals: <b>6 fixed</b></div>
+        <div class="ns-prop">Max: <b>~$1.2 trillion USDC</b></div>
+        <div class="ns-prop">Used for: <b>balances, fees, PnL, margins</b></div>
+      </div>
+      <div class="ns-card" id="nsc-PNS" onclick="pickNS('PNS')">
+        <div class="ns-card-top">
+          <div><div class="ns-abbr" style="color:var(--blue)">PNS</div><div class="ns-full-name">Price Number System</div></div>
+          <span class="ns-badge b32">32-bit</span>
+        </div>
+        <div class="bit-bar"><div class="bit-bar-fill" style="width:40%;background:var(--blue);opacity:0.4;"></div></div>
+        <div class="ns-prop">Decimals: <b>0–6, per-perp</b></div>
+        <div class="ns-prop">Max: <b>$429M @ 1 dec / $4,295 @ 6 dec</b></div>
+        <div class="ns-prop">Used for: <b>mark price, oracle, entry price</b></div>
+      </div>
+      <div class="ns-card" id="nsc-LNS" onclick="pickNS('LNS')">
+        <div class="ns-card-top">
+          <div><div class="ns-abbr" style="color:var(--green)">LNS</div><div class="ns-full-name">Lot Number System</div></div>
+          <span class="ns-badge b40">40-bit</span>
+        </div>
+        <div class="bit-bar"><div class="bit-bar-fill" style="width:50%;background:var(--green);opacity:0.4;"></div></div>
+        <div class="ns-prop">Decimals: <b>0–6, per-perp</b></div>
+        <div class="ns-prop">Max: <b>1,099,511,627,775 raw lots</b></div>
+        <div class="ns-prop">Used for: <b>position sizes, order sizes</b></div>
+      </div>
+      <div class="ns-card" id="nsc-ONS" onclick="pickNS('ONS')">
+        <div class="ns-card-top">
+          <div><div class="ns-abbr" style="color:var(--amber)">ONS</div><div class="ns-full-name">Orderbook Number System</div></div>
+          <span class="ns-badge b24">24-bit</span>
+        </div>
+        <div class="bit-bar"><div class="bit-bar-fill" style="width:30%;background:var(--amber);opacity:0.4;"></div></div>
+        <div class="ns-prop">Decimals: <b>0 (tick offsets only)</b></div>
+        <div class="ns-prop">Max: <b>16,777,215 ticks from base</b></div>
+        <div class="ns-prop">Used for: <b>orderbook price slots</b></div>
+      </div>
+    </div>
+    <div class="ns-detail" id="ns-detail"></div>
+  </div>
+
+  <!-- ── PANEL 3 ── -->
+  <div class="panel" id="panel-compare">
+    <div class="compare-wrap">
+      <div class="cmp" style="border-color:#60a5fa30;">
+        <div class="cmp-head" style="background:#60a5fa06;">
+          <div class="cmp-asset" style="color:var(--blue)">BTC-PERP</div>
+          <div class="cmp-desc">High-value asset — prioritise size granularity</div>
+        </div>
+        <div class="cmp-body">
+          <div class="cmp-row"><span class="cmp-key">Market price</span><span class="cmp-val">~$95,000</span></div>
+          <div class="cmp-row"><span class="cmp-key">price_decimals</span><span class="cmp-val" style="color:var(--blue)">1</span></div>
+          <div class="cmp-row"><span class="cmp-key">size_decimals</span><span class="cmp-val" style="color:var(--green)">5</span></div>
+          <div class="cmp-row"><span class="cmp-key">Price tick</span><span class="cmp-val">$0.10</span></div>
+          <div class="cmp-row"><span class="cmp-key">Tick as % of price</span><span class="cmp-val ok">0.0001%</span></div>
+          <div class="cmp-row"><span class="cmp-key">Min lot</span><span class="cmp-val">0.00001 BTC</span></div>
+          <div class="cmp-row"><span class="cmp-key">Min trade value</span><span class="cmp-val ok">~$0.95</span></div>
+          <div class="cmp-row"><span class="cmp-key">ONS price range</span><span class="cmp-val">$0 – $1,677,721</span></div>
+          <div class="cmp-row"><span class="cmp-key">Rally headroom</span><span class="cmp-val ok">17.7× current price</span></div>
+        </div>
+      </div>
+      <div class="cmp" style="border-color:#22c55e30;">
+        <div class="cmp-head" style="background:#22c55e06;">
+          <div class="cmp-asset" style="color:var(--green)">MON-PERP</div>
+          <div class="cmp-desc">Low-price token — prioritise price granularity</div>
+        </div>
+        <div class="cmp-body">
+          <div class="cmp-row"><span class="cmp-key">Market price</span><span class="cmp-val">~$0.40</span></div>
+          <div class="cmp-row"><span class="cmp-key">price_decimals</span><span class="cmp-val" style="color:var(--blue)">6</span></div>
+          <div class="cmp-row"><span class="cmp-key">size_decimals</span><span class="cmp-val" style="color:var(--green)">0</span></div>
+          <div class="cmp-row"><span class="cmp-key">Price tick</span><span class="cmp-val">$0.000001</span></div>
+          <div class="cmp-row"><span class="cmp-key">Tick as % of price</span><span class="cmp-val ok">0.00025%</span></div>
+          <div class="cmp-row"><span class="cmp-key">Min lot</span><span class="cmp-val">1 MON</span></div>
+          <div class="cmp-row"><span class="cmp-key">Min trade value</span><span class="cmp-val ok">~$0.40</span></div>
+          <div class="cmp-row"><span class="cmp-key">ONS price range</span><span class="cmp-val warn">$0 – $16.78</span></div>
+          <div class="cmp-row"><span class="cmp-key">Rally headroom</span><span class="cmp-val ok">42× current price</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cmp-note">
+      <strong>Both use the full 6-decimal budget</strong> (1+5=6 and 6+0=6). The direction of the split is driven entirely by the asset's price magnitude. BTC at $95k needs sub-cent lot granularity so traders can buy tiny fractions. MON at $0.40 needs sub-cent <em>price</em> precision so the orderbook can express real spread and movement — $0.10 ticks would be 25% of the entire price.
+    </div>
+
+    <div class="wrong-label">What if the settings were swapped? (wrong configurations)</div>
+    <div class="wrong-grid">
+      <div class="wrong-card">
+        <div class="wrong-title">BTC with price_dec=6, size_dec=0</div>
+        <div class="wrong-row">Price tick: $0.000001 (overkill — $0.10 was fine)</div>
+        <div class="wrong-row">Min lot: <b>1 whole BTC = $95,000</b></div>
+        <div class="wrong-row">ONS range: <b>$0 – $16.78 (BTC doesn't fit!)</b></div>
+        <div class="wrong-row">→ Orderbook overflows. No retail participation.</div>
+      </div>
+      <div class="wrong-card">
+        <div class="wrong-title">MON with price_dec=1, size_dec=5</div>
+        <div class="wrong-row">Price tick: <b>$0.10 = 25% of $0.40 price</b></div>
+        <div class="wrong-row">Min lot: 0.00001 MON = $0.000004 (dust)</div>
+        <div class="wrong-row">Expressible prices: $0.00, $0.10, $0.20, $0.30...</div>
+        <div class="wrong-row">→ Can't represent meaningful price moves. Useless book.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────
+const TOTAL = 6;
+const ONS_MAX = (1 << 24) - 1;   // 16,777,215
+const PNS_MAX = 2**32 - 1;        // 4,294,967,295
+const LNS_MAX = 2**40 - 1;        // 1,099,511,627,775
+
+const ASSETS = {
+  BTC: { price: 95000, sym: 'BTC' },
+  MON: { price: 0.40,  sym: 'MON' },
+};
+
+let asset = 'BTC';
+let pDec = 1;
+let dragging = false;
+
+// ── Panel switching ────────────────────────────────────
+function setPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  ['budget','systems','compare'].forEach((s,i) => {
+    if (s === id) document.querySelectorAll('.sec-tab')[i].classList.add('active');
+  });
+}
+
+// ── Asset ─────────────────────────────────────────────
+function setAsset(name, el) {
+  asset = name;
+  document.querySelectorAll('.asset-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('custom-row').style.display = name === 'custom' ? 'flex' : 'none';
+  if (name === 'BTC') pDec = 1;
+  else if (name === 'MON') pDec = 6;
+  renderBar(); refresh();
+}
+
+function getPrice() {
+  if (asset === 'custom') return parseFloat(document.getElementById('custom-price').value) || 1;
+  return ASSETS[asset].price;
+}
+function getSym() {
+  if (asset === 'custom') return document.getElementById('custom-sym').value || 'TOKEN';
+  return ASSETS[asset].sym;
+}
+
+// ── Drag ──────────────────────────────────────────────
+function dragStart(e) {
+  dragging = true;
+  document.addEventListener('mousemove', onDrag);
+  document.addEventListener('mouseup', dragEnd);
+  document.addEventListener('touchmove', onDrag, {passive: false});
+  document.addEventListener('touchend', dragEnd);
+  onDrag(e);
+}
+function onDrag(e) {
+  if (!dragging) return;
+  if (e.cancelable) e.preventDefault();
+  const bar = document.getElementById('split-bar');
+  const r = bar.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  pDec = Math.round(Math.max(0, Math.min(TOTAL, (x / r.width) * TOTAL)));
+  renderBar(); refresh();
+}
+function dragEnd() {
+  dragging = false;
+  document.removeEventListener('mousemove', onDrag);
+  document.removeEventListener('mouseup', dragEnd);
+  document.removeEventListener('touchmove', onDrag);
+  document.removeEventListener('touchend', dragEnd);
+}
+
+// ── Bar render ────────────────────────────────────────
+function renderBar() {
+  const sd = TOTAL - pDec;
+  const pct = (pDec / TOTAL) * 100;
+  const price = getPrice();
+  const sym = getSym();
+
+  document.getElementById('sp-fill').style.width = Math.max(2, pct) + '%';
+  document.getElementById('ss-fill').style.left = pct + '%';
+  document.getElementById('ss-fill').style.width = Math.max(2, 100 - pct) + '%';
+  document.getElementById('sp-handle').style.left = pct + '%';
+  document.getElementById('sp-num').textContent = pDec;
+  document.getElementById('ss-num').textContent = sd;
+  document.getElementById('ft-total').textContent = pDec + ' + ' + sd + ' = 6 ✓';
+
+  const ptick = Math.pow(10, -pDec);
+  const stick = Math.pow(10, -sd);
+  document.getElementById('ft-price').textContent = 'tick: ' + fmtD(ptick, Math.max(pDec,2));
+  document.getElementById('ft-size').textContent = 'tick: ' + fmtD(stick, sd) + ' ' + sym;
+
+  // Pills
+  const pc = document.getElementById('pills');
+  pc.innerHTML = [0,1,2,3,4,5,6].map(i => {
+    let cls = 'pill';
+    let txt = i + ' dec';
+    if (i === pDec) { cls += ' p-active'; txt = i + ' price'; }
+    else if (i === sd) { cls += ' s-active'; txt = i + ' size'; }
+    return `<div class="${cls}" onclick="setPDec(${i})">${txt}</div>`;
+  }).join('');
+}
+
+function setPDec(n) { pDec = n; renderBar(); refresh(); }
+
+// ── Compute & refresh ─────────────────────────────────
+function refresh() {
+  const sd = TOTAL - pDec;
+  const price = getPrice();
+  const sym = getSym();
+
+  const ptick = Math.pow(10, -pDec);
+  const stick = sd === 0 ? 1 : Math.pow(10, -sd);
+
+  const curPNS = Math.round(price / ptick);
+  const onsRange = ONS_MAX * ptick;
+  const maxPNSPrice = PNS_MAX * ptick;
+  const fitsONS = curPNS <= ONS_MAX;
+  const headroom = onsRange / price;
+  const minTrade = stick * price;
+  const maxLots = LNS_MAX * stick;
+  const tickPct = (ptick / price) * 100;
+
+  // Stats
+  set('s-pdec', pDec + (pDec===1?' decimal':' decimals'));
+  set('s-ptick', fmtP(ptick));
+  set('s-pns', curPNS.toLocaleString() + (fitsONS ? '' : ' ⚠'));
+  set('s-ons', '$0 – ' + fmtP(onsRange));
+  set('s-pmax', fmtP(maxPNSPrice));
+  set('s-sdec', sd + (sd===1?' decimal':' decimals'));
+  set('s-stick', fmtD(stick, sd) + ' ' + sym);
+  set('s-smin', fmtP(minTrade));
+  set('s-smax', fmtBig(maxLots) + ' ' + sym);
+
+  // Checks
+  const ckRes = document.getElementById('ck-res');
+  if (tickPct < 0.01)      { ckRes.textContent = tickPct.toFixed(5) + '% ✓'; ckRes.className = 'check-val ok'; }
+  else if (tickPct < 1)    { ckRes.textContent = tickPct.toFixed(3) + '% ⚠'; ckRes.className = 'check-val warn'; }
+  else                     { ckRes.textContent = tickPct.toFixed(1) + '% ✗'; ckRes.className = 'check-val bad'; }
+
+  const ckTrade = document.getElementById('ck-trade');
+  if (minTrade < 5)        { ckTrade.textContent = fmtP(minTrade) + ' ✓'; ckTrade.className = 'check-val ok'; }
+  else if (minTrade < 100) { ckTrade.textContent = fmtP(minTrade) + ' ⚠'; ckTrade.className = 'check-val warn'; }
+  else                     { ckTrade.textContent = fmtP(minTrade) + ' ✗'; ckTrade.className = 'check-val bad'; }
+
+  const ckONS = document.getElementById('ck-ons');
+  if (fitsONS) { ckONS.textContent = 'Yes ✓ (' + ((curPNS/ONS_MAX)*100).toFixed(1) + '% used)'; ckONS.className = 'check-val ok'; }
+  else         { ckONS.textContent = 'No ✗ — overflows 24-bit'; ckONS.className = 'check-val bad'; }
+
+  const ckRoom = document.getElementById('ck-room');
+  if (headroom >= 10)     { ckRoom.textContent = headroom.toFixed(1) + '× current price ✓'; ckRoom.className = 'check-val ok'; }
+  else if (headroom >= 3) { ckRoom.textContent = headroom.toFixed(1) + '× current price ⚠'; ckRoom.className = 'check-val warn'; }
+  else                    { ckRoom.textContent = headroom.toFixed(1) + '× current price ✗'; ckRoom.className = 'check-val bad'; }
+
+  // Verdict
+  const issues = [];
+  const warns = [];
+  if (!fitsONS) issues.push('price exceeds 24-bit ONS range — orderbook cannot represent this price');
+  if (tickPct >= 1) issues.push('price tick is ' + tickPct.toFixed(1) + '% of asset price — too coarse');
+  if (minTrade >= 100) issues.push('min trade ' + fmtP(minTrade) + ' — excludes retail');
+  if (fitsONS && headroom < 3) warns.push(headroom.toFixed(1) + '× headroom — base price update needed on large rally');
+  if (minTrade >= 5 && minTrade < 100) warns.push('min trade ' + fmtP(minTrade) + ' may limit small traders');
+
+  const v = document.getElementById('verdict');
+  if (issues.length) {
+    v.className = 'verdict bad';
+    v.innerHTML = '<strong>✗ Invalid:</strong> ' + issues.join('; ') + '.';
+  } else if (warns.length) {
+    v.className = 'verdict warn';
+    v.innerHTML = '<strong>⚠ Workable with caveats:</strong> ' + warns.join('; ') + '.';
+  } else {
+    const live = (asset==='BTC'&&pDec===1)||(asset==='MON'&&pDec===6);
+    v.className = 'verdict ok';
+    v.innerHTML = live
+      ? '<strong>✓ Matches live deployment.</strong> Full 6-decimal budget used. Both price resolution and size granularity are optimal for this asset.'
+      : '<strong>✓ Valid configuration.</strong> All checks pass for this asset at this price.';
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────
+function set(id, txt) { document.getElementById(id).textContent = txt; }
+function fmtD(n, dec) { return n.toFixed(Math.max(0, Math.min(dec, 10))); }
+function fmtP(n) {
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(1) + 'k';
+  if (n >= 1)   return '$' + n.toFixed(2);
+  return '$' + n.toFixed(6);
+}
+function fmtBig(n) {
+  if (n >= 1e12) return (n/1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6)  return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3)  return (n/1e3).toFixed(1) + 'k';
+  return n.toFixed(0);
+}
+
+// ── Number Systems panel ──────────────────────────────
+const NS = {
+  CNS: {
+    color: 'var(--purple)', bits: 80, label: 'CNS — Collateral Number System',
+    decimals: '6 (fixed — always USDC)',
+    maxRaw: '1,208,925,819,614,629,174,706,175',
+    maxHuman: '~$1.2 trillion USDC (effectively unlimited)',
+    storage: 'uint80, unsigned',
+    usedFor: 'Every monetary value: collateral balances, fees charged, PnL realized, margin requirements, insurance fund balances.',
+    why: 'USDC has 6 decimals and that\'s fixed. 80-bit is large enough that no realistic exchange balance could ever overflow. Completely independent of PNS/LNS choices.',
+    example: '$1,234.567890 USDC → stored as CNS value 1,234,567,890',
+    constraint: 'None — fully independent. The 6 CNS decimals are why price_dec + size_dec must equal 6.',
+  },
+  PNS: {
+    color: 'var(--blue)', bits: 32, label: 'PNS — Price Number System',
+    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec = 6.',
+    maxRaw: '4,294,967,295',
+    maxHuman: '$429M @ dec=1 · $4.29M @ dec=2 · $4,295 @ dec=6',
+    storage: 'uint32, unsigned',
+    usedFor: 'Mark price, oracle price, entry price, liquidation price. Orderbook prices are ONS offsets that get added to basePricePNS to produce PNS.',
+    why: '32-bit provides a max of ~4 billion, sufficient for any realistic asset price at any decimal setting. Derived from ONS via base price offset, enabling compact 24-bit orderbook slots.',
+    example: 'BTC $95,000.1 @ dec=1 → PNS = 950,001. MON $0.400000 @ dec=6 → PNS = 400,000.',
+    constraint: 'Orderbook slots are ONS (24-bit). Max ONS range = 16,777,215 ticks. At dec=6 this is $16.78; at dec=1 this is $1,677,721.',
+  },
+  LNS: {
+    color: 'var(--green)', bits: 40, label: 'LNS — Lot Number System',
+    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec = 6.',
+    maxRaw: '1,099,511,627,775',
+    maxHuman: '~10.9B units @ dec=5 · ~1.1T units @ dec=0',
+    storage: 'uint40, unsigned',
+    usedFor: 'Position lot sizes and order lot sizes. One "lot" is the minimum tradeable unit.',
+    why: '40-bit (larger than PNS\'s 32-bit) because lot counts can be much larger than prices — a trader might hold billions of a cheap token. The extra 8 bits (256× range) handles this without overflow.',
+    example: 'Long 2.50000 BTC @ dec=5 → LNS = 250,000. Long 5000 MON @ dec=0 → LNS = 5,000.',
+    constraint: 'size_dec = 6 − price_dec. More price precision = coarser lot granularity. At dec=0, minimum lot is 1 whole unit.',
+  },
+  ONS: {
+    color: 'var(--amber)', bits: 24, label: 'ONS — Orderbook Number System',
+    decimals: '0 (always — stores integer tick offsets from basePricePNS)',
+    maxRaw: '16,777,215',
+    maxHuman: 'Covers 16.7M price ticks from the base price',
+    storage: 'uint24, unsigned',
+    usedFor: 'Orderbook price slots. Every open limit order has an ONS price. The actual PNS price = basePricePNS + ONS.',
+    why: 'The orderbook only needs to span a finite price window. 24-bit (16M slots) is enough. Compact slots mean more orders pack into a storage word, reducing gas for order placement and cancellation.',
+    example: 'BTC order at $95,000.1 with base=0, dec=1 → ONS = 950,001. At dec=6, ONS range only spans $16.78 total.',
+    constraint: 'PNS = basePricePNS + ONS. If asset price moves outside the ONS window, basePricePNS must be updated. Higher price_dec = tighter window.',
+  },
+};
+
+let selNS = 'CNS';
+function pickNS(name) {
+  selNS = name;
+  document.querySelectorAll('.ns-card').forEach(c => c.classList.remove('sel'));
+  document.getElementById('nsc-' + name).classList.add('sel');
+  renderNS();
+}
+function renderNS() {
+  const d = NS[selNS];
+  document.getElementById('ns-detail').innerHTML = `
+    <h3 style="color:${d.color}">${d.label}</h3>
+    <div class="detail-row">
+      <div class="detail-cell"><div class="detail-lbl">Storage type</div><div class="detail-v" style="color:${d.color}">uint${d.bits}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Decimal places</div><div class="detail-v" style="font-size:11px;line-height:1.4">${d.decimals}</div></div>
+      <div class="detail-cell"><div class="detail-lbl">Max raw value</div><div class="detail-v" style="font-size:11px">${d.maxRaw}</div></div>
+    </div>
+    <div class="detail-text">
+      <div class="detail-block"><div class="detail-block-lbl">Used for</div><div class="detail-block-body">${d.usedFor}</div></div>
+      <div class="detail-block"><div class="detail-block-lbl">Why this bit width?</div><div class="detail-block-body">${d.why}</div></div>
+    </div>
+    <div class="detail-block" style="margin-top:10px;">
+      <div class="detail-block-lbl">Example</div>
+      <div style="font-size:12px;font-family:'SF Mono',monospace;color:${d.color};line-height:1.7">${d.example}</div>
+    </div>
+    <div class="detail-block" style="margin-top:10px;">
+      <div class="detail-block-lbl">Key constraint</div>
+      <div class="detail-block-body">${d.constraint}</div>
+    </div>`;
+}
+
+// ── Init ──────────────────────────────────────────────
+renderBar();
+refresh();
+renderNS();
+</script>
+</body>
+</html>
