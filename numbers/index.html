@@ -436,7 +436,7 @@
       <div>
         <div class="fund-col-head btc">
           <span>BTC-PERP</span>
-          <span class="fund-col-meta">price_dec=1 · PNS=<span id="fb-pns">950,000</span></span>
+          <span class="fund-col-meta">$95,000 · price_dec=1 · PNS=<span id="fb-pns">950,000</span></span>
         </div>
         <div class="fund-col-body">
           <div class="sec-label" style="margin-bottom:8px;">Step-by-step funding pipeline</div>
@@ -449,7 +449,7 @@
       <div>
         <div class="fund-col-head mon">
           <span>MON-PERP</span>
-          <span class="fund-col-meta">price_dec=6 · PNS=<span id="fm-pns">400,000</span></span>
+          <span class="fund-col-meta">$0.024 · price_dec=6 · PNS=<span id="fm-pns">24,000</span></span>
         </div>
         <div class="fund-col-body">
           <div class="sec-label" style="margin-bottom:8px;">Step-by-step funding pipeline</div>
@@ -834,7 +834,7 @@ function refreshFunding() {
 
   // Compute both assets
   const btc = computeFund(95000, 1, effInt, lots);
-  const mon = computeFund(0.40,  6, effInt, lots);
+  const mon = computeFund(0.024, 6, effInt, lots);
 
   // Header PNS labels
   document.getElementById('fb-pns').textContent = btc.PNS.toLocaleString();
