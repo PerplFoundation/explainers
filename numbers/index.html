@@ -352,21 +352,21 @@
           <div class="cmp-desc">Low-price token — prioritise price granularity</div>
         </div>
         <div class="cmp-body">
-          <div class="cmp-row"><span class="cmp-key">Market price</span><span class="cmp-val">~$0.40</span></div>
+          <div class="cmp-row"><span class="cmp-key">Market price</span><span class="cmp-val">~$0.04</span></div>
           <div class="cmp-row"><span class="cmp-key">price_decimals</span><span class="cmp-val" style="color:var(--blue)">6</span></div>
           <div class="cmp-row"><span class="cmp-key">size_decimals</span><span class="cmp-val" style="color:var(--green)">0</span></div>
           <div class="cmp-row"><span class="cmp-key">Price tick</span><span class="cmp-val">$0.000001</span></div>
-          <div class="cmp-row"><span class="cmp-key">Tick as % of price</span><span class="cmp-val ok">0.00025%</span></div>
+          <div class="cmp-row"><span class="cmp-key">Tick as % of price</span><span class="cmp-val ok">0.0025%</span></div>
           <div class="cmp-row"><span class="cmp-key">Min lot</span><span class="cmp-val">1 MON</span></div>
-          <div class="cmp-row"><span class="cmp-key">Min trade value</span><span class="cmp-val ok">~$0.40</span></div>
+          <div class="cmp-row"><span class="cmp-key">Min trade value</span><span class="cmp-val ok">~$0.04</span></div>
           <div class="cmp-row"><span class="cmp-key">ONS price range</span><span class="cmp-val warn">$0 – $16.78</span></div>
-          <div class="cmp-row"><span class="cmp-key">Rally headroom</span><span class="cmp-val ok">42× current price</span></div>
+          <div class="cmp-row"><span class="cmp-key">Rally headroom</span><span class="cmp-val ok">419× current price</span></div>
         </div>
       </div>
     </div>
 
     <div class="cmp-note">
-      <strong>Both use the full 6-decimal budget</strong> (1+5=6 and 6+0=6). The direction of the split is driven entirely by the asset's price magnitude. BTC at $95k needs sub-cent lot granularity so traders can buy tiny fractions. MON at $0.40 needs sub-cent <em>price</em> precision so the orderbook can express real spread and movement — $0.10 ticks would be 25% of the entire price.
+      <strong>Both use the full 6-decimal budget</strong> (1+5=6 and 6+0=6). The direction of the split is driven entirely by the asset's price magnitude. BTC at $95k needs sub-cent lot granularity so traders can buy tiny fractions. MON at $0.04 needs sub-cent <em>price</em> precision so the orderbook can express real spread and movement — $0.10 ticks would be 250% of the entire price.
     </div>
 
     <div class="wrong-label">What if the settings were swapped? (wrong configurations)</div>
@@ -380,7 +380,7 @@
       </div>
       <div class="wrong-card">
         <div class="wrong-title">MON with price_dec=1, size_dec=5</div>
-        <div class="wrong-row">Price tick: <b>$0.10 = 25% of $0.40 price</b></div>
+        <div class="wrong-row">Price tick: <b>$0.10 = 250% of $0.04 price</b></div>
         <div class="wrong-row">Min lot: 0.00001 MON = $0.000004 (dust)</div>
         <div class="wrong-row">Expressible prices: $0.00, $0.10, $0.20, $0.30...</div>
         <div class="wrong-row">→ Can't represent meaningful price moves. Useless book.</div>
@@ -449,7 +449,7 @@
       <div>
         <div class="fund-col-head mon">
           <span>MON-PERP</span>
-          <span class="fund-col-meta">$0.024 · price_dec=6 · PNS=<span id="fm-pns">24,000</span></span>
+          <span class="fund-col-meta">$0.04 · price_dec=6 · PNS=<span id="fm-pns">40,000</span></span>
         </div>
         <div class="fund-col-body">
           <div class="sec-label" style="margin-bottom:8px;">Step-by-step funding pipeline</div>
@@ -470,7 +470,7 @@ const LNS_MAX = 2**40 - 1;        // 1,099,511,627,775
 
 const ASSETS = {
   BTC: { price: 95000, sym: 'BTC' },
-  MON: { price: 0.40,  sym: 'MON' },
+  MON: { price: 0.04,  sym: 'MON' },
 };
 
 let asset = 'BTC';
@@ -684,7 +684,7 @@ const NS = {
     storage: 'uint32, unsigned',
     usedFor: 'Mark price, oracle price, entry price, liquidation price. Orderbook prices are ONS offsets that get added to basePricePNS to produce PNS.',
     why: '32-bit provides a max of ~4 billion, sufficient for any realistic asset price at any decimal setting. Derived from ONS via base price offset, enabling compact 24-bit orderbook slots.',
-    example: 'BTC $95,000.1 @ dec=1 → PNS = 950,001. MON $0.400000 @ dec=6 → PNS = 400,000.',
+    example: 'BTC $95,000.1 @ dec=1 → PNS = 950,001. MON $0.040000 @ dec=6 → PNS = 40,000.',
     constraint: 'Orderbook slots are ONS (24-bit). Max ONS range = 16,777,215 ticks. At dec=6 this is $16.78; at dec=1 this is $1,677,721.',
   },
   LNS: {
@@ -834,7 +834,7 @@ function refreshFunding() {
 
   // Compute both assets
   const btc = computeFund(95000, 1, effInt, lots);
-  const mon = computeFund(0.024, 6, effInt, lots);
+  const mon = computeFund(0.04, 6, effInt, lots);
 
   // Header PNS labels
   document.getElementById('fb-pns').textContent = btc.PNS.toLocaleString();
