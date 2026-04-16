@@ -8,11 +8,12 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0d0d12; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
-  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
-  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
   .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; }
-  .site-links a:hover { border-color: #444; color: #ccc; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #e0e0f0; }
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
   .content { max-width: 860px; margin: 0 auto; padding: 48px 32px 100px; }
@@ -124,7 +125,7 @@
 <body>
 
 <nav class="site-nav">
-  <span class="site-logo">Perpl</span>
+  <a href="overview.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
     <a class="active" href="overview.html">Overview</a>
     <a href="index.html">Interactive</a>
