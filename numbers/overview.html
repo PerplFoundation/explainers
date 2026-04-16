@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Number Systems: Overview</title>
+<title>Number Systems — Perpl</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #0d0d12; color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
@@ -15,16 +15,32 @@
   .site-links a:hover { border-color: #444; color: #ccc; }
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
-  .content { max-width: 740px; margin: 0 auto; padding: 48px 32px 80px; }
-  h1 { font-size: 28px; color: #e6edf3; font-weight: 700; margin-bottom: 8px; }
-  .lead { font-size: 15px; color: #8b949e; margin-bottom: 40px; line-height: 1.7; }
-  h2 { font-size: 18px; color: #e6edf3; font-weight: 600; margin: 36px 0 12px; }
+  .content { max-width: 860px; margin: 0 auto; padding: 48px 32px 100px; }
+  h1 { font-size: 30px; color: #e6edf3; font-weight: 700; margin-bottom: 10px; }
+  .lead { font-size: 15px; color: #8b949e; margin-bottom: 44px; line-height: 1.8; }
+  h2 { font-size: 20px; color: #e6edf3; font-weight: 600; margin: 44px 0 14px; }
+  h3 { font-size: 15px; color: #c9d1d9; font-weight: 600; margin: 28px 0 10px; }
   p { color: #8b949e; margin-bottom: 16px; font-size: 14px; }
   strong { color: #c9d1d9; }
+
+  .divider { border: none; border-top: 1px solid #1e1e2e; margin: 40px 0; }
 
   .eq { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 20px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; margin: 16px 0; line-height: 2; }
   .eq .label { display: block; font-size: 11px; color: #484f58; margin-top: 4px; font-style: italic; }
 
+  .callout { background: #161b22; border-left: 3px solid #58a6ff; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #8b949e; line-height: 1.8; }
+  .callout strong { color: #c9d1d9; }
+  .callout.green { border-color: #3fb950; }
+  .callout.amber { border-color: #d29922; }
+
+  /* Figure wrapper */
+  .figure { margin: 28px 0 36px; }
+  .fig-label { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .fig-label span { color: #58a6ff; font-weight: 600; }
+  .box { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
+  .fig-note { font-size: 11px; color: #8b949e; margin-top: 10px; padding: 10px 14px; background: #161b22; border-left: 3px solid #30363d; border-radius: 0 4px 4px 0; line-height: 1.6; }
+
+  /* NS grid */
   .ns-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
   .ns-card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px; }
   .ns-card-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
@@ -32,24 +48,70 @@
   .ns-card-row { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
   .ns-card-row span { color: #c9d1d9; }
 
-  .callout { background: #161b22; border-left: 3px solid #58a6ff; border-radius: 0 6px 6px 0; padding: 14px 18px; margin: 20px 0; font-size: 13px; color: #8b949e; line-height: 1.8; }
-  .callout strong { color: #c9d1d9; }
+  /* Figure 1: Bit widths */
+  .bw-row { display: grid; grid-template-columns: 70px 1fr 170px; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .bw-label { font-size: 13px; font-weight: 700; text-align: right; }
+  .bw-bar-wrap { height: 28px; background: #0d1117; border-radius: 5px; overflow: hidden; border: 1px solid #21262d; }
+  .bw-bar { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 10px; }
+  .bw-bits { font-size: 11px; font-weight: 600; }
+  .bw-info { font-size: 11px; color: #8b949e; line-height: 1.5; }
+  .bw-info b { color: #c9d1d9; }
+  .bw-ref { margin-top: 8px; padding-top: 8px; border-top: 1px solid #21262d; }
+  .bw-ref-row { display: grid; grid-template-columns: 70px 1fr; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .bw-ref-bar { height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; }
+  .bw-ref-fill { height: 100%; border-radius: 3px; background: #484f58; }
 
+  /* Figure 2: Precision budget derivation */
+  .eq-flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin-bottom: 20px; }
+  .eq-box { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 20px; text-align: center; font-family: 'SF Mono', monospace; }
+  .eq-box .big { font-size: 16px; font-weight: 700; }
+  .eq-box .lbl { font-size: 10px; color: #484f58; margin-top: 4px; }
+  .eq-op { font-size: 22px; color: #484f58; padding: 0 16px; }
+  .eq-result { background: #0d2a1a; border: 1px solid #3fb95033; border-radius: 6px; padding: 14px 20px; text-align: center; font-family: 'SF Mono', monospace; }
+
+  /* Figure 3: ONS range table */
+  .range-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .range-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .range-table td { padding: 8px 12px; border-bottom: 1px solid #161b22; font-family: 'SF Mono', monospace; font-size: 11px; }
+  .range-table tr:hover td { background: #161b22; }
+  td.blue { color: #58a6ff; } td.green { color: #3fb950; } td.red { color: #f85149; } td.amber { color: #d29922; } td.gray { color: #8b949e; }
+  .range-table tr.btc-row td { background: #0d1a2a18; }
+  .range-table tr.mon-row td { background: #0a1a0a18; }
+  .rbar { height: 10px; border-radius: 3px; background: #21262d; overflow: hidden; }
+  .rbar-fill { height: 100%; border-radius: 3px; }
+
+  /* Figure 4: ONS/PNS relationship */
+  .ons-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .ons-diagram { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 16px; }
+  .ons-title { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .price-line { position: relative; height: 32px; background: #161b22; border-radius: 4px; margin: 8px 0; border: 1px solid #21262d; overflow: hidden; }
+  .price-ons { position: absolute; top: 0; bottom: 0; background: #58a6ff20; border-right: 2px solid #58a6ff; display: flex; align-items: center; justify-content: center; }
+  .price-marker { position: absolute; top: 0; bottom: 0; width: 2px; background: #f97316; }
+  .price-label { font-size: 10px; color: #8b949e; margin-bottom: 4px; font-family: 'SF Mono', monospace; }
+  .price-lsub { font-size: 9px; color: #484f58; margin-top: 8px; }
+
+  /* Figure 5: Full comparison table */
+  .full-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .full-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #21262d; color: #8b949e; font-size: 11px; }
+  .full-table th.btc-th { color: #58a6ff; background: #0d1a2a; border-bottom: 2px solid #58a6ff33; }
+  .full-table th.mon-th { color: #3fb950; background: #0a1a0a; border-bottom: 2px solid #3fb95044; }
+  .full-table td { padding: 9px 12px; border-bottom: 1px solid #161b22; }
+  .full-table tr:hover td { background: #161b22; }
+  td.g { color: #3fb950; } td.r { color: #f85149; } td.b { color: #58a6ff; } td.y { color: #d29922; }
+  .full-table td.btc-col { background: #0d1a2a08; border-left: 1px solid #58a6ff15; }
+  .full-table td.mon-col { background: #0a1a0a08; border-left: 1px solid #3fb95015; }
+
+  /* Budget visual */
   .budget-visual { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; margin: 20px 0; }
   .bv-title { font-size: 11px; color: #484f58; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
   .bv-row { display: grid; grid-template-columns: 80px 1fr 80px; align-items: center; gap: 10px; margin-bottom: 14px; }
   .bv-label { font-size: 11px; color: #8b949e; text-align: right; }
-  .bv-bar { height: 24px; border-radius: 4px; display: flex; overflow: hidden; position: relative; }
+  .bv-bar { height: 24px; border-radius: 4px; display: flex; overflow: hidden; }
   .bv-price { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
   .bv-size { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
   .bv-note { font-size: 11px; color: #484f58; }
 
-  .example-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 20px 0; }
-  .example-table th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .example-table td { padding: 8px 10px; border-bottom: 1px solid #161b22; font-family: 'SF Mono', monospace; }
-  .example-table tr.highlight td { background: #1a2a1a22; }
-  td.blue { color: #58a6ff; } td.green { color: #3fb950; } td.red { color: #f85149; } td.gray { color: #8b949e; }
-
+  /* CTA */
   .cta-row { display: flex; gap: 12px; margin: 36px 0 0; flex-wrap: wrap; }
   .cta { padding: 10px 22px; border-radius: 7px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s; }
   .cta-primary { background: #6F5CFF; color: #fff; border: 1px solid #6F5CFF; }
@@ -66,17 +128,16 @@
   <div class="site-links">
     <a class="active" href="overview.html">Overview</a>
     <a href="index.html">Interactive</a>
-    <a href="diagrams.html">Technical Diagrams</a>
   </div>
 </nav>
 
 <div class="content">
 
 <h1>Number Systems</h1>
-<p class="lead">Perpl uses four purpose-built integer representations — each sized exactly for its job. The choice of decimal split between price and size is a fundamental tradeoff that shapes every market on the exchange.</p>
+<p class="lead">Perpl uses four purpose-built integer representations — each sized exactly for its job. The choice of decimal split between price and size is a fundamental tradeoff baked into every market on the exchange.</p>
 
 <h2>Why integers?</h2>
-<p>EVM smart contracts don't have floating point. Every price, size, and balance is an unsigned integer. The question is how many of those integers represent whole units versus fractional parts — the decimal placement is a design choice baked into the contract at deployment time.</p>
+<p>EVM smart contracts don't have floating point. Every price, size, and balance is an unsigned integer. The question is how many of those integers represent whole units versus fractional parts — the decimal placement is a design choice fixed at deployment time.</p>
 <p>A naive approach uses one representation for everything. Perpl uses four, each with the right bit width and decimal precision for its specific role.</p>
 
 <h2>The four number systems</h2>
@@ -103,7 +164,7 @@
     <div class="ns-card-full">Lot Number System</div>
     <div class="ns-card-row">Storage: <span>40-bit unsigned</span></div>
     <div class="ns-card-row">Decimals: <span>0–6, per-perp</span></div>
-    <div class="ns-card-row">Max: <span>1.1 trillion units</span></div>
+    <div class="ns-card-row">Max: <span>1.1 trillion raw lots</span></div>
     <div class="ns-card-row">Used for: <span>position sizes, order sizes</span></div>
   </div>
   <div class="ns-card">
@@ -116,6 +177,43 @@
   </div>
 </div>
 
+<!-- Figure 1: Bit widths -->
+<div class="figure">
+  <div class="fig-label">Figure 1: <span>Bit Width Comparison — all four types relative to a 256-bit EVM word</span></div>
+  <div class="box">
+    <div class="bw-row">
+      <span class="bw-label" style="color:#bc8cff">CNS</span>
+      <div class="bw-bar-wrap"><div class="bw-bar" style="width:100%;background:#a78bfa18;border-right:2px solid #a78bfa44;"><span class="bw-bits" style="color:#a78bfa">80-bit unsigned</span></div></div>
+      <div class="bw-info"><b>uint80</b> · max ~1.2 × 10²⁴<br>Collateral, fees, PnL</div>
+    </div>
+    <div class="bw-row">
+      <span class="bw-label" style="color:#3fb950">LNS</span>
+      <div class="bw-bar-wrap"><div class="bw-bar" style="width:50%;background:#22c55e18;border-right:2px solid #22c55e44;"><span class="bw-bits" style="color:#3fb950">40-bit unsigned</span></div></div>
+      <div class="bw-info"><b>uint40</b> · max 1,099,511,627,775<br>Lot sizes, position sizes</div>
+    </div>
+    <div class="bw-row">
+      <span class="bw-label" style="color:#58a6ff">PNS</span>
+      <div class="bw-bar-wrap"><div class="bw-bar" style="width:40%;background:#58a6ff18;border-right:2px solid #58a6ff44;"><span class="bw-bits" style="color:#58a6ff">32-bit unsigned</span></div></div>
+      <div class="bw-info"><b>uint32</b> · max 4,294,967,295<br>Mark price, oracle, entry</div>
+    </div>
+    <div class="bw-row">
+      <span class="bw-label" style="color:#d29922">ONS</span>
+      <div class="bw-bar-wrap"><div class="bw-bar" style="width:30%;background:#eab30818;border-right:2px solid #eab30844;"><span class="bw-bits" style="color:#d29922">24-bit unsigned</span></div></div>
+      <div class="bw-info"><b>uint24</b> · max 16,777,215<br>Orderbook price slots</div>
+    </div>
+    <div class="bw-ref">
+      <div class="bw-ref-row">
+        <span style="font-size:11px;color:#484f58;text-align:right">EVM word</span>
+        <div class="bw-ref-bar"><div class="bw-ref-fill" style="width:100%;"></div></div>
+      </div>
+      <div style="font-size:10px;color:#484f58;padding-left:84px;">256-bit reference (1 storage slot)</div>
+    </div>
+  </div>
+  <div class="fig-note">LNS is wider than PNS (40 vs 32 bits) because lot counts can be vastly larger than prices — a trader holding billions of a near-zero-price token needs more range than any realistic price. All four types are chosen to pack tightly into EVM storage words, minimising gas cost per operation.</div>
+</div>
+
+<hr class="divider">
+
 <h2>The precision budget</h2>
 <p>CNS (collateral) is always 6 decimal places — USDC has 6 decimals, and that's fixed. When the contract computes PnL as <strong>price × size</strong>, the result must land exactly in CNS. That requires:</p>
 
@@ -125,6 +223,57 @@
 </div>
 
 <p>This means every market is making a tradeoff: more price precision means less size precision, and vice versa. The split is chosen once at market creation and can't change.</p>
+
+<!-- Figure 2: Derivation -->
+<div class="figure">
+  <div class="fig-label">Figure 2: <span>The Precision Budget — Formal Derivation</span></div>
+  <div class="box">
+    <div class="eq-flow">
+      <div class="eq-box" style="border-color:#58a6ff44;">
+        <div class="big" style="color:#58a6ff">price</div>
+        <div class="lbl">PNS · price_dec decimals</div>
+      </div>
+      <div class="eq-op">×</div>
+      <div class="eq-box" style="border-color:#3fb95044;">
+        <div class="big" style="color:#3fb950">size</div>
+        <div class="lbl">LNS · size_dec decimals</div>
+      </div>
+      <div class="eq-op">=</div>
+      <div class="eq-box" style="border-color:#a78bfa44;">
+        <div class="big" style="color:#a78bfa">PnL</div>
+        <div class="lbl">CNS · must have 6 decimals</div>
+      </div>
+      <div class="eq-op">⟹</div>
+      <div class="eq-result">
+        <div class="big" style="color:#3fb950">price_dec + size_dec = 6</div>
+        <div class="lbl" style="margin-top:4px">use the full budget for maximum precision</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:#0d1117;border-radius:6px;padding:14px;border:1px solid #21262d;">
+        <div style="font-size:11px;color:#58a6ff;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">BTC example (1 + 5 = 6)</div>
+        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#8b949e;line-height:2.0;">
+          price = $95,000.1 → PNS = 950,001<br>
+          size = 2.50000 BTC → LNS = 250,000<br>
+          raw product = 950,001 × 250,000<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 237,500,250,000<br>
+          ÷ 10<sup>6</sup> = <span style="color:#3fb950">$237,500.25 USDC ✓</span>
+        </div>
+      </div>
+      <div style="background:#0d1117;border-radius:6px;padding:14px;border:1px solid #21262d;">
+        <div style="font-size:11px;color:#3fb950;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">MON example (6 + 0 = 6)</div>
+        <div style="font-size:11px;font-family:'SF Mono',monospace;color:#8b949e;line-height:2.0;">
+          price = $0.400000 → PNS = 400,000<br>
+          size = 5,000 MON → LNS = 5,000<br>
+          raw product = 400,000 × 5,000<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= 2,000,000,000<br>
+          ÷ 10<sup>6</sup> = <span style="color:#3fb950">$2,000.00 USDC ✓</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="fig-note">If price_dec + size_dec were &lt; 6, precision would be wasted — the product would always end in zeros. If &gt; 6, the product would have too many decimal places and fractional USDC would be silently dropped, causing rounding errors in every PnL calculation. Both live perps use exactly 6: the only lossless choice.</div>
+</div>
 
 <div class="budget-visual">
   <div class="bv-title">How the 6 decimal budget is split — live perps</div>
@@ -140,45 +289,195 @@
     <span class="bv-label" style="color:#3fb950">MON-PERP</span>
     <div class="bv-bar" style="background:#0d1117;border:1px solid #21262d;">
       <div class="bv-price" style="width:100%;background:#58a6ff20;border-right:2px solid #58a6ff;color:#58a6ff;">6</div>
-      <div class="bv-size" style="width:0%;background:#3fb95014;color:#3fb950;"></div>
     </div>
     <span class="bv-note">6 price + 0 size</span>
   </div>
 </div>
 
+<hr class="divider">
+
 <h2>Why BTC and MON look so different</h2>
 <p>At ~$95,000, Bitcoin needs fine size granularity — you want to let traders buy $1 worth of BTC, which means 0.00001 BTC minimum lots (5 size decimals). Price ticks of $0.10 are more than adequate at that scale. So BTC uses <strong>1 price decimal, 5 size decimals</strong>.</p>
 <p>Monad at ~$0.40 has the opposite problem. A $0.10 price tick would be 25% of the entire asset price — you could only represent $0.00, $0.10, $0.20, $0.30, $0.40. That's useless. You need $0.000001 ticks to express meaningful price moves. And whole-MON lot sizes ($0.40 each) are still small enough for retail. So MON uses <strong>6 price decimals, 0 size decimals</strong>.</p>
 
-<table class="example-table">
-  <thead>
-    <tr>
-      <th>Asset</th><th>Price</th><th>Price dec</th><th>Size dec</th><th>Price tick</th><th>Min lot</th><th>Min trade</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr class="highlight">
-      <td class="blue">BTC</td><td class="gray">~$95,000</td><td class="blue">1</td><td class="green">5</td>
-      <td class="gray">$0.10</td><td class="gray">0.00001 BTC</td><td class="green">~$0.95</td>
-    </tr>
-    <tr class="highlight">
-      <td class="green">MON</td><td class="gray">~$0.40</td><td class="blue">6</td><td class="green">0</td>
-      <td class="gray">$0.000001</td><td class="gray">1 MON</td><td class="green">~$0.40</td>
-    </tr>
-  </tbody>
-</table>
+<!-- Figure 5: Full comparison table -->
+<div class="figure">
+  <div class="fig-label">Figure 3: <span>BTC vs MON — Full Configuration Comparison</span></div>
+  <div style="background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden;">
+    <table class="full-table">
+      <thead>
+        <tr>
+          <th style="width:220px">Property</th>
+          <th class="btc-th">BTC-PERP</th>
+          <th class="mon-th">MON-PERP</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="color:#8b949e">Market price</td><td class="btc-col b">~$95,000</td><td class="mon-col g">~$0.40</td></tr>
+        <tr><td style="color:#8b949e">price_decimals</td><td class="btc-col b">1</td><td class="mon-col b">6</td></tr>
+        <tr><td style="color:#8b949e">size_decimals</td><td class="btc-col g">5</td><td class="mon-col g">0</td></tr>
+        <tr><td style="color:#8b949e">Price tick size</td><td class="btc-col">$0.10</td><td class="mon-col">$0.000001</td></tr>
+        <tr><td style="color:#8b949e">Tick as % of price</td><td class="btc-col g">0.000105%</td><td class="mon-col g">0.00025%</td></tr>
+        <tr><td style="color:#8b949e">Min lot size</td><td class="btc-col">0.00001 BTC</td><td class="mon-col">1 MON</td></tr>
+        <tr><td style="color:#8b949e">Min trade value</td><td class="btc-col g">~$0.95</td><td class="mon-col g">~$0.40</td></tr>
+        <tr><td style="color:#8b949e">Max lot size</td><td class="btc-col">~10.9B BTC</td><td class="mon-col">~1.1T MON</td></tr>
+        <tr><td style="color:#8b949e">ONS price range</td><td class="btc-col g">$0 – $1,677,721</td><td class="mon-col y">$0 – $16.78</td></tr>
+        <tr><td style="color:#8b949e">Rally headroom (ONS)</td><td class="btc-col g">17.7× current price</td><td class="mon-col g">42× current price</td></tr>
+        <tr><td style="color:#8b949e">Base price update risk</td><td class="btc-col g">Very low (wide window)</td><td class="mon-col y">Needed above ~$16</td></tr>
+        <tr><td style="color:#8b949e">Max PNS price</td><td class="btc-col g">$429,496,729</td><td class="mon-col y">$4,294.97</td></tr>
+        <tr><td style="color:#8b949e">PNS for current price</td><td class="btc-col">950,000</td><td class="mon-col">400,000</td></tr>
+        <tr><td style="color:#8b949e">price_dec + size_dec</td><td class="btc-col g">1 + 5 = 6 ✓</td><td class="mon-col g">6 + 0 = 6 ✓</td></tr>
+        <tr><td style="color:#8b949e">Design priority</td><td class="btc-col b">Fine size granularity</td><td class="mon-col b">Fine price granularity</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="fig-note">Both configurations use the full 6-decimal precision budget. The direction of the split is driven entirely by the asset's price magnitude: expensive assets need sub-cent tradeable units; cheap assets need sub-cent price resolution.</div>
+</div>
+
+<hr class="divider">
 
 <h2>The ONS range tradeoff</h2>
 <p>Prices in the orderbook are stored as 24-bit offsets (ONS) from a base price. This caps the total representable price range at <strong>16,777,215 ticks</strong>. More price decimals means smaller ticks, which means the total range shrinks:</p>
-<p>BTC at 1 price decimal: each tick is $0.10, so the range spans $1,677,721 — enough to cover BTC from near zero to multiples of today's price. MON at 6 price decimals: each tick is $0.000001, so the range spans $16.78 — fine at $0.40 but requires a base price update if MON ever rallies significantly above ~$16.</p>
+<p>BTC at 1 price decimal: each tick is $0.10, so the range spans $1,677,721 — enough to cover BTC from near zero to multiples of today's price. MON at 6 price decimals: each tick is $0.000001, so the range spans $16.78 — fine at $0.40 but requires a base price update if MON ever rallies significantly.</p>
+
+<!-- Figure 3: ONS range table -->
+<div class="figure">
+  <div class="fig-label">Figure 4: <span>ONS Price Range vs price_decimals (16,777,215 ticks total)</span></div>
+  <div class="box" style="overflow:hidden;">
+    <table class="range-table">
+      <thead>
+        <tr>
+          <th>price_dec</th>
+          <th>size_dec</th>
+          <th>Price tick</th>
+          <th>ONS range ($0 → max)</th>
+          <th style="width:180px">Range visual</th>
+          <th>Min trade (BTC)</th>
+          <th>Min trade (MON)</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="blue">0</td><td class="green">6</td><td class="gray">$1.00</td>
+          <td class="gray">$16,777,215</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:100%;background:#58a6ff40;"></div></div></td>
+          <td class="gray">$0.000095</td>
+          <td class="red">$1.00 (250% of price)</td>
+          <td class="gray" style="font-size:10px;">MON: tick swamps price</td>
+        </tr>
+        <tr class="btc-row">
+          <td class="blue">1</td><td class="green">5</td><td class="gray">$0.10</td>
+          <td class="gray">$1,677,721</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:10%;background:#58a6ff60;"></div></div></td>
+          <td class="green">$0.95</td>
+          <td class="red">$0.10 (25% of price)</td>
+          <td class="blue" style="font-size:10px;">← BTC live config</td>
+        </tr>
+        <tr>
+          <td class="blue">2</td><td class="green">4</td><td class="gray">$0.01</td>
+          <td class="gray">$167,772</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:1%;background:#58a6ff80;"></div></div></td>
+          <td class="amber">$9.50</td>
+          <td class="red">$0.01 (2.5% of price)</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="blue">3</td><td class="green">3</td><td class="gray">$0.001</td>
+          <td class="gray">$16,777</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:0.1%;background:#58a6ffa0;"></div></div></td>
+          <td class="red">$95.00</td>
+          <td class="amber">$0.001 (0.25%)</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="blue">4</td><td class="green">2</td><td class="gray">$0.0001</td>
+          <td class="gray">$1,677</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:0.01%;background:#58a6ffc0;"></div></div></td>
+          <td class="red">$950</td>
+          <td class="amber">$0.0001 (0.025%)</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td class="blue">5</td><td class="green">1</td><td class="gray">$0.00001</td>
+          <td class="gray">$167.77</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:0.001%;background:#58a6ffe0;"></div></div></td>
+          <td class="red">$9,500</td>
+          <td class="amber">$0.00001 (0.0025%)</td>
+          <td></td>
+        </tr>
+        <tr class="mon-row">
+          <td class="blue">6</td><td class="green">0</td><td class="gray">$0.000001</td>
+          <td class="amber">$16.78</td>
+          <td><div class="rbar"><div class="rbar-fill" style="width:0.0001%;background:#eab30860;"></div></div></td>
+          <td class="red">$95,000 (whole BTC)</td>
+          <td class="green">$0.40</td>
+          <td class="green" style="font-size:10px;">← MON live config</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="fig-note">The range visual shows total ONS window relative to dec=0 ($16.7M). At dec=6, the entire window spans only $16.78. If MON rallied to $20, basePricePNS would need to shift up. At dec=1 (BTC), the window spans $1.68M — more than enough for any realistic price, no updates needed.</div>
+</div>
+
+<!-- Figure 4: ONS/PNS diagrams -->
+<div class="figure">
+  <div class="fig-label">Figure 5: <span>ONS → PNS Relationship (basePricePNS + ONS = PNS)</span></div>
+  <div class="ons-layout">
+    <div class="ons-diagram">
+      <div class="ons-title">BTC · price_dec = 1 · base = 0</div>
+      <div class="price-label">Full PNS range (32-bit, $0 → $429M)</div>
+      <div class="price-line" style="height:20px;">
+        <div class="price-ons" style="left:0%;width:39%;"></div>
+        <div class="price-marker" style="left:22%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-bottom:12px;">
+        <span>$0</span><span style="color:#58a6ff">ONS spans $0 → $1,677,721 (39% of PNS)</span><span>$429M</span>
+      </div>
+      <div class="price-label">ONS window detail (24-bit)</div>
+      <div class="price-line">
+        <div class="price-ons" style="left:0%;width:100%;border-color:#58a6ff;"></div>
+        <div class="price-marker" style="left:56.6%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-top:4px;">
+        <span>$0</span>
+        <span style="color:#f97316">▲ $95,000 (56.6% of window)</span>
+        <span>$1,677,721</span>
+      </div>
+      <div class="price-lsub">Headroom: $1,582,721 above current price. No base update needed.</div>
+    </div>
+    <div class="ons-diagram">
+      <div class="ons-title" style="color:#3fb950">MON · price_dec = 6 · base = 0</div>
+      <div class="price-label">Full PNS range (32-bit, $0 → $4,295)</div>
+      <div class="price-line" style="height:20px;">
+        <div class="price-ons" style="left:0%;width:0.4%;"></div>
+        <div class="price-marker" style="left:0.009%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-bottom:12px;">
+        <span>$0</span><span style="color:#eab308">ONS spans $0 → $16.78 (0.4% of PNS)</span><span>$4,295</span>
+      </div>
+      <div class="price-label">ONS window detail (24-bit)</div>
+      <div class="price-line">
+        <div class="price-ons" style="left:0%;width:100%;border-color:#eab308;background:#eab30810;"></div>
+        <div class="price-marker" style="left:2.4%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#484f58;margin-top:4px;">
+        <span>$0</span>
+        <span style="color:#f97316">▲ $0.40 (2.4%)</span>
+        <span>$16.78</span>
+      </div>
+      <div class="price-lsub">42× headroom to ONS ceiling. If MON exceeds ~$16, basePricePNS shifts up.</div>
+    </div>
+  </div>
+  <div class="fig-note">basePricePNS is a fixed offset stored per-perp. The orderbook stores all prices as ONS values (ticks above this base). When the market moves outside the ONS window, a privileged transaction shifts the window by updating basePricePNS. For BTC with 1 price decimal the window is wide enough that this almost never happens; for MON with 6 decimals a large rally would require a shift.</div>
+</div>
 
 <div class="callout">
-  <strong>The key insight:</strong> There's no universally optimal decimal split. It depends on the asset's price magnitude. Low-price tokens need fine price precision; high-price tokens need fine size precision. The 6-decimal budget forces a choice that has to match the asset's characteristics.
+  <strong>The key insight:</strong> There's no universally optimal decimal split. It depends on the asset's price magnitude. Low-price tokens need fine price precision; high-price tokens need fine size precision. The 6-decimal budget forces a choice that has to match the asset's characteristics — and it's fixed at market creation.
 </div>
 
 <div class="cta-row">
   <a class="cta cta-primary" href="index.html">&#9654; Try the interactive explorer</a>
-  <a class="cta cta-secondary" href="diagrams.html">Technical diagrams</a>
 </div>
 
 <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>

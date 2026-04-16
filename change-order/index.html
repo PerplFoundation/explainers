@@ -100,10 +100,6 @@
     background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9;
   }
   .cta-primary:hover { background: #2a3a2a; color: #9cb; }
-  .cta-secondary {
-    background: #1a1a2a; border: 1px solid #3a3a6a; color: #99b;
-  }
-  .cta-secondary:hover { background: #2a2a3a; color: #bbf; }
 
   .table-wrap { margin: 24px 0; overflow-x: auto; }
   table {
@@ -124,6 +120,374 @@
     margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a1a1a;
     font-size: 11px; color: #444; text-align: center;
   }
+
+  /* ── Figure / diagram styles ── */
+  .figure-section {
+    margin: 48px -180px;
+    padding: 0 20px;
+  }
+  @media (max-width: 1000px) {
+    .figure-section {
+      margin: 48px -24px;
+      padding: 0 16px;
+    }
+  }
+
+  .figure {
+    margin-bottom: 40px;
+  }
+  .figure-title {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 500;
+  }
+  .figure-title span {
+    color: #58a6ff;
+  }
+  .figure-sep {
+    font-size: 12px; color: #444; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin: 32px 0 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .figure-sep::before, .figure-sep::after {
+    content: ''; flex: 1; height: 1px; background: #1e1e1e;
+  }
+
+  .timeline {
+    display: flex;
+    gap: 0;
+    position: relative;
+    overflow-x: auto;
+  }
+  .block {
+    flex: 1;
+    min-width: 160px;
+    border-left: 1px solid #21262d;
+    padding: 0 12px;
+    position: relative;
+  }
+  .block:last-child {
+    border-right: 1px solid #21262d;
+  }
+  .block-header {
+    text-align: center;
+    padding: 8px 0;
+    font-size: 12px;
+    color: #8b949e;
+    border-bottom: 1px solid #21262d;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .block-header .time {
+    display: block;
+    font-size: 10px;
+    color: #484f58;
+    margin-top: 2px;
+  }
+  .block-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 16px;
+    min-height: 200px;
+  }
+  .op {
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    position: relative;
+  }
+  .op .label {
+    font-size: 10px;
+    opacity: 0.7;
+    display: block;
+    margin-top: 2px;
+  }
+  .op-cancel {
+    background: #2a1515;
+    border: 1px solid #f85149;
+    color: #f85149;
+  }
+  .op-post {
+    background: #151f15;
+    border: 1px solid #3fb950;
+    color: #3fb950;
+  }
+  .op-change {
+    background: #151e2a;
+    border: 1px solid #58a6ff;
+    color: #58a6ff;
+  }
+  .op-oracle {
+    background: #1e1800;
+    border: 1px solid #d29922;
+    color: #d29922;
+  }
+  .op-taker {
+    background: #1e1520;
+    border: 1px solid #bc8cff;
+    color: #bc8cff;
+  }
+  .op-settle {
+    background: #151e1e;
+    border: 1px solid #56d4dd;
+    color: #56d4dd;
+  }
+  .op-empty {
+    background: #151515;
+    border: 1px dashed #2a2a2a;
+    color: #444;
+  }
+  .status-bar {
+    margin-top: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .status-on {
+    background: #151f15;
+    color: #3fb950;
+    border: 1px solid #238636;
+  }
+  .status-off {
+    background: #2a1515;
+    color: #f85149;
+    border: 1px solid #da3633;
+  }
+  .status-stale {
+    background: #1e1800;
+    color: #d29922;
+    border: 1px solid #9e6a03;
+  }
+  .status-partial {
+    background: #1e1200;
+    color: #db6d28;
+    border: 1px solid #8a4c1e;
+  }
+  .mm-label {
+    font-size: 10px;
+    color: #484f58;
+    text-align: center;
+    margin-bottom: 6px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .mm-group {
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: #151515;
+  }
+  .mm-group.mm-a { border-left: 3px solid #58a6ff; }
+  .mm-group.mm-b { border-left: 3px solid #bc8cff; }
+  .mm-group.mm-c { border-left: 3px solid #3fb950; }
+  .divider {
+    height: 1px;
+    background: #21262d;
+    margin: 12px 0;
+  }
+  .book-depth {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin-top: 4px;
+    height: 24px;
+    align-items: flex-end;
+  }
+  .depth-bar {
+    width: 16px;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.3s;
+  }
+  .depth-bar.full { background: #3fb950; }
+  .depth-bar.empty { background: #21262d; border: 1px dashed #30363d; }
+  .depth-bar.stale { background: #9e6a03; }
+  .depth-bar.new { background: #58a6ff; }
+  .depth-label {
+    font-size: 9px;
+    color: #484f58;
+    text-align: center;
+    margin-top: 2px;
+  }
+  .contention-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 16px;
+  }
+  .contention-panel {
+    background: #151515;
+    border: 1px solid #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .contention-panel h3 {
+    font-size: 13px;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+  .contention-panel h3.bad { color: #b77; }
+  .contention-panel h3.good { color: #7a9; }
+  .slot-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .slot-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .slot-dot.shared { background: #f85149; }
+  .slot-dot.private { background: #3fb950; }
+  .slot-dot.none { background: #21262d; border: 1px solid #30363d; }
+  .slot-name { color: #8b949e; flex: 1; }
+  .slot-who { font-size: 10px; color: #484f58; }
+  .conflict-line {
+    text-align: center;
+    padding: 8px;
+    margin-top: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .conflict-serial {
+    background: #2a1515;
+    color: #f85149;
+    border: 1px solid #da3633;
+  }
+  .conflict-parallel {
+    background: #151f15;
+    color: #3fb950;
+    border: 1px solid #238636;
+  }
+  .gas-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .gas-bar-label {
+    font-size: 10px;
+    color: #8b949e;
+    width: 80px;
+    text-align: right;
+  }
+  .gas-bar-track {
+    flex: 1;
+    height: 20px;
+    background: #1e1e1e;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .gas-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 8px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .gas-bar-fill.red { background: linear-gradient(90deg, #f85149, #da3633); color: #fff; }
+  .gas-bar-fill.blue { background: linear-gradient(90deg, #58a6ff, #388bfd); color: #fff; }
+  .gas-bar-fill.green { background: linear-gradient(90deg, #3fb950, #238636); color: #fff; }
+  .parallel-viz {
+    margin-top: 16px;
+  }
+  .exec-row {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 4px;
+    align-items: center;
+  }
+  .exec-label {
+    font-size: 9px;
+    color: #484f58;
+    width: 28px;
+    text-align: right;
+  }
+  .exec-block {
+    height: 22px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    flex: 1;
+  }
+  .exec-block.serial { background: #2a1515; color: #f85149; border: 1px solid #da3633; }
+  .exec-block.parallel-a { background: #151e2a; color: #58a6ff; border: 1px solid #1f6feb; }
+  .exec-block.parallel-b { background: #1a152a; color: #bc8cff; border: 1px solid #8957e5; }
+  .exec-block.parallel-c { background: #151f15; color: #3fb950; border: 1px solid #238636; }
+  .exec-block.reexec { background: #1e1800; color: #d29922; border: 1px solid #9e6a03; }
+  .exec-block.empty { background: transparent; border: none; }
+  .arrow-right {
+    display: inline-block;
+    margin: 0 4px;
+    color: #30363d;
+  }
+  .note {
+    font-size: 11px;
+    color: #888;
+    margin-top: 12px;
+    padding: 10px;
+    background: #151515;
+    border-left: 3px solid #2a2a2a;
+    border-radius: 0 4px 4px 0;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #666;
+  }
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 8px;
+  }
+  .badge-serial { background: #2a1515; color: #f85149; }
+  .badge-parallel { background: #151f15; color: #3fb950; }
+
+  .sources {
+    margin-top: 48px; padding: 16px;
+    background: #151515; border-radius: 8px; border: 1px solid #1e1e1e;
+  }
+  .sources-text {
+    font-size: 12px; color: #555;
+  }
+  .sources-text strong { color: #777; }
 </style>
 </head>
 <body>
@@ -133,7 +497,6 @@
   <div class="site-links">
     <a class="active" href="index.html">Overview</a>
     <a href="interactive.html">Interactive Sim</a>
-    <a href="diagrams.html">Technical Diagrams</a>
   </div>
 </nav>
 
@@ -161,6 +524,44 @@
   <p>Because Change reuses the existing order ID, it never touches the global ID index. It never increments or decrements the order counter. The only storage it writes to is the market maker's own order slot and the price level it's moving to. Each market maker's Change is completely independent of every other market maker's Change.</p>
 
   <p>On Monad, this means they all execute in parallel. No conflicts. No re-execution. No serial bottleneck.</p>
+
+</div>
+
+<!-- Figure 3: State Contention Map — placed after "What Perpl Does Differently" -->
+<div class="figure-section">
+  <div class="figure">
+    <div class="figure-title">Figure 3.0 : <span>State Contention Map</span> — why Change is parallel</div>
+    <div class="contention-grid">
+      <div class="contention-panel">
+        <h3 class="bad">Post/Cancel : Shared State Conflicts</h3>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">A, B, C all write</div></div>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">A, B, C write (varies)</div></div>
+        <div class="slot-row"><div class="slot-dot shared"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">A, B, C all write</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>orderLockMap[lockId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
+        <div class="conflict-line conflict-serial">
+          3 global conflict points &rarr; FULLY SERIAL execution
+        </div>
+      </div>
+
+      <div class="contention-panel">
+        <h3 class="good">Change : No Shared State</h3>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.root</code></div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>Index16Bit.leaf[i]</code></div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot none"></div><div class="slot-name"><code>OrderBook.slot1</code> (numOrders)</div><div class="slot-who">NOT TOUCHED</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>idOrderMap[orderId]</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>account.lockedBalCNS</code></div><div class="slot-who">per-MM (private)</div></div>
+        <div class="slot-row"><div class="slot-dot private"></div><div class="slot-name"><code>priceLevelOrderIds[price]</code></div><div class="slot-who">per-price (private)</div></div>
+        <div class="conflict-line conflict-parallel">
+          0 global conflict points &rarr; FULLY PARALLEL execution
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" style="padding-top: 0;">
 
   <h2>What This Looks Like</h2>
 
@@ -191,8 +592,215 @@
 
   <div class="cta-row">
     <a class="cta cta-primary" href="interactive.html">&#9654; Run the simulation</a>
-    <a class="cta cta-secondary" href="diagrams.html">View technical diagrams</a>
   </div>
+
+</div>
+
+<!-- Figures 1 & 2: Post/Cancel and Change timelines -->
+<div class="figure-section">
+  <div class="figure-sep">Timeline Diagrams</div>
+
+  <div class="figure">
+    <div class="figure-title">Figure 1.0 : <span>Post/Cancel Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-serial">SERIAL</span></div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#f85149;"></div> Cancel Order</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#3fb950;"></div> Post Order</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#bc8cff;"></div> Taker Order</div>
+    </div>
+
+    <div class="timeline">
+      <!-- Block N -->
+      <div class="block">
+        <div class="block-header">Block N <span class="time">t = 0ms</span></div>
+        <div class="block-content">
+          <div class="op op-oracle">Oracle Price Update<span class="label">$85,000 &rarr; $85,100</span></div>
+          <div class="divider"></div>
+          <div class="mm-group mm-a"><div class="mm-label">MM-A</div><div class="status-bar status-on">ON BOOK @ $85,000</div></div>
+          <div class="mm-group mm-b"><div class="mm-label">MM-B</div><div class="status-bar status-on">ON BOOK @ $84,990</div></div>
+          <div class="mm-group mm-c"><div class="mm-label">MM-C</div><div class="status-bar status-on">ON BOOK @ $84,980</div></div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth</div>
+          <div class="book-depth">
+            <div class="depth-bar stale" style="height:20px;" title="MM-A"></div>
+            <div class="depth-bar stale" style="height:18px;" title="MM-B"></div>
+            <div class="depth-bar stale" style="height:16px;" title="MM-C"></div>
+          </div>
+          <div class="depth-label">3/3 MMs quoting (stale)</div>
+        </div>
+      </div>
+
+      <!-- Block N+1 (TX1 lands) -->
+      <div class="block">
+        <div class="block-header">Block N+1, TX1 <span class="time">t = 400ms</span></div>
+        <div class="block-content">
+          <div class="mm-group mm-a">
+            <div class="mm-label">MM-A (highest priority fee)</div>
+            <div class="op op-cancel">Cancel @ $85,000<span class="label">free ID &bull; update Idx16 &bull; remove lock</span></div>
+            <div class="status-bar status-off">NOT ON BOOK</div>
+            <div class="op op-post">Post @ $85,090<span class="label">alloc ID &bull; update Idx16 &bull; add lock</span></div>
+            <div class="status-bar status-on">ON BOOK @ $85,090</div>
+          </div>
+          <div class="mm-group mm-b"><div class="mm-label">MM-B</div><div class="status-bar status-stale">STALE @ $84,990</div></div>
+          <div class="mm-group mm-c"><div class="mm-label">MM-C</div><div class="status-bar status-stale">STALE @ $84,980</div></div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth</div>
+          <div class="book-depth">
+            <div class="depth-bar empty" style="height:6px;"></div>
+            <div class="depth-bar stale" style="height:18px;"></div>
+            <div class="depth-bar stale" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">2/3 MMs quoting bids</div>
+        </div>
+      </div>
+
+      <!-- Block N+1 (TX2 lands - re-executed) -->
+      <div class="block">
+        <div class="block-header">Block N+1, TX2 <span class="time">re-executed (conflict)</span></div>
+        <div class="block-content">
+          <div class="mm-group mm-b">
+            <div class="mm-label">MM-B (re-exec: Idx16 conflict)</div>
+            <div class="op op-cancel">Cancel @ $84,990<span class="label">free ID &bull; update Idx16 &bull; remove lock</span></div>
+            <div class="status-bar status-off">NOT ON BOOK</div>
+            <div class="op op-post">Post @ $85,080<span class="label">alloc ID &bull; update Idx16 &bull; add lock</span></div>
+            <div class="status-bar status-on">ON BOOK @ $85,080</div>
+          </div>
+          <div class="mm-group mm-c"><div class="mm-label">MM-C</div><div class="status-bar status-stale">STALE @ $84,980</div></div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth</div>
+          <div class="book-depth">
+            <div class="depth-bar empty" style="height:6px;"></div>
+            <div class="depth-bar empty" style="height:6px;"></div>
+            <div class="depth-bar stale" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">1/3 MMs quoting bids</div>
+        </div>
+      </div>
+
+      <!-- Block N+1 (TX3 lands - re-executed again) -->
+      <div class="block">
+        <div class="block-header">Block N+1, TX3 <span class="time">re-executed (conflict)</span></div>
+        <div class="block-content">
+          <div class="mm-group mm-c">
+            <div class="mm-label">MM-C (re-exec: Idx16 conflict)</div>
+            <div class="op op-cancel">Cancel @ $84,980<span class="label">free ID &bull; update Idx16 &bull; remove lock</span></div>
+            <div class="status-bar status-off">NOT ON BOOK</div>
+            <div class="op op-post">Post @ $85,070<span class="label">alloc ID &bull; update Idx16 &bull; add lock</span></div>
+            <div class="status-bar status-on">ON BOOK @ $85,070</div>
+          </div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth (final)</div>
+          <div class="book-depth">
+            <div class="depth-bar new" style="height:20px;"></div>
+            <div class="depth-bar new" style="height:18px;"></div>
+            <div class="depth-bar new" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">3/3 MMs requoted</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Taker arriving mid-block</strong> (between TX1 and TX3): sees only 1-2 stale bids, wide spread, degraded depth.
+      Each Cancel removes an MM from the book before its Post restores it at the new price.
+      All 3 MMs serialized through <code>Index16Bit.root</code> and <code>numOrders</code> conflicts.
+    </div>
+  </div>
+
+  <div class="figure-sep">vs</div>
+
+  <div class="figure">
+    <div class="figure-title">Figure 2.0 : <span>Change Regime</span> (3 Market Makers requoting after oracle move) <span class="badge badge-parallel">PARALLEL</span></div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#d29922;"></div> Oracle Update</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#58a6ff;"></div> Change Order</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#bc8cff;"></div> Taker Order</div>
+    </div>
+
+    <div class="timeline">
+      <!-- Block N -->
+      <div class="block">
+        <div class="block-header">Block N <span class="time">t = 0ms</span></div>
+        <div class="block-content">
+          <div class="op op-oracle">Oracle Price Update<span class="label">$85,000 &rarr; $85,100</span></div>
+          <div class="divider"></div>
+          <div class="mm-group mm-a"><div class="mm-label">MM-A</div><div class="status-bar status-on">ON BOOK @ $85,000</div></div>
+          <div class="mm-group mm-b"><div class="mm-label">MM-B</div><div class="status-bar status-on">ON BOOK @ $84,990</div></div>
+          <div class="mm-group mm-c"><div class="mm-label">MM-C</div><div class="status-bar status-on">ON BOOK @ $84,980</div></div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth</div>
+          <div class="book-depth">
+            <div class="depth-bar stale" style="height:20px;"></div>
+            <div class="depth-bar stale" style="height:18px;"></div>
+            <div class="depth-bar stale" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">3/3 MMs quoting (stale)</div>
+        </div>
+      </div>
+
+      <!-- Block N+1 (all execute in parallel) -->
+      <div class="block" style="min-width: 320px;">
+        <div class="block-header">Block N+1 <span class="time">t = 400ms : all execute in parallel</span></div>
+        <div class="block-content">
+          <div style="display:flex; gap:8px;">
+            <div class="mm-group mm-a" style="flex:1;">
+              <div class="mm-label">MM-A</div>
+              <div class="op op-change">Change<span class="label">$85,000 &rarr; $85,090</span></div>
+              <div class="status-bar status-on">ON BOOK @ $85,090</div>
+            </div>
+            <div class="mm-group mm-b" style="flex:1;">
+              <div class="mm-label">MM-B</div>
+              <div class="op op-change">Change<span class="label">$84,990 &rarr; $85,080</span></div>
+              <div class="status-bar status-on">ON BOOK @ $85,080</div>
+            </div>
+            <div class="mm-group mm-c" style="flex:1;">
+              <div class="mm-label">MM-C</div>
+              <div class="op op-change">Change<span class="label">$84,980 &rarr; $85,070</span></div>
+              <div class="status-bar status-on">ON BOOK @ $85,070</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth (instant transition)</div>
+          <div class="book-depth">
+            <div class="depth-bar new" style="height:20px;"></div>
+            <div class="depth-bar new" style="height:18px;"></div>
+            <div class="depth-bar new" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">3/3 MMs requoted simultaneously</div>
+        </div>
+      </div>
+
+      <!-- Block N+2 -->
+      <div class="block">
+        <div class="block-header">Block N+2 <span class="time">t = 800ms</span></div>
+        <div class="block-content">
+          <div class="op op-taker">Taker Buy Order<span class="label">hits full depth at new prices</span></div>
+          <div class="divider"></div>
+          <div class="mm-group mm-a"><div class="mm-label">MM-A</div><div class="status-bar status-on">ON BOOK @ $85,090</div></div>
+          <div class="mm-group mm-b"><div class="mm-label">MM-B</div><div class="status-bar status-on">ON BOOK @ $85,080</div></div>
+          <div class="mm-group mm-c"><div class="mm-label">MM-C</div><div class="status-bar status-on">ON BOOK @ $85,070</div></div>
+          <div class="divider"></div>
+          <div class="depth-label">Bid Depth</div>
+          <div class="book-depth">
+            <div class="depth-bar full" style="height:20px;"></div>
+            <div class="depth-bar full" style="height:18px;"></div>
+            <div class="depth-bar full" style="height:16px;"></div>
+          </div>
+          <div class="depth-label">3/3 MMs &bull; full depth &bull; fresh prices</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Taker arriving at any point</strong>: sees either full old book or full new book. Never a partially-drained state.
+      No MM is ever absent from the book. Zero <code>Index16Bit</code> or <code>numOrders</code> contention &mdash; all MMs execute in true parallel.
+    </div>
+  </div>
+</div>
+
+<div class="page" style="padding-top: 0;">
 
   <h2>Why This Matters</h2>
 
@@ -216,6 +824,236 @@
         <tr><td>Liquidity gap</td><td class="bad">Yes</td><td class="good">Never</td></tr>
       </tbody>
     </table>
+  </div>
+
+</div>
+
+<!-- Figures 4 & 5: after the comparison table -->
+<div class="figure-section">
+  <div class="figure">
+    <div class="figure-title">Figure 4.0 : <span>Parallel Executor Timeline</span> (10 MMs, 20 requotes per block)</div>
+
+    <div class="contention-grid">
+      <div class="contention-panel">
+        <h3 class="bad">Post/Cancel : Serial Pipeline</h3>
+        <p style="font-size:11px; color:#666; margin-bottom:12px;">Each tx conflicts with previous via Index16Bit.root. Re-execution on every step.</p>
+        <div class="parallel-viz">
+          <div class="exec-row"><div class="exec-label">t=0</div><div class="exec-block serial">TX1 (MM-A bid)</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+          <div class="exec-row"><div class="exec-label">t=1</div><div class="exec-block reexec">TX2 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+          <div class="exec-row"><div class="exec-label">t=2</div><div class="exec-block reexec">TX3 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+          <div class="exec-row"><div class="exec-label">t=3</div><div class="exec-block reexec">TX4 re-exec</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+          <div class="exec-row"><div class="exec-label">...</div><div class="exec-block serial" style="opacity:0.5;">TX5-TX20</div><div class="exec-block empty"></div><div class="exec-block empty"></div><div class="exec-block empty"></div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Wall time</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill red" style="width:100%;">20 sequential steps</div></div>
+          </div>
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Gas used</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill red" style="width:70%;">~2.8M gas (140k each)</div></div>
+          </div>
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Parallelism</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill red" style="width:5%;">1x</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contention-panel">
+        <h3 class="good">Change : Parallel Pipeline</h3>
+        <p style="font-size:11px; color:#666; margin-bottom:12px;">No shared slots between MMs at different prices. All execute in first pass.</p>
+        <div class="parallel-viz">
+          <div class="exec-row"><div class="exec-label">t=0</div><div class="exec-block parallel-a">TX1</div><div class="exec-block parallel-b">TX2</div><div class="exec-block parallel-c">TX3</div><div class="exec-block parallel-a">TX4</div></div>
+          <div class="exec-row"><div class="exec-label">t=1</div><div class="exec-block parallel-b">TX5</div><div class="exec-block parallel-c">TX6</div><div class="exec-block parallel-a">TX7</div><div class="exec-block parallel-b">TX8</div></div>
+          <div class="exec-row"><div class="exec-label">t=2</div><div class="exec-block parallel-c">TX9</div><div class="exec-block parallel-a">TX10</div><div class="exec-block parallel-b">TX11</div><div class="exec-block parallel-c">TX12</div></div>
+          <div class="exec-row"><div class="exec-label">t=3</div><div class="exec-block parallel-a">TX13</div><div class="exec-block parallel-b">TX14</div><div class="exec-block parallel-c">TX15</div><div class="exec-block parallel-a">TX16</div></div>
+          <div class="exec-row"><div class="exec-label">t=4</div><div class="exec-block parallel-b">TX17</div><div class="exec-block parallel-c">TX18</div><div class="exec-block parallel-a">TX19</div><div class="exec-block parallel-b">TX20</div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Wall time</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill green" style="width:25%;">5 parallel batches</div></div>
+          </div>
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Gas used</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill green" style="width:30%;">~1.2M gas (60k each)</div></div>
+          </div>
+          <div class="gas-bar-row">
+            <div class="gas-bar-label">Parallelism</div>
+            <div class="gas-bar-track"><div class="gas-bar-fill green" style="width:80%;">~4x</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="figure">
+    <div class="figure-title">Figure 5.0 : <span>Book Depth During Requote Storm</span> (taker perspective)</div>
+
+    <div class="contention-grid">
+      <div class="contention-panel">
+        <h3 class="bad">Post/Cancel : Progressive Thinning</h3>
+        <div style="display:flex; gap:16px; margin-top:16px;">
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">Before</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar stale" style="height:40px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:36px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">A+B+C</div>
+            <div class="status-bar status-stale" style="margin-top:4px;">stale</div>
+          </div>
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">After TX1</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar empty" style="height:8px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:36px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">B+C</div>
+            <div class="status-bar status-partial" style="margin-top:4px;">67% depth</div>
+          </div>
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">After TX2</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar empty" style="height:8px; width:24px;"></div>
+              <div class="depth-bar empty" style="height:8px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">C only</div>
+            <div class="status-bar status-off" style="margin-top:4px;">33% depth</div>
+          </div>
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">Final</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar new" style="height:40px; width:24px;"></div>
+              <div class="depth-bar new" style="height:36px; width:24px;"></div>
+              <div class="depth-bar new" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">A'+B'+C'</div>
+            <div class="status-bar status-on" style="margin-top:4px;">100% depth</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contention-panel">
+        <h3 class="good">Change : Atomic Transition</h3>
+        <div style="display:flex; gap:16px; margin-top:16px;">
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">Before</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar stale" style="height:40px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:36px; width:24px;"></div>
+              <div class="depth-bar stale" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">A+B+C</div>
+            <div class="status-bar status-stale" style="margin-top:4px;">stale</div>
+          </div>
+          <div style="text-align:center; flex:2;">
+            <div class="depth-label" style="margin-bottom:4px;">Transition (parallel, atomic)</div>
+            <div style="display:flex; align-items:center; justify-content:center; height:48px;">
+              <div style="font-size:32px; color:#58a6ff;">&rarr;</div>
+            </div>
+            <div class="depth-label">no intermediate state</div>
+            <div class="status-bar status-on" style="margin-top:4px;">always 100% depth</div>
+          </div>
+          <div style="text-align:center; flex:1;">
+            <div class="depth-label" style="margin-bottom:4px;">After</div>
+            <div class="book-depth" style="height:48px;">
+              <div class="depth-bar new" style="height:40px; width:24px;"></div>
+              <div class="depth-bar new" style="height:36px; width:24px;"></div>
+              <div class="depth-bar new" style="height:32px; width:24px;"></div>
+            </div>
+            <div class="depth-label">A'+B'+C'</div>
+            <div class="status-bar status-on" style="margin-top:4px;">100% depth</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" style="padding-top: 0;">
+  <p>The difference compounds as market maker count grows. At 10 MMs, cancel/post means 20 serial re-executions in the worst case. Change means 1 parallel pass. The throughput gap is not additive — it's multiplicative with market depth.</p>
+</div>
+
+<!-- Figure 6: MM React Pipeline — after "Why This Matters" -->
+<div class="figure-section">
+  <div class="figure">
+    <div class="figure-title">Figure 6.0 : <span>MM React Pipeline</span> (speculative execution window)</div>
+
+    <div class="contention-grid">
+      <div class="contention-panel">
+        <h3 class="bad">Post/Cancel : Dependency Chain</h3>
+        <div style="font-size:11px; color:#666; margin-top:12px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-oracle" style="flex:none; width:140px;">See oracle update</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>Compute new price</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-cancel" style="flex:none; width:140px;">Build Cancel tx</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>Need: current orderId, perpId</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-post" style="flex:none; width:140px;">Build Post tx</div>
+            <span class="arrow-right">&rarr;</span>
+            <span style="color:#f85149;">Need: balance AFTER cancel (unknown), new orderId (unknown)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-empty" style="flex:none; width:140px;">Batch both ops</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>gas_limit must cover worst case of 2 ops</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="op op-empty" style="flex:none; width:140px;">Submit</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>1 tx, 2 ops, higher gas, fragile balance estimation</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="contention-panel">
+        <h3 class="good">Change : No Dependencies</h3>
+        <div style="font-size:11px; color:#666; margin-top:12px;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-oracle" style="flex:none; width:140px;">See oracle update</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>Compute new price</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-change" style="flex:none; width:140px;">Build Change tx</div>
+            <span class="arrow-right">&rarr;</span>
+            <span style="color:#3fb950;">orderId known (unchanged), balance known (unchanged)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <div class="op op-empty" style="flex:none; width:140px;">Submit</div>
+            <span class="arrow-right">&rarr;</span>
+            <span>1 tx, 1 op, tight gas_limit, no speculation needed</span>
+          </div>
+          <div style="height:48px;"></div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="flex:none; width:140px;"></div>
+            <span style="color:#3fb950; font-weight:600;">Fewer steps, no dependency chain, lower latency</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page" style="padding-top: 0;">
+
+  <div class="sources">
+    <div class="sources-text">
+      <strong>Sources:</strong>
+      Perpl smart contracts &bull;
+      Monad docs (<code>docs.monad.xyz</code>) &bull;
+      Perpl docs (<code>docs.perpl.xyz</code>)
+    </div>
   </div>
 
   <div class="footer">

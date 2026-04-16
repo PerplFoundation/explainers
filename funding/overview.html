@@ -14,7 +14,7 @@
   .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
   .site-links a:hover { border-color: #444; color: #ccc; }
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-  .page { max-width: 680px; margin: 0 auto; padding: 80px 24px 80px; }
+  .page { max-width: 760px; margin: 0 auto; padding: 80px 24px 80px; }
   h1 { font-size: 28px; color: #ddd; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
   .subtitle { font-size: 14px; color: #666; margin-bottom: 48px; }
   h2 { font-size: 16px; color: #bbb; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
@@ -31,8 +31,6 @@
   .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
   .cta-primary { background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9; }
   .cta-primary:hover { background: #2a3a2a; color: #9cb; }
-  .cta-secondary { background: #1a1a2a; border: 1px solid #3a3a6a; color: #99b; }
-  .cta-secondary:hover { background: #2a2a3a; color: #bbf; }
   .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1a1a1a; font-size: 11px; color: #444; text-align: center; }
   .compare-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
   .cm-cell { background: #141414; border: 1px solid #222; border-radius: 10px; padding: 20px 16px; text-align: center; }
@@ -42,6 +40,87 @@
   .ok .cm-status { color: #3fb950; }
   .warn .cm-status { color: #d29922; }
   .bad .cm-status { color: #f85149; }
+  hr { border: none; border-top: 1px solid #1a1a2a; margin: 48px 0; }
+
+  /* Figure styles (from diagrams.html) */
+  .figure { margin: 32px 0 48px; }
+  .fig-title { font-size: 13px; color: #8b949e; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .fig-title span { color: #58a6ff; }
+  .note { font-size: 11px; color: #8b949e; margin-top: 12px; padding: 10px; background: #161b22; border-left: 3px solid #30363d; border-radius: 0 4px 4px 0; line-height: 1.6; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  .card { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
+
+  /* Figure 1: Position lifecycle */
+  .lifecycle { display: flex; align-items: flex-start; gap: 0; }
+  .lc-step { flex: 1; }
+  .lc-box { padding: 12px; border-radius: 6px; text-align: center; font-size: 11px; font-weight: 600; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+  .lc-sub { font-size: 9px; font-weight: 400; color: rgba(255,255,255,0.5); line-height: 1.4; }
+  .lc-arrow { display: flex; align-items: center; justify-content: center; padding-top: 20px; color: #30363d; font-size: 18px; flex-shrink: 0; width: 28px; }
+  .lc-label { font-size: 9px; color: #484f58; text-align: center; margin-top: 6px; }
+
+  .box-open { background: #1a2a1a; border: 1px solid #23863644; color: #3fb950; }
+  .box-event { background: #1a1a2a; border: 1px solid #388bfd33; color: #58a6ff; }
+  .box-change { background: #2a2010; border: 1px solid #9e6a0344; color: #d29922; }
+  .box-close { background: #2a1515; border: 1px solid #da363344; color: #f85149; }
+  .box-fsum { background: #1a152a; border: 1px solid #8957e544; color: #bc8cff; }
+
+  /* Figure 2: F_sum accumulation table */
+  .fsum-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fsum-table th { text-align: left; padding: 8px 10px; border-bottom: 1px solid #21262d; color: #484f58; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: #0d1117; }
+  .fsum-table td { padding: 8px 10px; border-bottom: 1px solid #161b22; font-family: 'SF Mono', monospace; font-size: 11px; }
+  .fsum-table tr:hover td { background: #161b22; }
+  .fsum-table td.pos { color: #3fb950; }
+  .fsum-table td.neg { color: #f85149; }
+  .fsum-table td.sum { color: #58a6ff; font-weight: 600; }
+  .fsum-table td.gray { color: #8b949e; }
+  .fsum-table tr.highlight td { background: #1a2a1a22; }
+
+  /* Figure 3: Gas cost chart */
+  .gas-chart { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
+  .gc-bars { display: flex; flex-direction: column; gap: 8px; }
+  .gc-row { display: grid; grid-template-columns: 120px 1fr 140px; align-items: center; gap: 10px; font-size: 11px; }
+  .gc-label { color: #8b949e; }
+  .gc-label.perpl { color: #3fb950; font-weight: 700; }
+  .gc-bar-wrap { height: 20px; background: #0d1117; border-radius: 3px; overflow: hidden; position: relative; }
+  .gc-bar-wrap.perpl { height: 26px; border: 1px solid #3fb95044; background: #0a1a0a; box-shadow: inset 0 0 12px #3fb95010; }
+  .gc-bar { height: 100%; border-radius: 3px; }
+  .gc-bar.perpl-bar { background: #3fb950; box-shadow: 0 0 8px #3fb95060; height: 100%; border-radius: 3px; width: 8px; }
+  .gc-limit { position: absolute; top: 0; bottom: 0; width: 1px; background: #f97316; }
+  .gc-val { font-family: 'SF Mono', monospace; color: #8b949e; text-align: right; }
+  .gc-val.red { color: #f85149; }
+  .gc-val.green { color: #3fb950; font-weight: 700; font-size: 12px; }
+  .gc-section { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0 4px; }
+
+  /* Figure 4: Formula derivation */
+  .formula-block { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px; }
+  .eq-row { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #21262d; }
+  .eq-row:last-child { margin: 0; padding: 0; border: none; }
+  .eq-name { font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .eq-box { background: #0d1117; border: 1px solid #1a1a2a; border-radius: 5px; padding: 12px 16px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; text-align: center; margin-bottom: 8px; }
+  .eq-vars { font-size: 11px; color: #8b949e; line-height: 1.9; }
+  .eq-vars span { color: #c9d1d9; }
+
+  /* Figure 5: Storage layout */
+  .storage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .slot-card { background: #161b22; border: 1px solid #21262d; border-radius: 6px; }
+  .slot-header { padding: 8px 12px; border-bottom: 1px solid #21262d; font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 0.5px; }
+  .slot-row { padding: 7px 12px; border-bottom: 1px solid #0d1117; font-size: 11px; display: flex; justify-content: space-between; align-items: center; }
+  .slot-row:last-child { border: none; }
+  .slot-field { color: #58a6ff; font-family: 'SF Mono', monospace; }
+  .slot-type { color: #8b949e; font-size: 10px; }
+  .slot-note { color: #484f58; font-size: 10px; }
+
+  /* Figure 6: Comparison table */
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .compare-table th { text-align: left; padding: 10px 12px; border-bottom: 2px solid #21262d; color: #8b949e; font-size: 11px; }
+  .compare-table th.perpl-th { color: #3fb950; background: #0a1a0a; border-bottom: 2px solid #3fb95044; font-weight: 700; font-size: 12px; }
+  .compare-table td { padding: 10px 12px; border-bottom: 1px solid #161b22; }
+  .compare-table td.perpl-col { background: #0a1a0a08; border-left: 1px solid #3fb95022; }
+  .compare-table tr:hover td { background: #161b22; }
+  td.g { color: #3fb950; } td.r { color: #f85149; } td.y { color: #d29922; } td.b { color: #58a6ff; }
+  td.g.perpl-col { color: #4ade80; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -51,7 +130,6 @@
   <div class="site-links">
     <a class="active" href="overview.html">Overview</a>
     <a href="index.html">Interactive Sim</a>
-    <a href="diagrams.html">Technical Diagrams</a>
   </div>
 </nav>
 
@@ -61,6 +139,8 @@
   <p class="subtitle">How Perpl settles funding payments for 100,000+ positions with two storage reads instead of 100,000 writes.</p>
 
   <p>Perpetual exchanges use a funding rate to keep the perpetual price anchored to the underlying asset. Periodically — roughly every hour — longs pay shorts (or vice versa) based on the rate and position size. On a centralized exchange this is trivial: a background job debits and credits every account. On a decentralized exchange running on a general-purpose EVM chain, it's a fundamental scaling problem.</p>
+
+  <hr>
 
   <h2>The Settlement Problem</h2>
 
@@ -91,6 +171,8 @@
     </div>
   </div>
 
+  <hr>
+
   <h2>The Insight: Superposition</h2>
 
   <p>The key observation is that a position's cumulative funding payment depends only on three things: its lot size, when it was opened, and when it was closed. The lot size and side are fixed between open and close (the contract forces settlement if they change). This means the per-event payment for any position factors cleanly:</p>
@@ -107,10 +189,102 @@
     <span class="label">One value, updated once per funding event, regardless of how many positions are open</span>
   </div>
 
-  <div class="cta-row" style="margin-top:28px;margin-bottom:0;">
-    <a class="cta cta-primary" href="index.html">&#9654; See it in the interactive sim</a>
-    <a class="cta cta-secondary" href="diagrams.html">Full formula derivation</a>
+  <!-- Figure 4: Formula Derivation -->
+  <div class="figure">
+    <div class="fig-title">Figure 4: <span>Formula Derivation</span></div>
+    <div class="grid2">
+      <div class="formula-block">
+        <div class="eq-row">
+          <div class="eq-name">Funding payment per event</div>
+          <div class="eq-box">F<sub>payment</sub>[j] = P<sub>i</sub>[j] × F<sub>rate</sub>[j] × L</div>
+          <div class="eq-vars">
+            <span>P<sub>i</sub>[j]</span> = spot index price at event j<br>
+            <span>F<sub>rate</sub>[j]</span> = funding rate (10⁻⁶ units)<br>
+            <span>L</span> = signed lot size (+long, −short)
+          </div>
+        </div>
+        <div class="eq-row">
+          <div class="eq-name">Define the funding product (market-level)</div>
+          <div class="eq-box">F<sub>product</sub>[j] = P<sub>i</sub>[j] × F<sub>rate</sub>[j]</div>
+          <div class="eq-vars">
+            Independent of any individual position.<br>
+            One value computed per event.
+          </div>
+        </div>
+        <div class="eq-row">
+          <div class="eq-name">Rewrite payment using product</div>
+          <div class="eq-box">F<sub>payment</sub>[j] = F<sub>product</sub>[j] × L</div>
+          <div class="eq-vars">
+            Payment factored into market term × position term.
+          </div>
+        </div>
+      </div>
+      <div class="formula-block">
+        <div class="eq-row">
+          <div class="eq-name">Define the running sum</div>
+          <div class="eq-box">F<sub>sum</sub>[j] = Σ F<sub>product</sub>[k], k = 0..j</div>
+          <div class="eq-vars">
+            Cumulative product sum, updated once per event.<br>
+            Initialized to 0 at contract creation.
+          </div>
+        </div>
+        <div class="eq-row">
+          <div class="eq-name">Recover any single event from sum</div>
+          <div class="eq-box">F<sub>product</sub>[j] = F<sub>sum</sub>[j] − F<sub>sum</sub>[j−k]</div>
+          <div class="eq-vars">
+            Difference of adjacent sums = one event's product.
+          </div>
+        </div>
+        <div class="eq-row">
+          <div class="eq-name">Generalize to any holding period</div>
+          <div class="eq-box" style="font-size:12px;">θ<sub>pnl</sub> = (F<sub>sum</sub>[j] − F<sub>sum</sub>[m]) × L</div>
+          <div class="eq-vars">
+            <span>m</span> = F<sub>sum</sub> stored at position open<br>
+            <span>j</span> = F<sub>sum</sub> read at position close<br>
+            <span style="color:#22c55e">Two reads. Exact. Any duration.</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+
+  <!-- Figure 2: F_sum Accumulation Table -->
+  <div class="figure">
+    <div class="fig-title">Figure 2: <span>F<sub>sum</sub> Accumulation — 8 Funding Events</span></div>
+    <div style="background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden;">
+      <table class="fsum-table">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Block</th>
+            <th>F<sub>rate</sub> (10⁻⁶)</th>
+            <th>Price (USDC)</th>
+            <th>F<sub>product</sub> = P × rate / 10⁶</th>
+            <th>F<sub>sum</sub> (running)</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="gray">—</td><td class="gray">0</td><td class="gray">—</td><td class="gray">—</td><td class="gray">—</td><td class="sum">0.000</td><td class="gray">contract genesis</td></tr>
+          <tr><td class="gray">FE1</td><td class="gray">8,571</td><td class="pos">+50</td><td class="gray">60,000</td><td class="pos">+3.000</td><td class="sum">3.000</td><td class="gray"></td></tr>
+          <tr class="highlight"><td class="gray">FE2</td><td class="gray">17,142</td><td class="pos">+80</td><td class="gray">61,000</td><td class="pos">+4.880</td><td class="sum">7.880</td><td style="color:#3fb950;font-size:10px;">← position opens here (stores 7.880)</td></tr>
+          <tr><td class="gray">FE3</td><td class="gray">25,713</td><td class="neg">−30</td><td class="gray">60,500</td><td class="neg">−1.815</td><td class="sum">6.065</td><td class="gray"></td></tr>
+          <tr><td class="gray">FE4</td><td class="gray">34,284</td><td class="pos">+120</td><td class="gray">62,000</td><td class="pos">+7.440</td><td class="sum">13.505</td><td class="gray"></td></tr>
+          <tr><td class="gray">FE5</td><td class="gray">42,855</td><td class="pos">+60</td><td class="gray">63,000</td><td class="pos">+3.780</td><td class="sum">17.285</td><td class="gray"></td></tr>
+          <tr class="highlight"><td class="gray">FE6</td><td class="gray">51,426</td><td class="neg">−20</td><td class="gray">62,000</td><td class="neg">−1.240</td><td class="sum">16.045</td><td style="color:#f85149;font-size:10px;">← position closes here</td></tr>
+          <tr><td class="gray">FE7</td><td class="gray">59,997</td><td class="pos">+90</td><td class="gray">64,000</td><td class="pos">+5.760</td><td class="sum">21.805</td><td class="gray"></td></tr>
+          <tr><td class="gray">FE8</td><td class="gray">68,568</td><td class="pos">+40</td><td class="gray">63,500</td><td class="pos">+2.540</td><td class="sum">24.345</td><td class="gray"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:12px;">
+      <strong>Example:</strong> Long 10 lots opened at FE2 (F<sub>sum</sub>[m] = 7.880), closed at FE6 (F<sub>sum</sub>[j] = 16.045).<br>
+      θ_pnl = (16.045 − 7.880) × 10 × (−1) = <strong style="color:#f85149">−81.65 USDC</strong> (long pays funding — 4 positive rate events minus 1 negative, net positive).<br>
+      Computed from <strong>2 reads</strong>: F<sub>sum</sub>[m] stored at open, F<sub>sum</sub>[j] read at close.
+    </div>
+  </div>
+
+  <hr>
 
   <h2>Two Reads, Any History</h2>
 
@@ -128,19 +302,170 @@
     <strong>What happens when a position closes:</strong> two reads — fetch F<sub>sum</sub>[j] and the stored F<sub>sum</sub>[m]. Compute. Done.
   </div>
 
+  <!-- Figure 1: Position Lifecycle -->
+  <div class="figure">
+    <div class="fig-title">Figure 1: <span>Position Lifecycle with Virtual Funding</span></div>
+    <div style="background:#161b22;border:1px solid #21262d;border-radius:8px;padding:20px;">
+      <div class="lifecycle" style="align-items:center;">
+        <div class="lc-step">
+          <div class="lc-box box-open">
+            OPEN POSITION
+            <div class="lc-sub">Store F<sub>sum</sub>[m]<br>as funding checkpoint</div>
+          </div>
+          <div class="lc-label">1 read + 1 write<br>(the checkpoint)</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-box box-fsum" style="min-height:100px;">
+            FUNDING EVENTS
+            <div class="lc-sub" style="margin-top:6px;">
+              F<sub>sum</sub>[j] += F<sub>product</sub>[j]<br>
+              for each event j<br>
+              <span style="color:#3fb950;font-size:9px;font-weight:700;background:#3fb95018;padding:2px 5px;border-radius:3px;border:1px solid #3fb95033;">Position NOT touched ✓</span>
+            </div>
+          </div>
+          <div class="lc-label">1 write per event<br>regardless of positions</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-box box-change">
+            SIZE CHANGE
+            <div class="lc-sub">Forces settlement:<br>θ_pnl realized now<br>New checkpoint stored</div>
+          </div>
+          <div class="lc-label">2 reads → compute<br>reset checkpoint</div>
+        </div>
+        <div class="lc-arrow">→</div>
+        <div class="lc-step">
+          <div class="lc-box box-close">
+            CLOSE POSITION
+            <div class="lc-sub">θ_pnl = (F<sub>sum</sub>[j] −<br>F<sub>sum</sub>[m]) × L<br>Final settlement</div>
+          </div>
+          <div class="lc-label" style="color:#3fb950;font-weight:600;">2 reads → exact PNL<br>any # of events</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:16px;">
+        <strong>Key invariant:</strong> The contract forces premium PNL realization whenever lot size or side changes. This keeps the checkpoint valid: the stored F<sub>sum</sub>[m] always corresponds to the current position parameters. Dormant positions are never touched between open and close — their funding accumulates silently in F<sub>sum</sub>.
+      </div>
+    </div>
+  </div>
+
+  <hr>
+
   <h2>Gas Cost: O(1) Per Event</h2>
 
   <p>For a naive DEX, settlement gas scales linearly with position count: double the traders, double the gas. Perpl's gas cost for a funding event is constant regardless of how many positions are open. A single storage write to update F<sub>sum</sub>, plus whatever overhead the permissioned rate-setter transaction requires. The protocol never loops over positions.</p>
 
   <p>The settlement cost is deferred and amortized. Each position pays its cumulative funding when it changes or closes — folded into the settlement transaction the trader was going to execute anyway. The chain never does work for dormant positions.</p>
 
+  <!-- Figure 3: Gas Cost Scaling -->
+  <div class="figure">
+    <div class="fig-title">Figure 3: <span>Gas Cost vs Position Count (per funding event)</span></div>
+    <div class="gas-chart">
+      <div style="font-size:11px;color:#484f58;margin-bottom:16px;display:flex;justify-content:space-between;">
+        <span>Gas required per funding event settlement</span>
+        <span style="color:#f97316;">█ = Block gas limit (30M)</span>
+      </div>
+      <div class="gc-bars">
+        <div class="gc-section">At 1,000 positions</div>
+        <div class="gc-row">
+          <span class="gc-label">Naive DEX</span>
+          <div class="gc-bar-wrap"><div class="gc-bar" style="width:83%;background:#ef444440;"></div><div class="gc-limit" style="left:100%"></div></div>
+          <span class="gc-val">25M gas</span>
+        </div>
+        <div class="gc-row">
+          <span class="gc-label perpl">Perpl ✓</span>
+          <div class="gc-bar-wrap perpl"><div class="gc-bar perpl-bar"></div></div>
+          <span class="gc-val green">~5k gas — O(1)</span>
+        </div>
+
+        <div class="gc-section">At 5,000 positions</div>
+        <div class="gc-row">
+          <span class="gc-label">Naive DEX</span>
+          <div class="gc-bar-wrap"><div class="gc-bar" style="width:100%;background:#ef444460;"></div><div class="gc-limit" style="left:20%"></div></div>
+          <span class="gc-val red">125M gas (4× limit)</span>
+        </div>
+        <div class="gc-row">
+          <span class="gc-label perpl">Perpl ✓</span>
+          <div class="gc-bar-wrap perpl"><div class="gc-bar perpl-bar"></div></div>
+          <span class="gc-val green">~5k gas — O(1)</span>
+        </div>
+
+        <div class="gc-section">At 100,000 positions</div>
+        <div class="gc-row">
+          <span class="gc-label">Naive DEX</span>
+          <div class="gc-bar-wrap"><div class="gc-bar" style="width:100%;background:#ef444480;"></div><div class="gc-limit" style="left:1%"></div></div>
+          <span class="gc-val red">2.5B gas (83× limit)</span>
+        </div>
+        <div class="gc-row">
+          <span class="gc-label perpl">Perpl ✓</span>
+          <div class="gc-bar-wrap perpl"><div class="gc-bar perpl-bar"></div></div>
+          <span class="gc-val green">~5k gas — O(1)</span>
+        </div>
+      </div>
+    </div>
+    <div class="note">Assumptions: 25,000 gas per position update (SSTORE warm: 5k + reads + events + arithmetic). Block gas limit: 30M. Naive approach: one SSTORE per position per event. Perpl: one SSTORE for F<sub>sum</sub>, regardless of position count.</div>
+  </div>
+
+  <hr>
+
   <h2>Forced Settlement on Position Change</h2>
 
   <p>The contract enforces a constraint: any change to a position's lot size or side triggers immediate premium PNL realization. This is what makes the virtualization safe. If a trader could silently grow or shrink their position without settling, the F<sub>sum</sub> checkpoint would become invalid. The forced settlement means the checkpoint is always correct relative to the current position parameters.</p>
 
+  <!-- Figure 5: Storage Layout -->
+  <div class="figure">
+    <div class="fig-title">Figure 5: <span>On-Chain Storage Layout</span></div>
+    <div class="storage-grid">
+      <div class="slot-card">
+        <div class="slot-header">Market state (one per perp)</div>
+        <div class="slot-row"><span class="slot-field">fSum</span><span class="slot-type">int128</span><span class="slot-note">updated each funding event</span></div>
+        <div class="slot-row"><span class="slot-field">fRate</span><span class="slot-type">int32</span><span class="slot-note">current rate (10⁻⁶)</span></div>
+        <div class="slot-row"><span class="slot-field">fPrice</span><span class="slot-type">uint64</span><span class="slot-note">index price at last event</span></div>
+        <div class="slot-row"><span class="slot-field">fundingBlock</span><span class="slot-type">uint64</span><span class="slot-note">block of last event</span></div>
+      </div>
+      <div class="slot-card">
+        <div class="slot-header">Position record (one per open position)</div>
+        <div class="slot-row"><span class="slot-field">fSumCheckpoint</span><span class="slot-type">int128</span><span class="slot-note">F<sub>sum</sub>[m] stored at open</span></div>
+        <div class="slot-row"><span class="slot-field">lotSize</span><span class="slot-type">int64</span><span class="slot-note">signed (+ long, − short)</span></div>
+        <div class="slot-row"><span class="slot-field">entryPrice</span><span class="slot-type">uint64</span><span class="slot-note">for delta PNL</span></div>
+        <div class="slot-row"><span class="slot-field">deposit</span><span class="slot-type">uint64</span><span class="slot-note">collateral locked</span></div>
+      </div>
+    </div>
+    <div class="note">Settlement on close reads <code>market.fSum</code> and <code>position.fSumCheckpoint</code> — two reads, constant cost. The funding event transaction writes only <code>market.fSum</code> — one write, constant cost.</div>
+  </div>
+
+  <hr>
+
+  <!-- Figure 6: System Comparison Table -->
+  <div class="figure">
+    <div class="fig-title">Figure 6: <span>Settlement System Comparison</span></div>
+    <div style="background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:200px">Property</th>
+            <th>CEX</th>
+            <th>Naive DEX</th>
+            <th>Appchain (Hyperliquid)</th>
+            <th class="perpl-th">✓ Perpl (Virtualized)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="color:#8b949e">Gas per funding event</td><td class="b">None</td><td class="r">O(N) positions</td><td class="y">N/A — custom opcode</td><td class="g perpl-col">O(1) — one write</td></tr>
+          <tr><td style="color:#8b949e">Scales to 100k positions</td><td class="g">✓</td><td class="r">✗ (83 blocks at 100k)</td><td class="g">✓</td><td class="g perpl-col">✓</td></tr>
+          <tr><td style="color:#8b949e">Trustless / on-chain</td><td class="r">✗</td><td class="g">✓</td><td class="y">Partially</td><td class="g perpl-col">✓ Fully</td></tr>
+          <tr><td style="color:#8b949e">Requires dedicated chain</td><td class="r">N/A</td><td class="g">✗</td><td class="r">✓ Required</td><td class="g perpl-col">✗</td></tr>
+          <tr><td style="color:#8b949e">Settlement cost per position</td><td class="b">Server time</td><td class="r">~25k gas/event</td><td class="y">~0 (absorbed by chain)</td><td class="g perpl-col">~0 deferred to close</td></tr>
+          <tr><td style="color:#8b949e">Reads at position close</td><td class="b">N/A</td><td class="b">N/A</td><td class="b">N/A</td><td class="g perpl-col">2 reads (exact)</td></tr>
+          <tr><td style="color:#8b949e">Dormant positions touched</td><td class="r">Every event</td><td class="r">Every event</td><td class="y">Every event (cheap)</td><td class="g perpl-col">Never</td></tr>
+          <tr><td style="color:#8b949e">Multi-event history</td><td class="b">Server sums</td><td class="r">Requires loop</td><td class="y">Custom accumulator</td><td class="g perpl-col">Telescopes into 2 reads</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="cta-row">
     <a class="cta cta-primary" href="index.html">&#9654; Try the interactive simulation</a>
-    <a class="cta cta-secondary" href="diagrams.html">Technical diagrams</a>
   </div>
 
   <div class="footer">
