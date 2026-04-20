@@ -7,7 +7,7 @@
 <title>Number Systems — Perpl</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; line-height: 1.7; }
+  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
   .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
   .site-logo { display: flex; align-items: center; text-decoration: none; }
   .site-logo img { height: 18px; display: block; }
@@ -16,12 +16,12 @@
   .site-links a:hover { border-color: #444; color: #e0e0f0; }
   .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
 
-  .content { max-width: 860px; margin: 0 auto; padding: 48px 32px 100px; }
-  h1 { font-size: 30px; color: #e0e0f0; font-weight: 700; margin-bottom: 10px; }
-  .lead { font-size: 15px; color: #9090a8; margin-bottom: 44px; line-height: 1.8; }
-  h2 { font-size: 20px; color: #e0e0f0; font-weight: 600; margin: 44px 0 14px; }
+  .content { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 28px; color: #e0e0f0; font-weight: 600; margin-bottom: 10px; }
+  .lead { font-size: 14px; color: #9090a8; margin-bottom: 44px; line-height: 1.8; }
+  h2 { font-size: 16px; color: #e0e0f0; font-weight: 600; margin: 44px 0 14px; }
   h3 { font-size: 15px; color: #c9d1d9; font-weight: 600; margin: 28px 0 10px; }
-  p { color: #9090a8; margin-bottom: 16px; font-size: 14px; }
+  p { color: #9090a8; margin-bottom: 16px; font-size: 15px; }
   strong { color: #c9d1d9; }
 
   .divider { border: none; border-top: 1px solid #1e1e2e; margin: 40px 0; }
@@ -149,7 +149,7 @@
     <div class="ns-card-full">Collateral Number System</div>
     <div class="ns-card-row">Storage: <span>80-bit unsigned</span></div>
     <div class="ns-card-row">Decimals: <span>6 (fixed — always USDC)</span></div>
-    <div class="ns-card-row">Max: <span>~$1.2 trillion USDC</span></div>
+    <div class="ns-card-row">Max: <span>~$1.2 quintillion USDC</span></div>
     <div class="ns-card-row">Used for: <span>balances, fees, PnL, margins</span></div>
   </div>
   <div class="ns-card">
@@ -157,7 +157,7 @@
     <div class="ns-card-full">Price Number System</div>
     <div class="ns-card-row">Storage: <span>32-bit unsigned</span></div>
     <div class="ns-card-row">Decimals: <span>0–6, per-perp</span></div>
-    <div class="ns-card-row">Max: <span>$429M at 1 decimal</span></div>
+    <div class="ns-card-row">ONS window: <span>$1.68M (dec=1) · $16.78 (dec=6)</span></div>
     <div class="ns-card-row">Used for: <span>mark price, oracle, entry price</span></div>
   </div>
   <div class="ns-card">
@@ -220,14 +220,16 @@
 <hr class="divider">
 
 <h2>The precision budget</h2>
-<p>CNS (collateral) is always 6 decimal places — USDC has 6 decimals, and that's fixed. When the contract computes PnL as <strong>price × size</strong>, the result must land exactly in CNS. That requires:</p>
+<p>CNS (collateral) is always 6 decimal places — USDC has 6 decimals, and that's fixed. When the contract computes PnL as <strong>price × size</strong>, the result must land in CNS. That means price and size decimals together <strong>can't exceed 6</strong>:</p>
 
 <div class="eq">
-  price_decimals + size_decimals = 6
-  <span class="label">Every perp uses all 6 decimal places, split between price precision and size precision.</span>
+  d_c = 6 &nbsp;&nbsp;&nbsp;&nbsp;(always — USDC fixed)<br>
+  d_p + d_l ≤ 6<br>
+  d_p ≥ 0,&nbsp; d_l ≥ 0
+  <span class="label">Both live perps use the full budget (d_p + d_l = 6). Using fewer wastes precision; using more causes truncation errors.</span>
 </div>
 
-<p>This means every market is making a tradeoff: more price precision means less size precision, and vice versa. The split is chosen once at market creation and can't change.</p>
+<p>This means every market is making a tradeoff: more price precision means less size precision, and vice versa. The split is chosen once at market creation and can't change. Using fewer than all 6 decimals is allowed but wastes precision that could otherwise be allocated to price or size granularity.</p>
 
 <!-- Figure 2: Derivation -->
 <div class="figure">
@@ -250,8 +252,8 @@
       </div>
       <div class="eq-op">⟹</div>
       <div class="eq-result">
-        <div class="big" style="color:#3fb950">price_dec + size_dec = 6</div>
-        <div class="lbl" style="margin-top:4px">use the full budget for maximum precision</div>
+        <div class="big" style="color:#3fb950">price_dec + size_dec ≤ 6</div>
+        <div class="lbl" style="margin-top:4px">= 6 is optimal — uses the full budget without truncation</div>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -277,7 +279,7 @@
       </div>
     </div>
   </div>
-  <div class="fig-note">If price_dec + size_dec were &lt; 6, precision would be wasted — the product would always end in zeros. If &gt; 6, the product would have too many decimal places and fractional USDC would be silently dropped, causing rounding errors in every PnL calculation. Both live perps use exactly 6: the only lossless choice.</div>
+  <div class="fig-note">If price_dec + size_dec &gt; 6, the product has more decimal places than CNS can hold — fractional USDC is silently dropped, causing rounding errors in every PnL calculation. If &lt; 6, no error occurs but precision is wasted (the product always ends in trailing zeros). Both live perps use exactly 6: the optimal choice that uses the full precision budget without any truncation.</div>
 </div>
 
 <div class="budget-visual">
@@ -329,14 +331,13 @@
         <tr><td style="color:#9090a8">ONS price range</td><td class="btc-col g">$0 – $1,677,721</td><td class="mon-col y">$0 – $16.78</td></tr>
         <tr><td style="color:#9090a8">Rally headroom (ONS)</td><td class="btc-col g">17.7× current price</td><td class="mon-col g">419× current price</td></tr>
         <tr><td style="color:#9090a8">Base price update risk</td><td class="btc-col g">Very low (wide window)</td><td class="mon-col y">Needed above ~$16</td></tr>
-        <tr><td style="color:#9090a8">Max PNS price</td><td class="btc-col g">$429,496,729</td><td class="mon-col y">$4,294.97</td></tr>
         <tr><td style="color:#9090a8">PNS for current price</td><td class="btc-col">950,000</td><td class="mon-col">40,000</td></tr>
         <tr><td style="color:#9090a8">price_dec + size_dec</td><td class="btc-col g">1 + 5 = 6 ✓</td><td class="mon-col g">6 + 0 = 6 ✓</td></tr>
         <tr><td style="color:#9090a8">Design priority</td><td class="btc-col b">Fine size granularity</td><td class="mon-col b">Fine price granularity</td></tr>
       </tbody>
     </table>
   </div>
-  <div class="fig-note">Both configurations use the full 6-decimal precision budget. The direction of the split is driven entirely by the asset's price magnitude: expensive assets need sub-cent tradeable units; cheap assets need sub-cent price resolution.</div>
+  <div class="fig-note">Both live perps use all 6 decimal places (1+5=6 and 6+0=6), maximising precision. Using fewer is valid but wastes the unused budget. The direction of the split is driven entirely by the asset's price magnitude: expensive assets need sub-cent tradeable units; cheap assets need sub-cent price resolution.</div>
 </div>
 
 <hr class="divider">

@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Withdrawal Rate Limiter — Perpl Security</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
+    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --bd: #1e1e2e; --bd2: #2a2a3a;
+    --green: #22c55e; --red: #ef4444; --amber: #eab308;
+    --blue: #60a5fa; --purple: #a78bfa; --perpl: #6F5CFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+  button { font-family: inherit; cursor: pointer; }
+
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--bd); }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: var(--tx); }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: var(--perpl); }
+
+  .page { max-width: 1160px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  .hero { margin-bottom: 28px; }
+  .hero h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; color: var(--tx2); line-height: 1.7; max-width: 700px; }
+
+  /* ── Scenario bar ── */
+  .sc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .sc-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; }
+  .sc-btn { padding: 8px 18px; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .sc-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .sc-btn.sn { border-color: var(--green); background: #22c55e08; color: var(--green); }
+  .sc-btn.sh { border-color: var(--red); background: #ef444408; color: var(--red); }
+  .sc-btn.so { border-color: var(--perpl); background: #6F5CFF08; color: var(--perpl); }
+  .spacer { flex: 1; }
+  .sim-ctrl { display: flex; align-items: center; gap: 8px; }
+  .btn { padding: 7px 16px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx2); cursor: pointer; transition: all 0.15s; }
+  .btn:hover { border-color: var(--bd); color: var(--tx); }
+  .btn-play { background: var(--perpl); border-color: var(--perpl); color: white; }
+  .btn-play:hover { background: #5a4ae6; }
+  .speed-wrap { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--tx3); }
+
+  /* ── Override panel ── */
+  .override-panel { background: var(--bg2); border: 1px solid #6F5CFF30; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+  .override-title { font-size: 11px; color: var(--perpl); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .override-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ov-section { background: var(--bg3); border-radius: 8px; padding: 14px; }
+  .ov-label { font-size: 12px; font-weight: 600; color: var(--perpl); margin-bottom: 6px; }
+  .ov-desc { font-size: 11px; color: var(--tx2); line-height: 1.65; margin-bottom: 12px; }
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .toggle { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .tslider { position: absolute; inset: 0; background: var(--bd2); border-radius: 10px; cursor: pointer; transition: 0.25s; }
+  .tslider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: 0.25s; }
+  .toggle input:checked + .tslider { background: var(--perpl); }
+  .toggle input:checked + .tslider::before { transform: translateX(18px); }
+  .tlabel { font-size: 12px; color: var(--tx2); }
+  .tlabel.on { color: var(--perpl); font-weight: 500; }
+  .code-pill { font-size: 10px; font-family: 'SF Mono', monospace; color: var(--tx3); margin-top: 6px; }
+  .btn-reset { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid var(--red); background: #ef444408; color: var(--red); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; }
+  .btn-reset:hover { background: #ef44441a; }
+  .reset-note { font-size: 11px; color: var(--tx3); line-height: 1.55; }
+
+  /* ── Main 3-col grid ── */
+  .main-grid { display: grid; grid-template-columns: 248px 1fr 270px; gap: 14px; margin-bottom: 16px; }
+
+  /* Left: vault card */
+  .card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
+  .card-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; }
+  .tvl-big { font-size: 30px; font-weight: 700; font-family: 'SF Mono', monospace; margin-bottom: 2px; }
+  .tvl-sub { font-size: 11px; color: var(--tx3); margin-bottom: 14px; }
+  .drain-bar-wrap { margin-bottom: 16px; }
+  .drain-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--tx2); margin-bottom: 5px; }
+  .bar-bg { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s, background 0.5s; }
+  .stat-list { display: flex; flex-direction: column; gap: 0; }
+  .srow { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--bd); font-size: 11px; }
+  .srow:last-child { border: none; }
+  .sk { color: var(--tx2); }
+  .sv { font-family: 'SF Mono', monospace; font-weight: 600; font-size: 12px; }
+
+  /* Center: mechanism card */
+  .mech-inner { display: flex; flex-direction: column; gap: 14px; }
+
+  /* SVG flow */
+  .flow-svg-wrap svg { width: 100%; display: block; }
+
+  /* Allowance gauge */
+  .gauge-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--tx2); margin-bottom: 5px; }
+  .gauge-bg { height: 36px; background: var(--bg3); border-radius: 6px; border: 1px solid var(--bd); overflow: hidden; position: relative; }
+  .gauge-fill { height: 100%; border-radius: 5px; transition: width 0.4s; background: linear-gradient(90deg, #22c55e18, #22c55e40); position: relative; }
+  .gauge-fill::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 3px; background: var(--green); border-radius: 0 3px 3px 0; }
+  .gauge-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'SF Mono', monospace; font-size: 14px; font-weight: 700; pointer-events: none; }
+  .cycle-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--tx3); }
+
+  /* Right: event log */
+  .log-list { display: flex; flex-direction: column; gap: 5px; max-height: 260px; overflow-y: auto; }
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: var(--bg3); }
+  .log-list::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+  .log-entry { display: flex; gap: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg3); font-size: 11px; border-left: 3px solid transparent; animation: eIn 0.25s ease; }
+  .log-entry.pass    { border-color: var(--green); }
+  .log-entry.attack  { border-color: #f97316; }
+  .log-entry.fail    { border-color: var(--red); }
+  .log-entry.bypass  { border-color: var(--perpl); }
+  .log-entry.reset   { border-color: var(--amber); }
+  .log-entry.deposit { border-color: var(--blue); }
+  @keyframes eIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .le-icon { flex-shrink: 0; font-size: 13px; }
+  .le-body { flex: 1; min-width: 0; }
+  .le-actor { font-weight: 600; }
+  .le-actor.pass    { color: var(--green); }
+  .le-actor.attack  { color: #f97316; }
+  .le-actor.fail    { color: var(--red); }
+  .le-actor.bypass  { color: var(--perpl); }
+  .le-actor.reset   { color: var(--amber); }
+  .le-actor.deposit { color: var(--blue); }
+  .le-detail { color: var(--tx3); margin-top: 2px; line-height: 1.4; }
+  .le-time { flex-shrink: 0; font-size: 10px; color: var(--tx3); padding-top: 1px; }
+  .log-empty { font-size: 11px; color: var(--tx3); text-align: center; padding: 28px 0; }
+
+  /* ── Curve card ── */
+  .curve-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .curve-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+  .curve-legend { display: flex; gap: 16px; font-size: 11px; color: var(--tx2); align-items: center; flex-wrap: wrap; }
+  .leg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+  .leg-line { display: inline-block; width: 14px; height: 2px; margin-right: 4px; vertical-align: middle; }
+  canvas#curve { display: block; width: 100%; }
+
+  /* ── Info cards ── */
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .info-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 16px; }
+  .info-tag { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .info-body { font-size: 12px; color: var(--tx2); line-height: 1.7; }
+  .info-code { margin-top: 10px; font-size: 10px; font-family: 'SF Mono', monospace; color: var(--tx3); line-height: 1.7; }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+    .override-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../index.html">← All Explainers</a>
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html">Interactive</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="hero">
+    <h1>Withdrawal Rate Limiter</h1>
+    <p class="hero-sub">A global circuit breaker that caps how quickly funds can leave the protocol. In a hack, an attacker can only drain a small fraction per hour — giving operators time to freeze accounts and recover before the vault empties.</p>
+  </div>
+
+  <!-- Scenario selector + sim controls -->
+  <div class="sc-row">
+    <span class="sc-label">Scenario</span>
+    <button class="sc-btn sn" id="btn-normal" onclick="setScenario('normal')">🟢 Normal Withdrawal</button>
+    <button class="sc-btn"    id="btn-hack"   onclick="setScenario('hack')">🔴 Hack Attempt</button>
+    <div class="spacer"></div>
+    <div class="sim-ctrl">
+      <button class="btn btn-play" id="play-btn" onclick="togglePlay()">▶ Play</button>
+      <button class="btn" id="step-btn" onclick="stepOnce()" title="Advance one tick">⏭ Step</button>
+      <button class="btn" onclick="resetSim()">↺ Reset</button>
+      <div class="speed-wrap">
+        Speed <input type="range" id="speed" min="1" max="6" value="2" style="width:52px">
+        <span id="speed-lbl">2×</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Override controls — always visible -->
+  <div class="override-panel show" id="override-panel">
+    <div class="override-title">⚙ Override Controls — active in any scenario</div>
+    <div class="override-grid">
+      <div class="ov-section">
+        <div class="ov-label">Bypass Address</div>
+        <div class="ov-desc">Owner designates addresses that skip the rate limiter entirely — used for protocol vaults, market makers, and emergency response during high-withdrawal periods.</div>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input type="checkbox" id="bypass-chk" onchange="onBypassChange(this)">
+            <span class="tslider"></span>
+          </label>
+          <span class="tlabel" id="bypass-lbl">Bypass OFF — rate limit applies</span>
+        </div>
+        <div class="code-pill">setWithdrawBypass(addr, true/false)</div>
+      </div>
+      <div class="ov-section">
+        <div class="ov-label">Owner Force Reset</div>
+        <div class="ov-desc">After freezing an attacker's accounts, the owner calls force reset. This zeros the current cycle and immediately restores burst allowance for legitimate users.</div>
+        <button class="btn-reset" onclick="doForceReset()">↺ forceResetWithdrawRateLimit()</button>
+        <div class="reset-note" id="reset-note">Zeroes allowance, perBlock, expiry, and lastBlock. Next withdrawal starts a fresh burst cycle from current TVL.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main 3-column layout -->
+  <div class="main-grid">
+
+    <!-- LEFT: Protocol Vault -->
+    <div class="card">
+      <div class="card-label">Protocol Vault</div>
+      <div class="tvl-big" id="tvl-num">$10.00M</div>
+      <div class="tvl-sub">Total Value Locked</div>
+      <div class="drain-bar-wrap">
+        <div class="drain-row">
+          <span>Drained this session</span>
+          <span id="drain-pct">0.0%</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill" id="drain-bar" style="width:0%;background:var(--green)"></div>
+        </div>
+      </div>
+      <div class="stat-list">
+        <div class="srow"><span class="sk">Hourly limit</span><span class="sv" id="s-hourly">$1.00M</span></div>
+        <div class="srow"><span class="sk">Burst (first 15 min)</span><span class="sv" id="s-burst">$250k</span></div>
+        <div class="srow"><span class="sk">Per-block rate</span><span class="sv" id="s-perblk">$117/blk</span></div>
+        <div class="srow"><span class="sk">wrlsThousandthsTvl</span><span class="sv" style="color:var(--tx3)">100 (10%)</span></div>
+        <div class="srow"><span class="sk">Approved total</span><span class="sv" id="s-approved" style="color:var(--green)">$0</span></div>
+        <div class="srow"><span class="sk">Blocked attempts</span><span class="sv" id="s-blocked" style="color:var(--tx2)">0</span></div>
+      </div>
+    </div>
+
+    <!-- CENTER: Rate Limiter mechanism -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-label" style="margin:0">Rate Limiter — Live State</div>
+        <span id="cycle-badge" style="font-size:10px;padding:3px 10px;border-radius:20px;background:var(--bg3);color:var(--tx3);font-weight:500;">Idle</span>
+      </div>
+
+      <!-- SVG flow diagram -->
+      <div class="flow-svg-wrap">
+        <svg viewBox="0 0 580 148" xmlns="http://www.w3.org/2000/svg">
+          <!-- Vault -->
+          <rect x="4" y="24" width="100" height="100" rx="8" fill="#12121a" stroke="#1e1e2e" stroke-width="1.5"/>
+          <text x="54" y="50" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">PROTOCOL VAULT</text>
+          <text x="54" y="74" text-anchor="middle" fill="#e0e0f0" font-size="16" font-family="SF Mono" font-weight="700" id="svg-tvl">$10M</text>
+          <!-- drain bar inside vault -->
+          <rect x="18" y="88" width="72" height="8" rx="4" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
+          <rect x="19" y="89" width="0" height="6" rx="3" fill="#ef4444" id="svg-drain-fill"/>
+          <text x="54" y="108" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter" id="svg-drain-pct">0% drained</text>
+
+          <!-- Connector vault → valve -->
+          <line x1="104" y1="74" x2="175" y2="74" stroke="#2a2a3a" stroke-width="5" stroke-linecap="round"/>
+          <polygon points="172,69 180,74 172,79" fill="#2a2a3a"/>
+
+          <!-- Bypass pipe (shown when bypass active) -->
+          <path d="M 54 24 Q 54 8 270 8 Q 486 8 492 40" stroke="#6F5CFF" stroke-width="2" stroke-dasharray="5,3" fill="none" id="bypass-pipe" opacity="0"/>
+          <text x="270" y="6" text-anchor="middle" fill="#6F5CFF" font-size="7.5" font-family="Inter" id="bypass-pipe-lbl" opacity="0">⚡ BYPASS PIPE (skips rate limiter)</text>
+
+          <!-- Rate limiter valve box -->
+          <rect x="175" y="16" width="190" height="116" rx="8" fill="#12121a" stroke="#1e1e2e" stroke-width="1.5" id="valve-box"/>
+          <text x="270" y="34" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">RATE LIMITER</text>
+
+          <!-- Allowance bar -->
+          <rect x="190" y="42" width="160" height="22" rx="5" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
+          <rect x="191" y="43" width="0" height="20" rx="4" fill="#22c55e20" id="svg-allow-fill"/>
+          <rect x="191" y="43" width="0" height="20" rx="4" fill="none" stroke="#22c55e" stroke-width="1.5" id="svg-allow-stroke"/>
+          <text x="270" y="57" text-anchor="middle" fill="#e0e0f0" font-size="11" font-family="SF Mono" font-weight="700" id="svg-allow-num">$0</text>
+
+          <text x="270" y="82" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter" id="svg-cycle-txt">No active cycle</text>
+          <text x="270" y="95" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter" id="svg-perblk-txt"></text>
+          <text x="270" y="108" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter" id="svg-expiry-txt"></text>
+          <text x="270" y="122" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter" id="svg-block-txt">block 0</text>
+
+          <!-- Out connector → approved -->
+          <line x1="365" y1="55" x2="432" y2="55" stroke="#22c55e40" stroke-width="5" stroke-linecap="round" id="out-pipe"/>
+          <polygon points="429,50 437,55 429,60" fill="#22c55e40" id="out-arrow"/>
+
+          <!-- Out connector → blocked -->
+          <line x1="365" y1="93" x2="432" y2="93" stroke="#ef444440" stroke-width="5" stroke-linecap="round" id="blk-pipe"/>
+          <polygon points="429,88 437,93 429,98" fill="#ef444440" id="blk-arrow"/>
+
+          <!-- Approved box -->
+          <rect x="432" y="30" width="140" height="50" rx="6" fill="#12121a" stroke="#22c55e30" stroke-width="1.5"/>
+          <text x="502" y="52" text-anchor="middle" fill="#22c55e" font-size="8.5" font-family="Inter" letter-spacing="0.3">✓ APPROVED</text>
+          <text x="502" y="68" text-anchor="middle" fill="#22c55e" font-size="13" font-family="SF Mono" font-weight="700" id="svg-approved">$0</text>
+
+          <!-- Blocked box -->
+          <rect x="432" y="68" width="140" height="46" rx="6" fill="#12121a" stroke="#ef444430" stroke-width="1.5"/>
+          <text x="502" y="87" text-anchor="middle" fill="#ef4444" font-size="8.5" font-family="Inter" letter-spacing="0.3">✗ BLOCKED</text>
+          <text x="502" y="103" text-anchor="middle" fill="#ef4444" font-size="13" font-family="SF Mono" font-weight="700" id="svg-blocked-n">0 txs</text>
+        </svg>
+      </div>
+
+      <!-- Allowance gauge -->
+      <div>
+        <div class="gauge-label">
+          <span>Current allowance</span>
+          <span id="gauge-label-r">$0 / $0</span>
+        </div>
+        <div class="gauge-bg">
+          <div class="gauge-fill" id="gauge-fill" style="width:0%">
+          </div>
+          <div class="gauge-text" id="gauge-text">—</div>
+        </div>
+        <div class="cycle-row" style="margin-top:8px;">
+          <span>Cycle: <span id="cycle-left" style="color:var(--tx2);">—</span></span>
+          <span>Block: <span id="block-num" style="color:var(--tx2);">0</span></span>
+          <span>Period ends: <span id="expiry-num" style="color:var(--tx2);">—</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Event log -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-label" style="margin:0">Event Log</div>
+        <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="log-list" id="log-list">
+        <div class="log-empty">Press ▶ Play to run scenario</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hack: protection impact card -->
+  <div id="hack-impact" style="display:none;margin-bottom:16px;">
+    <div style="background:var(--bg2);border:1px solid #f9731630;border-radius:10px;padding:18px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;">
+        <div style="font-size:10px;color:#f97316;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;">⚔ Rate Limiter Protection</div>
+        <div style="font-size:11px;color:var(--tx3);" id="hi-note">Play the scenario to see impact</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;">
+        <div>
+          <div style="font-size:10px;color:var(--tx3);margin-bottom:5px;">TOTAL ATTEMPTED</div>
+          <div style="font-size:22px;font-weight:700;font-family:'SF Mono';color:var(--tx);" id="hi-attempted">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:#f97316;margin-bottom:5px;">⚠ EXTRACTED</div>
+          <div style="font-size:22px;font-weight:700;font-family:'SF Mono';color:#f97316;" id="hi-extracted">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--green);margin-bottom:5px;">✓ BLOCKED BY LIMITER</div>
+          <div style="font-size:22px;font-weight:700;font-family:'SF Mono';color:var(--green);" id="hi-blocked-amt">—</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--tx2);margin-bottom:5px;">VAULT STILL SECURED</div>
+          <div style="font-size:22px;font-weight:700;font-family:'SF Mono';color:var(--tx);" id="hi-vault">—</div>
+        </div>
+      </div>
+      <!-- Stacked bar: attempted → extracted (orange) + blocked (green) + untouched (bg) -->
+      <div style="margin-bottom:6px;">
+        <div style="height:22px;background:var(--bg3);border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--bd);">
+          <div id="hi-bar-ext" style="height:100%;background:#f97316cc;transition:width 0.5s;width:0%;min-width:0;"></div>
+          <div id="hi-bar-blk" style="height:100%;background:#22c55e55;border-left:1px solid #22c55e40;transition:width 0.5s;width:0%;min-width:0;"></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--tx3);">
+        <span><span style="color:#f97316;">■</span> Extracted by attacker (% of initial TVL)</span>
+        <span id="hi-bar-label">—</span>
+        <span><span style="color:var(--green);">■</span> Blocked attempts (% of initial TVL)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Availability curve -->
+  <div class="curve-card">
+    <div class="curve-header">
+      <div>
+        <div class="card-label" style="margin-bottom:2px;">Withdrawal Availability Curve</div>
+        <div style="font-size:11px;color:var(--tx3);">Available allowance over one 60-minute rate-limit cycle</div>
+      </div>
+      <div class="curve-legend">
+        <span><span class="leg-line" style="background:var(--green);"></span>Theoretical</span>
+        <span><span class="leg-line" style="background:var(--blue);"></span>Actual</span>
+        <span><span class="leg-dot" style="background:var(--green);"></span>Approved</span>
+        <span><span style="display:inline-block;width:9px;height:9px;background:#f97316;transform:rotate(45deg);margin-right:5px;vertical-align:middle;border-radius:1px;"></span>Attacker ✓</span>
+        <span><span class="leg-dot" style="background:var(--red);"></span>Blocked</span>
+        <span><span class="leg-dot" style="background:var(--perpl);"></span>Bypass</span>
+        <span><span class="leg-line" style="background:var(--blue);opacity:0.6;border-top:2px dashed #60a5fa;height:0;width:14px;"></span> Deposit</span>
+      </div>
+    </div>
+    <canvas id="curve"></canvas>
+  </div>
+
+  <!-- Info cards -->
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-tag" style="color:var(--green);">Burst Window — First ~15 min</div>
+      <div class="info-body">~25% of the hourly limit is available immediately at the start of each cycle. Covers normal user withdrawals without delay while still limiting attacker throughput.</div>
+      <div class="info-code">burst ≈ hourlyLimit × 2143 / 8571<br>≈ 25% of hourly limit</div>
+    </div>
+    <div class="info-card">
+      <div class="info-tag" style="color:var(--blue);">Linear Refill — 15–60 min</div>
+      <div class="info-body">After the burst, capacity unlocks block-by-block at <code style="font-family:'SF Mono';font-size:10px;color:var(--blue)">collateralPerBlock</code>. An attacker who drains the burst must wait for the drip to refill before withdrawing more.</div>
+      <div class="info-code">perBlock = hourlyLimit / 8,571 blocks<br>hourly = max(TVL × 10%, $1M floor)</div>
+    </div>
+    <div class="info-card">
+      <div class="info-tag" style="color:var(--amber);">Cycle Reset &amp; Scaling</div>
+      <div class="info-body">At ~60 min, the next withdrawal triggers a new cycle recomputed from current TVL. As TVL shrinks during an exploit, so does the absolute limit — the attack self-throttles.</div>
+      <div class="info-code">New period: _wrlsExpiryBlock = block + 8571<br>Limit scales with each cycle's TVL snapshot</div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+// ── Constants ────────────────────────────────────────────────────
+const BPH  = 8571;   // blocks per hour
+const BP15 = 2143;   // blocks per 15 min
+const BPM  = 143;    // blocks per minute
+
+// ── Simulation state ─────────────────────────────────────────────
+const S = {
+  scenario: 'normal',
+  tvlInit:  10_000_000,
+  tvl:      10_000_000,
+  thousandths: 100,
+  minLimit:  1_000_000,
+
+  // Rate limiter
+  expiryBlock: 0,
+  lastBlock:   0,
+  allowance:   0,
+  perBlock:    0,
+
+  // Totals
+  approvedTotal:     0,
+  blockedCount:      0,
+  attackerExtracted: 0,
+  attackerBlocked:   0,
+
+  // Override
+  bypassActive: false,
+
+  // Sim run
+  running: false,
+  timer:   null,
+  step:    0,
+  block:   0,
+
+  // History for curve
+  history:  [],   // [{block, allow}]
+  events:   [],   // [{block, amt, actor, pass, bypass, allowBefore}]
+  deposits: [],   // [{block, amt}] — for curve annotation
+};
+
+// ── Scenarios ─────────────────────────────────────────────────────
+// Each event: { b: atBlock, amt: USDC amount, actor, bypass }
+// Bypass actors: any actor in this set skips the rate limiter when bypass toggle is ON
+const BYPASS_ACTORS = new Set(['Protocol Vault', 'Market Maker']);
+
+const SCENARIOS = {
+  normal: [
+    // User E wants $500k upfront — burst ceiling is $250k, clearly blocked
+    { b:   100, amt:  500_000, actor: 'User E' },
+    { b:   500, amt:   50_000, actor: 'User A' },
+    // Still in burst window — $400k exceeds $200k available and the $250k ceiling
+    { b:  1500, amt:  400_000, actor: 'User F' },
+    { b:  2000, amt:  120_000, actor: 'User B' },
+    // Burst window just ended — only ~$110k refilled, $300k exceeds theoretical too
+    { b:  2500, amt:  300_000, actor: 'User G' },
+    // Linear refill to ~$192k — $400k still exceeds theoretical (~$362k)
+    { b:  3200, amt:  400_000, actor: 'User H' },
+    { b:  4500, amt:   80_000, actor: 'User A' },
+    // Investor deposits $4M mid-cycle → TVL $12.8M → next cycle limit rises to $1.28M
+    { b:  5000, amt: 4_000_000, actor: 'Investor', deposit: true },
+    { b:  5500, amt:  200_000, actor: 'User C' },
+    { b:  7200, amt:  150_000, actor: 'User D' },
+    // New cycle — limit now $1.34M, burst ~$335k (deposit raised TVL to $13.4M)
+    { b:  9200, amt:  100_000, actor: 'User B' },   // PASS — burst $335k, $100k fine
+    { b:  9500, amt:  600_000, actor: 'User E' },   // BLOCKED — burst window, $600k >> $335k ceiling
+    { b: 10500, amt:  400_000, actor: 'User F' },   // BLOCKED — burst window, $400k > $335k ceiling
+    { b: 11000, amt:   80_000, actor: 'User A' },   // PASS
+    { b: 13000, amt:  150_000, actor: 'User C' },   // PASS
+    { b: 15000, amt:  120_000, actor: 'User D' },   // PASS
+  ],
+  hack: [
+    // Attacker drains entire burst immediately
+    { b:    50, amt:  250_000, actor: 'Attacker' },
+    // Rapid-fire retries — all blocked (burst is gone, burst window not yet over)
+    { b:   100, amt:  500_000, actor: 'Attacker' },
+    { b:   150, amt:  200_000, actor: 'Attacker' },
+    { b:   200, amt:   50_000, actor: 'Attacker' },
+    // Protocol Vault needs to rebalance — toggle bypass ON to let it through
+    { b:  2500, amt:  500_000, actor: 'Protocol Vault' },
+    // Attacker drains linear refill: by block 4000, ~$211k has refilled — stay under
+    { b:  4000, amt:  200_000, actor: 'Attacker' },
+    { b:  4100, amt:  400_000, actor: 'Attacker' }, // greedy retry — blocked (~$11k refilled)
+    { b:  6500, amt:  300_000, actor: 'Attacker' },
+    { b:  8000, amt:  150_000, actor: 'Attacker' },
+    // Unaware investor deposits $3M — raises TVL, counterintuitively boosting attacker's next cycle limit
+    { b:  8800, amt: 3_000_000, actor: 'Investor', deposit: true },
+    // New cycle — TVL $12.1M → limit now $1.21M (deposit helped the attacker)
+    { b:  9300, amt:  500_000, actor: 'Attacker' },
+    { b:  9350, amt:  600_000, actor: 'Attacker' }, // blocked
+    { b: 11000, amt:  400_000, actor: 'Market Maker' }, // try bypass ON
+    { b: 12000, amt:  280_000, actor: 'Attacker' },
+    { b: 15000, amt:  250_000, actor: 'Attacker' },
+  ],
+};
+
+// ── Rate limit math ──────────────────────────────────────────────
+function hourlyLimit() {
+  return Math.max((S.thousandths * S.tvl) / 1000, S.minLimit);
+}
+
+function burstAmount(limit) {
+  const perBlk = limit / BPH;
+  const fpEffect = limit - (perBlk * BPH);
+  return fpEffect + (perBlk * BP15);
+}
+
+// Try a withdrawal. Mutates S state. Returns { pass, bypass, reason }
+function tryWithdraw(amt, actor, bypass, atBlock) {
+  if (bypass) {
+    S.tvl = Math.max(0, S.tvl - amt);
+    S.approvedTotal += amt;
+    return { pass: true, bypass: true };
+  }
+
+  // Advance allowance for elapsed blocks
+  if (atBlock > S.expiryBlock) {
+    // New period
+    const lim   = hourlyLimit();
+    const perBlk = lim / BPH;
+    const fpEff  = lim - (perBlk * BPH);
+    S.expiryBlock = atBlock + BPH;
+    S.perBlock    = perBlk;
+    S.allowance   = fpEff + (perBlk * BP15);
+    S.lastBlock   = atBlock + BP15;  // burst window lasts 15 min
+  } else if (atBlock > S.lastBlock) {
+    S.allowance  += (atBlock - S.lastBlock) * S.perBlock;
+    S.lastBlock   = atBlock;
+  }
+
+  if (amt > S.allowance) {
+    S.blockedCount++;
+    return { pass: false, needed: amt, available: S.allowance };
+  }
+
+  S.allowance -= amt;
+  S.tvl = Math.max(0, S.tvl - amt);
+  S.approvedTotal += amt;
+  return { pass: true, bypass: false };
+}
+
+function doForceResetInternal() {
+  S.allowance   = 0;
+  S.perBlock    = 0;
+  S.expiryBlock = 0;
+  S.lastBlock   = 0;
+}
+
+// ── Formatting ───────────────────────────────────────────────────
+function fm(n) {
+  if (n >= 1_000_000) return '$' + (n / 1_000_000).toFixed(2) + 'M';
+  if (n >= 1_000)     return '$' + (n / 1_000).toFixed(0) + 'k';
+  return '$' + n.toFixed(0);
+}
+function fBlk(b) {
+  const m = Math.round(b / BPM);
+  return m >= 60 ? (m / 60).toFixed(1) + 'h' : m + 'min';
+}
+
+// ── UI update ────────────────────────────────────────────────────
+function ui() {
+  const lim   = hourlyLimit();
+  const burst = burstAmount(lim);
+  const allow = Math.max(0, S.allowance);
+  const pct   = lim > 0 ? Math.min(100, (allow / lim) * 100) : 0;
+  const drainPct = Math.max(0, Math.min(100, ((S.tvlInit - S.tvl) / S.tvlInit) * 100));
+
+  // Left column
+  el('tvl-num').textContent  = fm(S.tvl);
+  el('s-hourly').textContent = fm(lim);
+  el('s-burst').textContent  = fm(burst);
+  el('s-perblk').textContent = '$' + (lim / BPH).toFixed(0) + '/blk';
+  el('s-approved').textContent = fm(S.approvedTotal);
+  el('s-blocked').textContent  = S.blockedCount;
+  el('s-blocked').style.color  = S.blockedCount > 0 ? 'var(--red)' : 'var(--tx2)';
+  el('drain-pct').textContent = drainPct.toFixed(1) + '%';
+  el('drain-bar').style.width = drainPct + '%';
+  el('drain-bar').style.background = drainPct > 50 ? 'var(--red)' : drainPct > 20 ? 'var(--amber)' : 'var(--green)';
+
+  // Center gauge
+  el('gauge-fill').style.width = pct + '%';
+  el('gauge-text').textContent = fm(allow);
+  el('gauge-label-r').textContent = fm(allow) + ' / ' + fm(lim);
+
+  // Cycle info
+  if (S.expiryBlock > 0) {
+    const left = Math.max(0, S.expiryBlock - S.block);
+    el('cycle-left').textContent  = fBlk(left) + ' left';
+    el('expiry-num').textContent  = S.expiryBlock.toLocaleString();
+    el('cycle-badge').textContent = '🔄 Active';
+    el('cycle-badge').style.color      = 'var(--green)';
+    el('cycle-badge').style.background = '#22c55e10';
+  } else {
+    el('cycle-left').textContent  = '—';
+    el('expiry-num').textContent  = '—';
+    el('cycle-badge').textContent = 'Idle';
+    el('cycle-badge').style.color      = 'var(--tx3)';
+    el('cycle-badge').style.background = 'var(--bg3)';
+  }
+  el('block-num').textContent = S.block.toLocaleString();
+
+  // SVG
+  el('svg-tvl').textContent        = fm(S.tvl);
+  el('svg-allow-num').textContent  = fm(allow);
+  el('svg-approved').textContent   = fm(S.approvedTotal);
+  el('svg-blocked-n').textContent  = S.blockedCount + ' txs';
+  el('svg-block-txt').textContent  = 'block ' + S.block.toLocaleString();
+  const svgBarW = Math.max(0, Math.min(158, pct / 100 * 158));
+  el('svg-allow-fill').setAttribute('width', svgBarW);
+  el('svg-allow-stroke').setAttribute('width', svgBarW);
+  const svgDrainW = Math.max(0, Math.min(70, drainPct / 100 * 70));
+  el('svg-drain-fill').setAttribute('width', svgDrainW);
+  el('svg-drain-pct').textContent = drainPct.toFixed(1) + '% drained';
+  if (S.expiryBlock > 0) {
+    el('svg-cycle-txt').textContent = fBlk(Math.max(0, S.expiryBlock - S.block)) + ' left in cycle';
+    el('svg-perblk-txt').textContent = '$' + S.perBlock.toFixed(0) + '/block refill rate';
+    el('svg-expiry-txt').textContent = 'expires block ' + S.expiryBlock.toLocaleString();
+  } else {
+    el('svg-cycle-txt').textContent = 'No active cycle';
+    el('svg-perblk-txt').textContent = '';
+    el('svg-expiry-txt').textContent = '';
+  }
+
+  // Protection card (hack scenario only)
+  if (S.scenario === 'hack') {
+    const attempted = S.attackerExtracted + S.attackerBlocked;
+    if (attempted > 0) {
+      const extPct = (S.attackerExtracted / S.tvlInit) * 100;
+      const blkPct = (S.attackerBlocked  / S.tvlInit) * 100;
+      el('hi-attempted').textContent  = fm(attempted);
+      el('hi-extracted').textContent  = fm(S.attackerExtracted);
+      el('hi-blocked-amt').textContent = fm(S.attackerBlocked);
+      el('hi-vault').textContent      = fm(S.tvl);
+      el('hi-bar-ext').style.width    = extPct + '%';
+      el('hi-bar-blk').style.width    = blkPct + '%';
+      el('hi-bar-label').textContent  = extPct.toFixed(1) + '% extracted / ' + blkPct.toFixed(1) + '% blocked';
+      const saved = (S.attackerBlocked / attempted * 100).toFixed(0);
+      el('hi-note').textContent = saved + '% of attempted withdrawals stopped';
+    }
+  }
+}
+
+function el(id) { return document.getElementById(id); }
+
+// ── Event log ────────────────────────────────────────────────────
+function addLog(type, icon, actor, detail, atBlock) {
+  const list = el('log-list');
+  const emp  = list.querySelector('.log-empty');
+  if (emp) emp.remove();
+
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + type;
+  div.innerHTML = `
+    <span class="le-icon">${icon}</span>
+    <div class="le-body">
+      <div class="le-actor ${type}">${actor}</div>
+      <div class="le-detail">${detail}</div>
+    </div>
+    <span class="le-time">${fBlk(atBlock)}</span>`;
+  list.insertBefore(div, list.firstChild);
+  if (list.children.length > 25) list.removeChild(list.lastChild);
+}
+
+function clearLog() {
+  el('log-list').innerHTML = '<div class="log-empty">Press ▶ Play to run scenario</div>';
+}
+
+// ── Canvas curve ─────────────────────────────────────────────────
+function drawCurve() {
+  const canvas = el('curve');
+  const dpr    = window.devicePixelRatio || 1;
+  const W      = canvas.offsetWidth;
+  const H      = 210;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const pad = { t: 18, r: 16, b: 38, l: 64 };
+  const cw  = W - pad.l - pad.r;
+  const ch  = H - pad.t - pad.b;
+
+  ctx.clearRect(0, 0, W, H);
+
+  const lim   = hourlyLimit();
+  const burst = burstAmount(lim);
+
+  // Grid
+  ctx.strokeStyle = '#1e1e2e';
+  ctx.lineWidth   = 1;
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const y = pad.t + ch - f * ch;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+    ctx.fillStyle   = '#606078';
+    ctx.font        = '10px Inter';
+    ctx.textAlign   = 'right';
+    ctx.fillText(fm(f * lim), pad.l - 7, y + 4);
+  });
+
+  // Time axis labels
+  [0, 15, 30, 45, 60].forEach(min => {
+    const x = pad.l + (min / 60) * cw;
+    ctx.fillStyle   = '#606078';
+    ctx.font        = '10px Inter';
+    ctx.textAlign   = 'center';
+    ctx.fillText(min + ' min', x, H - 10);
+    ctx.beginPath(); ctx.moveTo(x, pad.t + ch); ctx.lineTo(x, pad.t + ch + 4);
+    ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 1; ctx.stroke();
+  });
+
+  // Burst zone
+  const burstX = pad.l + (15 / 60) * cw;
+  ctx.fillStyle = '#22c55e05';
+  ctx.fillRect(pad.l, pad.t, burstX - pad.l, ch);
+  ctx.fillStyle   = '#22c55e50';
+  ctx.font        = '9px Inter';
+  ctx.textAlign   = 'center';
+  ctx.fillText('▲ Burst', pad.l + (burstX - pad.l) / 2, pad.t + 11);
+
+  // Theoretical curve (green)
+  const burstY = pad.t + ch - (burst / lim) * ch;
+  ctx.beginPath();
+  ctx.strokeStyle = '#22c55e80';
+  ctx.lineWidth   = 2;
+  ctx.moveTo(pad.l, burstY);
+  ctx.lineTo(burstX, burstY);
+  ctx.lineTo(pad.l + cw, pad.t + 2);
+  ctx.stroke();
+
+  // Hourly limit dashed line
+  ctx.beginPath();
+  ctx.strokeStyle = '#9090a840';
+  ctx.lineWidth   = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.moveTo(pad.l, pad.t + 2);
+  ctx.lineTo(pad.l + cw, pad.t + 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle   = '#9090a8';
+  ctx.font        = '9px Inter';
+  ctx.textAlign   = 'left';
+  ctx.fillText('hourly limit', pad.l + 4, pad.t + 1);
+
+  // Actual history line (blue)
+  if (S.history.length > 1 && S.expiryBlock > 0) {
+    const pStart = S.expiryBlock - BPH;
+    ctx.beginPath();
+    ctx.strokeStyle = '#60a5faaa';
+    ctx.lineWidth   = 1.5;
+    let first = true;
+    S.history.forEach(h => {
+      const rel = h.block - pStart;
+      if (rel < 0 || rel > BPH) return;
+      const x = pad.l + (rel / BPH) * cw;
+      const y = pad.t + ch - Math.max(0, Math.min(1, h.allow / lim)) * ch;
+      if (first) { ctx.moveTo(x, y); first = false; } else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  // Event dots (and blocked-request lines)
+  S.events.forEach(ev => {
+    if (S.expiryBlock <= 0) return;
+    const pStart = S.expiryBlock - BPH;
+    const rel    = ev.block - pStart;
+    if (rel < 0 || rel > BPH) return;
+    const x = pad.l + (rel / BPH) * cw;
+    const y = pad.t + ch - Math.max(0, Math.min(1, ev.allowBefore / lim)) * ch;
+
+    // Blocked: dashed red line from allowance level up to requested amount
+    if (!ev.pass && !ev.bypass && ev.amt) {
+      const reqFrac = ev.amt / lim;
+      const yReq    = pad.t + ch - reqFrac * ch; // may be above chart top
+      const yTop    = Math.max(pad.t - 6, yReq);  // clamp with 6px overshoot
+
+      // Shaded fill between available and requested
+      ctx.fillStyle = '#ef444418';
+      ctx.fillRect(x - 5, yTop, 10, y - yTop);
+
+      // Dashed red stroke
+      ctx.beginPath();
+      ctx.strokeStyle = '#ef4444cc';
+      ctx.lineWidth   = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, yTop);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Arrow tip at top (⬆ requested)
+      ctx.beginPath();
+      ctx.moveTo(x, yTop - 5);
+      ctx.lineTo(x - 4, yTop + 2);
+      ctx.lineTo(x + 4, yTop + 2);
+      ctx.closePath();
+      ctx.fillStyle = '#ef4444cc';
+      ctx.fill();
+    }
+
+    // Dot on top
+    const isAtk = ev.actor === 'Attacker' && ev.pass && !ev.bypass;
+    const dotColor = ev.bypass ? '#6F5CFF' : isAtk ? '#f97316' : ev.pass ? '#22c55e' : '#ef4444';
+    if (isAtk) {
+      // Diamond shape for attacker-approved — visually distinct
+      ctx.beginPath();
+      ctx.moveTo(x,     y - 7);
+      ctx.lineTo(x + 6, y);
+      ctx.lineTo(x,     y + 7);
+      ctx.lineTo(x - 6, y);
+      ctx.closePath();
+      ctx.fillStyle   = dotColor;
+      ctx.fill();
+      ctx.strokeStyle = '#0a0a0f';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    } else {
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle   = dotColor;
+      ctx.fill();
+      ctx.strokeStyle = '#0a0a0f';
+      ctx.lineWidth   = 1.5;
+      ctx.stroke();
+    }
+  });
+
+  // Deposit markers — solid blue line + badge showing amount & resulting limit
+  if (S.expiryBlock > 0) {
+    const pStart = S.expiryBlock - BPH;
+    S.deposits.forEach(dep => {
+      const rel = dep.block - pStart;
+      if (rel < 0 || rel > BPH) return;
+      const x = pad.l + (rel / BPH) * cw;
+      const nextLim = Math.max((S.thousandths * dep.tvlAfter) / 1000, S.minLimit);
+
+      // Colored band behind line
+      ctx.fillStyle = '#60a5fa0c';
+      ctx.fillRect(x - 2, pad.t, 5, ch);
+
+      // Solid vertical line
+      ctx.beginPath();
+      ctx.strokeStyle = '#60a5facc';
+      ctx.lineWidth   = 2;
+      ctx.setLineDash([]);
+      ctx.moveTo(x, pad.t + 34); ctx.lineTo(x, pad.t + ch);
+      ctx.stroke();
+
+      // Badge background
+      ctx.font = '700 9px Inter';
+      const l1 = '↗ +' + fm(dep.amt);
+      const l2 = 'next limit: ' + fm(nextLim) + '/hr';
+      const bw = Math.max(ctx.measureText(l1).width, ctx.measureText(l2).width) + 14;
+      const bh = 30;
+      const bx = Math.min(x - bw / 2, pad.l + cw - bw); // clamp to chart right
+      const by = pad.t + 1;
+
+      ctx.fillStyle = '#0f2035';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.strokeStyle = '#60a5fa80';
+      ctx.lineWidth   = 1;
+      ctx.strokeRect(bx, by, bw, bh);
+
+      // Badge text
+      ctx.textAlign   = 'left';
+      ctx.fillStyle   = '#93c5fd';
+      ctx.fillText(l1, bx + 7, by + 11);
+      ctx.fillStyle   = '#60a5fa80';
+      ctx.font        = '9px Inter';
+      ctx.fillText(l2, bx + 7, by + 22);
+    });
+  }
+
+  // "NOW" marker
+  if (S.expiryBlock > 0 && S.block <= S.expiryBlock) {
+    const pStart = S.expiryBlock - BPH;
+    const rel    = Math.max(0, Math.min(BPH, S.block - pStart));
+    const x      = pad.l + (rel / BPH) * cw;
+    ctx.beginPath();
+    ctx.strokeStyle = '#e0e0f060';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + ch);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle   = '#9090a8';
+    ctx.font        = 'bold 9px Inter';
+    ctx.textAlign   = 'center';
+    ctx.fillText('▼ now', x, pad.t - 4);
+  }
+}
+
+// ── Simulation runner ────────────────────────────────────────────
+function runStep() {
+  if (!S.running) return;
+
+  const speed       = +el('speed').value;
+  el('speed-lbl').textContent = speed + '×';
+
+  const blocksPerStep = BPM * speed;   // 1 tick ≈ 1 min at 1×
+  S.block += blocksPerStep;
+
+  // Record allowance snapshot for curve
+  let projAllow = S.allowance;
+  if (S.expiryBlock > 0 && S.block <= S.expiryBlock && S.block > S.lastBlock) {
+    projAllow += (S.block - S.lastBlock) * S.perBlock;
+  }
+  S.history.push({ block: S.block, allow: Math.max(0, Math.min(projAllow, hourlyLimit())) });
+
+  // Fire pending events
+  const evts = SCENARIOS[S.scenario];
+  while (S.step < evts.length && evts[S.step].b <= S.block) {
+    const ev = evts[S.step];
+
+    // Deposit: increase TVL, no rate limiter interaction
+    if (ev.deposit) {
+      S.tvl += ev.amt;
+      S.deposits.push({ block: ev.b, amt: ev.amt, tvlAfter: S.tvl });
+      const nextLim = Math.max((S.thousandths * S.tvl) / 1000, S.minLimit);
+      addLog('deposit', '↗', ev.actor,
+        fm(ev.amt) + ' deposited — TVL now ' + fm(S.tvl) + ' · next cycle limit: ' + fm(nextLim), ev.b);
+      S.step++;
+      continue;
+    }
+
+    const isByp  = S.bypassActive && BYPASS_ACTORS.has(ev.actor);
+    const aBefor = S.allowance;
+    const res    = tryWithdraw(ev.amt, ev.actor, isByp, ev.b);
+
+    S.events.push({ block: ev.b, amt: ev.amt, actor: ev.actor, pass: res.pass, bypass: !!res.bypass, allowBefore: aBefor });
+
+    const isAttacker = ev.actor === 'Attacker';
+    if (isAttacker) {
+      if (res.pass && !res.bypass) S.attackerExtracted += ev.amt;
+      else if (!res.pass) S.attackerBlocked += ev.amt;
+    }
+    let type, icon, detail;
+    if (res.bypass) {
+      type = 'bypass'; icon = '⚡';
+      detail = fm(ev.amt) + ' — bypass address, skipped rate limiter';
+    } else if (res.pass) {
+      type = isAttacker ? 'attack' : 'pass'; icon = isAttacker ? '⚠' : '✓';
+      detail = fm(ev.amt) + (isAttacker ? ' drained' : ' approved') + ' — ' + fm(S.allowance) + ' remaining';
+    } else {
+      type = 'fail'; icon = '✗';
+      detail = fm(ev.amt) + ' blocked — needed ' + fm(res.needed) + ', only ' + fm(res.available) + ' available';
+    }
+    addLog(type, icon, ev.actor, detail, ev.b);
+    S.step++;
+  }
+
+  ui();
+  drawCurve();
+
+  // Stop when done (allow a 15-min tail after last event)
+  if (S.step >= evts.length && S.block > evts[evts.length - 1].b + BP15) {
+    S.running = false;
+    el('play-btn').textContent = '▶ Replay';
+    return;
+  }
+
+  // Step mode: fire one tick then pause
+  if (stepMode) {
+    stepMode = false;
+    S.running = false;
+    el('play-btn').textContent = '▶ Play';
+    return;
+  }
+
+  S.timer = setTimeout(runStep, Math.max(60, 900 / speed));
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+let stepMode = false;
+
+function stepOnce() {
+  if (S.running) return;
+  stepMode = true;
+  S.running = true;
+  el('play-btn').textContent = '⏸ Pause';
+  runStep();
+}
+
+function togglePlay() {
+  if (S.running) {
+    S.running = false;
+    clearTimeout(S.timer);
+    el('play-btn').textContent = '▶ Play';
+  } else {
+    S.running = true;
+    el('play-btn').textContent = '⏸ Pause';
+    runStep();
+  }
+}
+
+function resetSim() {
+  S.running = false;
+  clearTimeout(S.timer);
+  S.block = 0; S.step = 0;
+  S.tvl = S.tvlInit;
+  S.expiryBlock = 0; S.lastBlock = 0;
+  S.allowance = 0; S.perBlock = 0;
+  S.approvedTotal = 0; S.blockedCount = 0;
+  S.attackerExtracted = 0; S.attackerBlocked = 0;
+  S.history = []; S.events = []; S.deposits = [];
+  el('play-btn').textContent = '▶ Play';
+  el('reset-note').textContent = 'Zeroes allowance, perBlock, expiry, and lastBlock. Next withdrawal starts a fresh burst cycle from current TVL.';
+  el('reset-note').style.color = '';
+  clearLog();
+  ui();
+  drawCurve();
+}
+
+function setScenario(name) {
+  S.scenario = name;
+  ['normal','hack'].forEach(n => {
+    const btn = el('btn-' + n);
+    if (btn) btn.className = 'sc-btn' + (n === name ? ' s' + n[0] : '');
+  });
+  el('hack-impact').style.display = name === 'hack' ? 'block' : 'none';
+  resetSim();
+}
+
+function onBypassChange(cb) {
+  S.bypassActive = cb.checked;
+  el('bypass-lbl').textContent = cb.checked ? 'Bypass ON — skips rate limiter' : 'Bypass OFF — rate limit applies';
+  el('bypass-lbl').className   = 'tlabel' + (cb.checked ? ' on' : '');
+  el('bypass-pipe').setAttribute('opacity', cb.checked ? '1' : '0');
+  el('bypass-pipe-lbl').setAttribute('opacity', cb.checked ? '1' : '0');
+}
+
+function doForceReset() {
+  doForceResetInternal();
+  addLog('reset', '↺', 'Owner', 'forceResetWithdrawRateLimit() — cycle cleared, burst restores on next tx', S.block);
+  el('reset-note').textContent = '✓ Reset at block ' + S.block.toLocaleString() + '. Next withdrawal starts a fresh burst cycle.';
+  el('reset-note').style.color = 'var(--green)';
+  ui(); drawCurve();
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('resize', drawCurve);
+ui();
+drawCurve();
+</script>
+</body>
+</html>

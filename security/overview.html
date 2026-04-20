@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Withdrawal Rate Limiter — Perpl Security</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #e0e0f0; }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 28px; color: #e0e0f0; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
+  .subtitle { font-size: 14px; color: #606078; margin-bottom: 48px; }
+  h2 { font-size: 16px; color: #c9d1d9; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; font-size: 15px; }
+  strong { color: #c9d1d9; font-weight: 500; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #1a1a2a; border: 1px solid #2a2a3a; border-radius: 3px; padding: 1px 6px; color: #a0c0ff; }
+  a { color: #88f; text-decoration: none; }
+  a:hover { color: #bbf; }
+  hr { border: none; border-top: 1px solid #1e1e2e; margin: 48px 0; }
+
+  .eq { margin: 20px 0; padding: 14px 20px; background: #0d0d1a; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; line-height: 2; }
+  .eq .lbl { display: block; font-size: 11px; color: #606078; font-family: inherit; margin-top: 6px; font-style: italic; }
+
+  .callout { margin: 20px 0; padding: 14px 18px; background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 6px; font-size: 14px; color: #7ab; line-height: 1.7; }
+  .callout strong { color: #9cc; }
+  .callout.red { background: #1a0d0d; border-color: #3a1a1a; color: #b87; }
+  .callout.red strong { color: #c99; }
+  .callout.amber { background: #1a160a; border-color: #3a2a0a; color: #b9a; }
+  .callout.amber strong { color: #cba; }
+
+  .figure { margin: 32px 0 40px; }
+  .fig-title { font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .fig-title span { color: #58a6ff; font-weight: 600; }
+  .note { font-size: 11px; color: #9090a8; margin-top: 10px; padding: 10px 14px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
+
+  .cta-row { display: flex; gap: 12px; margin: 32px 0; }
+  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .cta-primary { background: #1a1a0a; border: 1px solid #3a3a1a; color: #aa9; }
+  .cta-primary:hover { background: #2a2a1a; color: #ccb; }
+
+  /* Figure 1: Allowance curve */
+  .curve-svg { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 8px; display: block; width: 100%; }
+
+  /* Figure 2: Cycle state machine */
+  .state-flow { display: flex; align-items: flex-start; gap: 0; background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 8px; padding: 24px 20px; overflow-x: auto; }
+  .sf-step { flex-shrink: 0; }
+  .sf-box { padding: 12px 14px; border-radius: 6px; text-align: center; font-size: 11px; font-weight: 600; line-height: 1.5; min-width: 120px; }
+  .sf-idle  { background: #1a1a26; border: 1px solid #3a3a5a; color: #8888a8; }
+  .sf-active { background: #0d1a0d; border: 1px solid #22863644; color: #3fb950; }
+  .sf-expire { background: #1a160a; border: 1px solid #d2992244; color: #d29922; }
+  .sf-reset  { background: #1a0d0d; border: 1px solid #da363344; color: #f85149; }
+  .sf-sub { font-size: 9px; font-weight: 400; opacity: 0.75; margin-top: 5px; line-height: 1.5; }
+  .sf-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 8px; padding-top: 12px; flex-shrink: 0; }
+  .sf-arr-line { color: #2a2a3a; font-size: 16px; }
+  .sf-arr-lbl { font-size: 9px; color: #606078; text-align: center; max-width: 70px; line-height: 1.4; margin-top: 4px; }
+  .sf-down { display: flex; flex-direction: column; align-items: center; margin-top: 10px; }
+  .sf-down-line { width: 1px; height: 24px; background: #2a2a3a; }
+  .sf-down-lbl { font-size: 9px; color: #f85149; text-align: center; max-width: 80px; margin-top: 4px; line-height: 1.4; }
+
+  /* Figure 3: Drain table */
+  .drain-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .drain-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #1e1e2e; color: #606078; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: #0a0a0f; }
+  .drain-table td { padding: 8px 12px; border-bottom: 1px solid #0d0d18; font-family: 'SF Mono', monospace; font-size: 11px; }
+  .drain-table tr:hover td { background: #0d0d18; }
+  .drain-table td.red { color: #f85149; }
+  .drain-table td.amber { color: #d29922; }
+  .drain-table td.green { color: #3fb950; }
+  .drain-table td.dim { color: #606078; }
+  .drain-table td.label { color: #9090a8; font-family: inherit; }
+
+  /* Figure 4: Storage layout */
+  .storage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .slot-card { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 6px; overflow: hidden; }
+  .slot-header { padding: 7px 12px; border-bottom: 1px solid #1e1e2e; font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.5px; }
+  .slot-row { padding: 8px 12px; border-bottom: 1px solid #0a0a0f; font-size: 11px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .slot-row:last-child { border: none; }
+  .slot-field { color: #58a6ff; font-family: 'SF Mono', monospace; }
+  .slot-type { color: #606078; font-size: 10px; font-family: 'SF Mono', monospace; }
+  .slot-note { color: #9090a8; font-size: 10px; text-align: right; }
+
+  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
+
+  @media (max-width: 600px) {
+    .storage-grid { grid-template-columns: 1fr; }
+    .state-flow { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a class="active" href="overview.html">Overview</a>
+    <a href="index.html">Interactive</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <h1>Withdrawal Rate Limiter</h1>
+  <p class="subtitle">How the protocol caps fund outflows to survive an exploit — burst window, linear refill, bypass addresses, and owner force reset.</p>
+
+  <p>Smart contract exploits rarely drain a vault instantaneously. Most attacks are iterative: the attacker finds a bug, calls the vulnerable function repeatedly, and accumulates the stolen funds over several transactions. The window between the first suspicious withdrawal and a full drain is often minutes or hours — long enough to act, if the protocol can create that window.</p>
+
+  <p>The withdrawal rate limiter is Perpl's circuit breaker. It places a hard cap on how quickly funds can leave the protocol, expressed as a percentage of total value locked per hour. In a hack, the attacker is limited to draining at most that percentage per cycle, regardless of how many times they call the withdraw function. Operators have at least one full cycle — typically 60 minutes — to detect the exploit, freeze the attacker, and begin recovery before the vault is meaningfully depleted.</p>
+
+  <hr>
+
+  <h2>The Hourly Limit</h2>
+
+  <p>Every withdrawal attempt is checked against a live allowance. That allowance is constrained by an hourly limit, computed from two protocol parameters:</p>
+
+  <div class="eq">
+    hourlyLimit = max( wrlsThousandthsTvl × TVL / 1000, minWithdrawLimitCNS )
+    <span class="lbl">Default: wrlsThousandthsTvl = 100 (10% of TVL), minWithdrawLimitCNS = $1,000,000</span>
+  </div>
+
+  <p>The first term scales the limit with the vault: a larger protocol allows more absolute throughput. The floor ensures the limit never drops so low that legitimate users are routinely blocked — even at modest TVL, at least $1M per hour can flow out. Both parameters are owner-configurable and can be adjusted as the protocol scales.</p>
+
+  <p>Critically, the hourly limit is <strong>recomputed at the start of each new cycle from current TVL</strong>. If an attacker drains the vault across multiple cycles, each subsequent cycle starts with a lower TVL, reducing the absolute limit. At $10M TVL the limit is $1M/hr. After draining $4M over four cycles, TVL is $6M and the computed rate is $600k/hr — but the floor of $1M still applies. The floor prevents the "spiral" where a small vault becomes effectively unwithdrawable.</p>
+
+  <hr>
+
+  <h2>Burst Window and Linear Refill</h2>
+
+  <p>The hourly limit is not made immediately available in full. Instead, the protocol splits each cycle into two phases. This prevents an attacker from draining the entire hour's allocation in a single transaction at the start of the cycle.</p>
+
+  <p>At the start of a new cycle, the contract makes approximately <strong>25% of the hourly limit available upfront</strong> as the burst amount. This accommodates normal user behavior — most withdrawals are routine and well within a reasonable burst window. After that burst is consumed or the first 15 minutes elapse, the remaining 75% unlocks gradually, block by block, at a rate of <code>hourlyLimit / 8,571</code> tokens per block (8,571 blocks = one hour at Monad's 0.42 s block time).</p>
+
+  <div class="eq">
+    perBlock = hourlyLimit / 8,571
+    <span class="lbl">≈ $117/block at $1M hourly limit</span>
+  </div>
+
+  <div class="eq">
+    burst ≈ hourlyLimit × (2,143 / 8,571) ≈ 25% of hourlyLimit
+    <span class="lbl">2,143 blocks = 15 minutes. Burst covers the first 15-minute window upfront.</span>
+  </div>
+
+  <!-- Figure 1: Allowance Curve -->
+  <div class="figure">
+    <div class="fig-title">Figure 1: <span>Theoretical Withdrawal Allowance Over One Cycle</span></div>
+    <svg class="curve-svg" viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg">
+      <!-- Grid lines -->
+      <line x1="68" y1="18"  x2="548" y2="18"  stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="68" y1="55"  x2="548" y2="55"  stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="68" y1="93"  x2="548" y2="93"  stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="68" y1="130" x2="548" y2="130" stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="68" y1="168" x2="548" y2="168" stroke="#1e1e2e" stroke-width="1"/>
+      <!-- Vertical grid -->
+      <line x1="188" y1="18" x2="188" y2="168" stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="308" y1="18" x2="308" y2="168" stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="428" y1="18" x2="428" y2="168" stroke="#1e1e2e" stroke-width="1"/>
+      <line x1="548" y1="18" x2="548" y2="168" stroke="#1e1e2e" stroke-width="1"/>
+
+      <!-- Burst zone highlight -->
+      <rect x="68" y="18" width="120" height="150" fill="#22c55e06"/>
+      <text x="128" y="32" text-anchor="middle" fill="#22c55e60" font-size="8" font-family="Inter" letter-spacing="0.3">▲ BURST ZONE</text>
+
+      <!-- Hourly limit dashed line -->
+      <line x1="68" y1="18" x2="548" y2="18" stroke="#9090a840" stroke-width="1" stroke-dasharray="4,4"/>
+      <text x="72" y="15" fill="#9090a860" font-size="8.5" font-family="Inter">hourly limit</text>
+
+      <!-- Theoretical curve: flat to 15min, then linear to 100% -->
+      <polyline points="68,130 188,130 548,18" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round"/>
+
+      <!-- Burst annotation -->
+      <line x1="68" y1="130" x2="60" y2="130" stroke="#22c55e50" stroke-width="1"/>
+      <text x="58" y="134" text-anchor="end" fill="#22c55e" font-size="8.5" font-family="SF Mono">~25%</text>
+
+      <!-- Example actual withdrawal curve (blue) — shows burst consumed then refill -->
+      <!-- Burst consumed immediately at t=0 (drop to near 0) -->
+      <!-- Refill from block 2143 onward -->
+      <!-- Second withdrawal at ~30min drops it again -->
+      <polyline points="68,130 70,168 188,155 308,120 310,145 428,112 548,90"
+                fill="none" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7"/>
+
+      <!-- Annotation: burst consumed -->
+      <circle cx="70" cy="168" r="4" fill="#ef4444" stroke="#0a0a0f" stroke-width="1.5"/>
+      <text x="85" y="172" fill="#ef444499" font-size="8" font-family="Inter">burst consumed</text>
+
+      <!-- Annotation: second withdrawal -->
+      <circle cx="310" cy="145" r="4" fill="#ef4444" stroke="#0a0a0f" stroke-width="1.5"/>
+
+      <!-- Annotation: first pass (at start, green dot) -->
+      <circle cx="68" cy="130" r="4" fill="#22c55e" stroke="#0a0a0f" stroke-width="1.5"/>
+
+      <!-- Y-axis labels -->
+      <text x="62" y="21"  text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">$1.00M</text>
+      <text x="62" y="59"  text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">$750k</text>
+      <text x="62" y="97"  text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">$500k</text>
+      <text x="62" y="134" text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">$250k</text>
+      <text x="62" y="172" text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">$0</text>
+
+      <!-- X-axis labels -->
+      <text x="68"  y="185" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">0 min</text>
+      <text x="188" y="185" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">15 min</text>
+      <text x="308" y="185" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">30 min</text>
+      <text x="428" y="185" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">45 min</text>
+      <text x="548" y="185" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">60 min</text>
+
+      <!-- 15-min marker label -->
+      <text x="188" y="197" text-anchor="middle" fill="#22c55e60" font-size="8" font-family="Inter">burst window ends</text>
+      <text x="188" y="207" text-anchor="middle" fill="#22c55e60" font-size="8" font-family="Inter">linear refill begins</text>
+
+      <!-- Legend -->
+      <line x1="72" y1="198" x2="90" y2="198" stroke="#22c55e" stroke-width="2.5"/>
+      <text x="93" y="202" fill="#606078" font-size="8.5" font-family="Inter">Theoretical (no withdrawals)</text>
+      <line x1="260" y1="198" x2="278" y2="198" stroke="#60a5fa" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="281" y="202" fill="#606078" font-size="8.5" font-family="Inter">Actual (after withdrawals)</text>
+    </svg>
+    <div class="note">At $1M/hr, the burst provides $250k upfront. The remaining $750k unlocks at ~$117/block over the next 45 minutes. An attacker who drains the burst immediately must then wait for block-by-block refill before withdrawing more.</div>
+  </div>
+
+  <p>The contract tracks when the current burst window ends via <code>_wrlsLastBlock</code>. If a withdrawal arrives before that block, no additional refill is added — the allowance is exactly what was set at cycle start. Once past <code>_wrlsLastBlock</code>, the contract accrues the elapsed blocks' worth of refill before checking the request.</p>
+
+  <hr>
+
+  <h2>How Cycles Work</h2>
+
+  <p>The rate limiter is stateful. A "cycle" is a 60-minute period initialized when the first withdrawal arrives after the previous cycle expires. The contract does not proactively start or end cycles — it is entirely reactive, updating state only when a withdrawal is attempted.</p>
+
+  <p>On each withdrawal call, the contract first determines which phase it is in:</p>
+
+  <p><strong>No active cycle</strong> (<code>block > _wrlsExpiryBlock</code>): A new cycle starts. The hourly limit is computed from current TVL, the per-block rate is set, and the burst allowance is loaded. The expiry block is set 8,571 blocks (one hour) in the future.</p>
+
+  <p><strong>Within burst window</strong> (<code>block ≤ _wrlsLastBlock</code>): No refill is accrued. The allowance is exactly what was set at cycle start, minus any withdrawals already made.</p>
+
+  <p><strong>Linear refill phase</strong> (<code>_wrlsLastBlock < block ≤ _wrlsExpiryBlock</code>): The contract adds <code>(block − _wrlsLastBlock) × perBlock</code> to the allowance and advances <code>_wrlsLastBlock</code>. The withdrawal is then checked against this updated allowance.</p>
+
+  <!-- Figure 2: Cycle State Machine -->
+  <div class="figure">
+    <div class="fig-title">Figure 2: <span>Cycle State Transitions</span></div>
+    <div style="background:#0d0d18;border:1px solid #1e1e2e;border-radius:8px;padding:24px 20px;overflow-x:auto;">
+      <div style="display:flex;align-items:flex-start;gap:0;min-width:560px;">
+
+        <div style="flex-shrink:0;">
+          <div class="sf-box sf-idle">
+            IDLE
+            <div class="sf-sub">No active cycle<br><code style="font-size:9px">expiryBlock = 0</code></div>
+          </div>
+        </div>
+
+        <div class="sf-arrow">
+          <div class="sf-arr-line">→</div>
+          <div class="sf-arr-lbl">First withdrawal<br>triggers new cycle</div>
+        </div>
+
+        <div style="flex-shrink:0;">
+          <div class="sf-box sf-active">
+            ACTIVE
+            <div class="sf-sub">
+              allowance = burst<br>
+              lastBlock = now + BP15<br>
+              expiry = now + BPH
+            </div>
+          </div>
+          <!-- Force reset arrow down -->
+          <div class="sf-down" style="margin-top:8px;">
+            <div class="sf-down-line"></div>
+            <div class="sf-down-lbl" style="color:#f85149">owner forceReset()<br>zeros all state</div>
+            <div style="width:1px;height:16px;background:#2a2a3a;margin:0 auto;"></div>
+            <div class="sf-box sf-reset" style="min-width:110px;font-size:10px;padding:8px 10px;margin-top:0;">
+              RESET
+              <div class="sf-sub">allowance = 0<br>perBlock = 0<br>expiry = 0<br>lastBlock = 0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sf-arrow">
+          <div class="sf-arr-line">→</div>
+          <div class="sf-arr-lbl">block advances<br>past lastBlock</div>
+        </div>
+
+        <div style="flex-shrink:0;">
+          <div class="sf-box sf-active">
+            REFILLING
+            <div class="sf-sub">
+              allowance += elapsed<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;× perBlock<br>
+              lastBlock = now
+            </div>
+          </div>
+        </div>
+
+        <div class="sf-arrow">
+          <div class="sf-arr-line">→</div>
+          <div class="sf-arr-lbl">block &gt; expiryBlock<br>on next withdrawal</div>
+        </div>
+
+        <div style="flex-shrink:0;">
+          <div class="sf-box sf-expire">
+            CYCLE EXPIRES
+            <div class="sf-sub">New cycle starts<br>limit recomputed<br>from current TVL</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="note">The reset path (owner <code>forceResetWithdrawRateLimit()</code>) zeroes all four state variables. The next incoming withdrawal will treat the contract as if no cycle has ever run, starting a completely fresh cycle from the current TVL snapshot.</div>
+  </div>
+
+  <div class="callout">
+    <strong>Lazy evaluation:</strong> the rate limiter never runs on a schedule. No keeper, no cron job, no gas spent proactively. State updates only when a withdrawal is attempted. A vault with no withdrawals for two hours does not automatically carry over any "saved" allowance — the next withdrawal starts a fresh cycle regardless.
+  </div>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">&#9654; Explore the interactive simulation</a>
+  </div>
+
+  <hr>
+
+  <h2>Surviving an Exploit</h2>
+
+  <p>The rate limiter's primary purpose is to bound the damage from a contract exploit. Without it, an attacker who discovers a reentrancy bug or unauthorized withdrawal vector can drain an entire vault in a single block. With it, the maximum damage in any 60-minute window is capped at the hourly limit — typically 10% of TVL.</p>
+
+  <p>The burst window creates an additional chokepoint. Even at cycle start, when the allowance is highest, an attacker can only extract the burst amount (~25% of the hourly limit) before the rate limiter forces them to wait for the linear drip. Their maximum theoretical throughput from a cold start is:</p>
+
+  <div class="eq">
+    max_instant = burst ≈ 0.25 × hourlyLimit
+    <span class="lbl">An attacker who hits the contract at cycle start gets at most 25% of the hourly limit before being blocked.</span>
+  </div>
+
+  <p>The remaining 75% of any given cycle's capacity is locked behind the block-by-block refill. An attacker willing to wait can eventually claim it — but waiting is dangerous. Each passing block is another block during which monitoring systems can detect anomalous outflow, on-chain alerts can fire, and operators can invoke the bypass lockdown or force reset.</p>
+
+  <!-- Figure 3: Multi-cycle drain table -->
+  <div class="figure">
+    <div class="fig-title">Figure 3: <span>Maximum Attacker Throughput — Ten Cycles</span></div>
+    <div style="background:#0d0d18;border:1px solid #1e1e2e;border-radius:8px;overflow:hidden;">
+      <table class="drain-table">
+        <thead>
+          <tr>
+            <th>Cycle</th>
+            <th>TVL at start</th>
+            <th>Hourly limit</th>
+            <th>Burst (instant)</th>
+            <th>Max drain</th>
+            <th>Response window</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="dim">1</td><td class="label">$10.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">2</td><td class="label">$9.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">3</td><td class="label">$8.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">4</td><td class="label">$7.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">5</td><td class="label">$6.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">6</td><td class="label">$5.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">7</td><td class="label">$4.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">8</td><td class="label">$3.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">9</td><td class="label">$2.00M</td><td class="amber">$1.00M</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+          <tr><td class="dim">10</td><td class="label">$1.00M</td><td class="amber">$1.00M ⌊floor⌋</td><td class="red">$250k</td><td class="red">$1.00M</td><td class="green">60 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Worst case: a fully patient attacker who waits out each complete cycle can drain at most $1M per hour. At $10M TVL the 10% rate and the $1M floor coincide. As TVL falls below $10M, the floor takes over and the absolute limit stays fixed at $1M — preventing the spiral where a depleted vault becomes trivially drainable. Each row represents a minimum 60-minute response window.</div>
+  </div>
+
+  <p>In practice, an attacker cannot drain the maximum each cycle. Partial refill, retry failures, and gas costs all reduce real throughput. The interactive simulation shows a realistic attack pattern: the burst is taken immediately, subsequent attempts are blocked, and the attacker can only extract smaller amounts as each cycle's linear refill trickles in.</p>
+
+  <div class="callout red">
+    <strong>Key property:</strong> The rate limiter cannot prevent a loss — it can only slow one down. Its value is the time window it creates. A protocol that responds within 60 minutes of a first anomalous withdrawal — by freezing the exploit vector, invoking the force reset, or raising bypass barriers — can cap total damage at a single cycle's allowance.
+  </div>
+
+  <hr>
+
+  <h2>Bypass Addresses</h2>
+
+  <p>Some protocol actors need to move funds without touching the rate limiter. The operator of a market-making vault needs to rebalance. An automated liquidation keeper needs to sweep collateral immediately. A protocol treasury contract may manage funds on a schedule that doesn't align with 60-minute cycles.</p>
+
+  <p>For these actors, the owner can designate <strong>bypass addresses</strong>. When <code>_wrlsBypassAddrs[msg.sender]</code> is true, the rate limiter check is skipped entirely — the withdrawal proceeds directly without consulting or modifying any of the four state variables. The bypass is per-address and owner-controlled.</p>
+
+  <div class="eq">
+    if (_wrlsBypassAddrs[msg.sender]) return; // skip rate limiter
+    <span class="lbl">Early return before any allowance check. Allowance, perBlock, expiryBlock, lastBlock are untouched.</span>
+  </div>
+
+  <p>Because bypass transactions do not touch the allowance, they also do not affect the refill schedule. A large bypass withdrawal by a market maker does not consume cycle capacity — subsequent non-bypass users still have the full allowance available.</p>
+
+  <div class="callout amber">
+    <strong>Bypass addresses in an attack:</strong> An attacker who gains control of a bypass address has effectively bypassed the rate limiter entirely. Bypass designations should be treated with the same access-control rigor as owner-level permissions. In the interactive simulation, toggling bypass ON shows this behavior: the Protocol Vault and Market Maker bypass addresses move funds at full speed regardless of cycle state.
+  </div>
+
+  <hr>
+
+  <h2>Owner Force Reset</h2>
+
+  <p>When operators detect an exploit in progress and have frozen the attacker's account-level access, the rate limiter may still be in mid-cycle state with depleted allowance. Legitimate users — who had nothing to do with the attack — may find themselves unable to withdraw because the attacker consumed the cycle's capacity. The force reset addresses this.</p>
+
+  <p>Calling <code>forceResetWithdrawRateLimit()</code> zeroes all four state variables:</p>
+
+  <div class="eq">
+    _wrlsAllowance    = 0<br>
+    _wrlsCollateralPerBlock = 0<br>
+    _wrlsExpiryBlock  = 0<br>
+    _wrlsLastBlock    = 0
+    <span class="lbl">All four fields cleared atomically. The contract behaves as if no cycle has ever run.</span>
+  </div>
+
+  <p>The next withdrawal after a force reset will trigger a completely fresh cycle, computed from current TVL at that moment. This means legitimate users immediately regain access to a full burst window. The reset is instantaneous and requires no waiting for the current cycle to expire.</p>
+
+  <p>In a typical response sequence: (1) exploit detected, (2) attacker's accounts frozen at the position/account level, (3) force reset called to restore withdrawal capacity for legitimate users, (4) investigation begins. The rate limiter served its purpose — it bought the time needed to execute steps 1–3.</p>
+
+  <hr>
+
+  <h2>TVL Scaling and Deposits</h2>
+
+  <p>Because the hourly limit is a function of current TVL, the limit grows as the protocol grows. A vault with $50M TVL at 10% can sustain $5M/hr in legitimate withdrawals — appropriate for a large protocol with significant trading volume. A smaller vault at $2M is capped at the $1M floor rather than $200k/hr, keeping the protocol usable at all sizes.</p>
+
+  <p>Deposits made mid-cycle do not affect the current cycle's parameters. The per-block rate and expiry block are fixed at cycle start and unchanged by incoming deposits. However, when the current cycle expires and the next withdrawal triggers a new cycle, the hourly limit is recomputed from the <em>new</em> (higher) TVL. A $3M deposit during a $10M-TVL cycle will raise the next cycle's limit from $1M to $1.3M/hr.</p>
+
+  <div class="callout red">
+    <strong>Counterintuitive edge case:</strong> Deposits made during an active attack <em>increase</em> the attacker's capacity in subsequent cycles. If TVL rises from $9M to $12M due to a large deposit between cycle 1 and cycle 2, the attacker's next-cycle limit increases from $1M (floor) to $1.2M. The rate limiter is TVL-aware — it cannot distinguish between legitimate and adversarial contexts when computing limits. This is worth noting in incident response: pausing new deposits during a confirmed hack prevents inadvertently boosting the drain rate.
+  </div>
+
+  <hr>
+
+  <h2>On-Chain State</h2>
+
+  <p>The entire rate limiter is implemented with four storage fields. All four are packed into a single 32-byte storage slot for gas efficiency. Force reset clears all four in one write.</p>
+
+  <!-- Figure 4: Storage Layout -->
+  <div class="figure">
+    <div class="fig-title">Figure 4: <span>Rate Limiter Storage Variables</span></div>
+    <div class="storage-grid">
+      <div class="slot-card">
+        <div class="slot-header">Allowance tracking</div>
+        <div class="slot-row">
+          <span class="slot-field">_wrlsAllowance</span>
+          <span class="slot-type">uint128</span>
+          <span class="slot-note">CNS — current spendable</span>
+        </div>
+        <div class="slot-row">
+          <span class="slot-field">_wrlsCollateralPerBlock</span>
+          <span class="slot-type">uint64</span>
+          <span class="slot-note">CNS/block refill rate</span>
+        </div>
+      </div>
+      <div class="slot-card">
+        <div class="slot-header">Cycle timing</div>
+        <div class="slot-row">
+          <span class="slot-field">_wrlsExpiryBlock</span>
+          <span class="slot-type">uint32</span>
+          <span class="slot-note">block cycle expires</span>
+        </div>
+        <div class="slot-row">
+          <span class="slot-field">_wrlsLastBlock</span>
+          <span class="slot-type">uint32</span>
+          <span class="slot-note">last accrual checkpoint</span>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>_wrlsAllowance:</strong> decremented on each successful withdrawal; incremented by elapsed blocks × perBlock at the start of each check.<br>
+      <strong>_wrlsCollateralPerBlock:</strong> set once per cycle as <code>hourlyLimit / 8,571</code>. Constant within a cycle.<br>
+      <strong>_wrlsExpiryBlock:</strong> the block at which the current cycle ends. If <code>block &gt; expiryBlock</code>, the next withdrawal starts a new cycle.<br>
+      <strong>_wrlsLastBlock:</strong> updated on every non-bypass withdrawal. During the burst window (<code>block ≤ cycleStart + 2,143</code>), this is initialized to the burst window end block so no refill accrues yet.
+    </div>
+  </div>
+
+  <p>Two additional mappings sit outside this slot: <code>_wrlsBypassAddrs</code> (address → bool) for bypass designations, and the owner-configurable parameters <code>wrlsThousandthsTvl</code> and <code>minWithdrawLimitCNS</code> which are read but not modified during normal withdrawal flow.</p>
+
+  <div class="callout">
+    <strong>Gas cost:</strong> A non-bypass withdrawal that triggers a new cycle writes to all four fields — one cold SSTORE (22,100 gas) and three warm SSTOREs (2,900 gas each). A withdrawal within an existing cycle that accrues refill writes two fields (allowance + lastBlock). A blocked withdrawal writes two fields and reverts. Bypass withdrawals touch none of the rate limiter storage.
+  </div>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">&#9654; Explore the interactive simulation</a>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</div>
+</body>
+</html>

@@ -259,8 +259,8 @@
           <div class="stat-row"><span class="stat-key">Decimals</span><span class="stat-val" id="s-pdec" style="color:var(--blue)">—</span></div>
           <div class="stat-row"><span class="stat-key">Tick size</span><span class="stat-val" id="s-ptick">—</span></div>
           <div class="stat-row"><span class="stat-key">Current PNS</span><span class="stat-val" id="s-pns">—</span></div>
-          <div class="stat-row"><span class="stat-key">ONS range (24-bit)</span><span class="stat-val" id="s-ons">—</span></div>
-          <div class="stat-row"><span class="stat-key">Max PNS price</span><span class="stat-val" id="s-pmax">—</span></div>
+          <div class="stat-row"><span class="stat-key">ONS window (24-bit)</span><span class="stat-val" id="s-ons">—</span></div>
+          <div class="stat-row"><span class="stat-key">32-bit PNS ceiling</span><span class="stat-val" id="s-pmax" style="color:var(--tx3)">—</span></div>
         </div>
         <div class="stat-card">
           <h4>Size System (LNS · 40-bit)</h4>
@@ -272,8 +272,8 @@
         <div class="stat-card">
           <h4>Collateral (CNS · 80-bit · fixed)</h4>
           <div class="stat-row"><span class="stat-key">Decimals</span><span class="stat-val" style="color:var(--purple)">6 (USDC)</span></div>
-          <div class="stat-row"><span class="stat-key">Max balance</span><span class="stat-val">~$1.2T</span></div>
-          <div class="stat-row"><span class="stat-key">price_dec + size_dec</span><span class="stat-val" style="color:var(--green)">= 6 ✓</span></div>
+          <div class="stat-row"><span class="stat-key">Max balance</span><span class="stat-val">~$1.2 quintillion</span></div>
+          <div class="stat-row"><span class="stat-key">p_dec + l_dec (≤ 6)</span><span class="stat-val" style="color:var(--green)" id="s-decsum">= 6 ✓</span></div>
         </div>
       </div>
     </div>
@@ -289,7 +289,7 @@
         </div>
         <div class="bit-bar"><div class="bit-bar-fill" style="width:100%;background:var(--purple);opacity:0.4;"></div></div>
         <div class="ns-prop">Decimals: <b>6 fixed</b></div>
-        <div class="ns-prop">Max: <b>~$1.2 trillion USDC</b></div>
+        <div class="ns-prop">Max: <b>~$1.2 quintillion USDC</b></div>
         <div class="ns-prop">Used for: <b>balances, fees, PnL, margins</b></div>
       </div>
       <div class="ns-card" id="nsc-PNS" onclick="pickNS('PNS')">
@@ -366,7 +366,7 @@
     </div>
 
     <div class="cmp-note">
-      <strong>Both use the full 6-decimal budget</strong> (1+5=6 and 6+0=6). The direction of the split is driven entirely by the asset's price magnitude. BTC at $95k needs sub-cent lot granularity so traders can buy tiny fractions. MON at $0.04 needs sub-cent <em>price</em> precision so the orderbook can express real spread and movement — $0.10 ticks would be 250% of the entire price.
+      <strong>Both use all 6 decimal places</strong> (1+5=6 and 6+0=6), maximising precision — the budget constraint is ≤ 6, and using less wastes it. The direction of the split is driven entirely by the asset's price magnitude. BTC at $95k needs sub-cent lot granularity so traders can buy tiny fractions. MON at $0.04 needs sub-cent <em>price</em> precision so the orderbook can express real spread and movement — $0.10 ticks would be 250% of the entire price.
     </div>
 
     <div class="wrong-label">What if the settings were swapped? (wrong configurations)</div>
@@ -594,7 +594,10 @@ function refresh() {
   set('s-ptick', fmtP(ptick));
   set('s-pns', curPNS.toLocaleString() + (fitsONS ? '' : ' ⚠'));
   set('s-ons', '$0 – ' + fmtP(onsRange));
-  set('s-pmax', fmtP(maxPNSPrice));
+  set('s-pmax', fmtP(maxPNSPrice));  // 32-bit theoretical ceiling
+  const sd2 = TOTAL - pDec;
+  const decSumEl = document.getElementById('s-decsum');
+  if (decSumEl) { const sum = pDec + sd2; decSumEl.textContent = pDec + ' + ' + sd2 + ' = ' + sum + (sum <= 6 ? ' ✓' : ' ✗'); decSumEl.style.color = sum <= 6 ? 'var(--green)' : 'var(--red)'; }
   set('s-sdec', sd + (sd===1?' decimal':' decimals'));
   set('s-stick', fmtD(stick, sd) + ' ' + sym);
   set('s-smin', fmtP(minTrade));
@@ -669,18 +672,18 @@ const NS = {
     color: 'var(--purple)', bits: 80, label: 'CNS — Collateral Number System',
     decimals: '6 (fixed — always USDC)',
     maxRaw: '1,208,925,819,614,629,174,706,175',
-    maxHuman: '~$1.2 trillion USDC (effectively unlimited)',
+    maxHuman: '~$1.2 quintillion USDC (effectively unlimited)',
     storage: 'uint80, unsigned',
     usedFor: 'Every monetary value: collateral balances, fees charged, PnL realized, margin requirements, insurance fund balances.',
     why: 'USDC has 6 decimals and that\'s fixed. 80-bit is large enough that no realistic exchange balance could ever overflow. Completely independent of PNS/LNS choices.',
     example: '$1,234.567890 USDC → stored as CNS value 1,234,567,890',
-    constraint: 'None — fully independent. The 6 CNS decimals are why price_dec + size_dec must equal 6.',
+    constraint: 'None — fully independent. CNS has 6 fixed decimals (USDC), which defines the upper bound: price_dec + size_dec cannot exceed 6.',
   },
   PNS: {
     color: 'var(--blue)', bits: 32, label: 'PNS — Price Number System',
-    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec = 6.',
+    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec ≤ 6.',
     maxRaw: '4,294,967,295',
-    maxHuman: '$429M @ dec=1 · $4.29M @ dec=2 · $4,295 @ dec=6',
+    maxHuman: '$429M @ dec=1 (32-bit ceiling). ONS-constrained window: $1.68M @ dec=1, $16.78 @ dec=6.',
     storage: 'uint32, unsigned',
     usedFor: 'Mark price, oracle price, entry price, liquidation price. Orderbook prices are ONS offsets that get added to basePricePNS to produce PNS.',
     why: '32-bit provides a max of ~4 billion, sufficient for any realistic asset price at any decimal setting. Derived from ONS via base price offset, enabling compact 24-bit orderbook slots.',
@@ -689,7 +692,7 @@ const NS = {
   },
   LNS: {
     color: 'var(--green)', bits: 40, label: 'LNS — Lot Number System',
-    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec = 6.',
+    decimals: '0–6, chosen per-perp at creation. Constrained: price_dec + size_dec ≤ 6.',
     maxRaw: '1,099,511,627,775',
     maxHuman: '~10.9B units @ dec=5 · ~1.1T units @ dec=0',
     storage: 'uint40, unsigned',
