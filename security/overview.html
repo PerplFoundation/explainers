@@ -77,20 +77,9 @@
   .drain-table td.dim { color: #606078; }
   .drain-table td.label { color: #9090a8; font-family: inherit; }
 
-  /* Figure 4: Storage layout */
-  .storage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .slot-card { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 6px; overflow: hidden; }
-  .slot-header { padding: 7px 12px; border-bottom: 1px solid #1e1e2e; font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.5px; }
-  .slot-row { padding: 8px 12px; border-bottom: 1px solid #0a0a0f; font-size: 11px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .slot-row:last-child { border: none; }
-  .slot-field { color: #58a6ff; font-family: 'SF Mono', monospace; }
-  .slot-type { color: #606078; font-size: 10px; font-family: 'SF Mono', monospace; }
-  .slot-note { color: #9090a8; font-size: 10px; text-align: right; }
-
-  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
+.footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
 
   @media (max-width: 600px) {
-    .storage-grid { grid-template-columns: 1fr; }
     .state-flow { flex-direction: column; align-items: flex-start; }
   }
 </style>
@@ -127,7 +116,7 @@
 
   <p>The first term scales the limit with the vault: a larger protocol allows more absolute throughput. The floor ensures the limit never drops so low that legitimate users are routinely blocked — even at modest TVL, at least $1M per hour can flow out. Both parameters are owner-configurable and can be adjusted as the protocol scales.</p>
 
-  <p>Critically, the hourly limit is <strong>recomputed at the start of each new cycle from current TVL</strong>. If an attacker drains the vault across multiple cycles, each subsequent cycle starts with a lower TVL, reducing the absolute limit. At $10M TVL the limit is $1M/hr. After draining $4M over four cycles, TVL is $6M and the computed rate is $600k/hr — but the floor of $1M still applies. The floor prevents the "spiral" where a small vault becomes effectively unwithdrawable.</p>
+  <p>Critically, the hourly limit is <strong>recomputed at the start of each new cycle from current TVL</strong>. If an attacker drains the vault across multiple cycles, each subsequent cycle starts with a lower TVL, reducing the absolute limit. At $10M TVL the limit is $1M/hr. After draining $4M over four cycles, TVL is $6M and the computed rate is $600k/hr — but the floor of $1M still applies. The floor prevents the "spiral" where a small account becomes effectively unwithdrawable.</p>
 
   <hr>
 
@@ -419,58 +408,7 @@
   <p>Deposits made mid-cycle do not affect the current cycle's parameters. The per-block rate and expiry block are fixed at cycle start and unchanged by incoming deposits. However, when the current cycle expires and the next withdrawal triggers a new cycle, the hourly limit is recomputed from the <em>new</em> (higher) TVL. A $3M deposit during a $10M-TVL cycle will raise the next cycle's limit from $1M to $1.3M/hr.</p>
 
   <div class="callout red">
-    <strong>Counterintuitive edge case:</strong> Deposits made during an active attack <em>increase</em> the attacker's capacity in subsequent cycles. If TVL rises from $9M to $12M due to a large deposit between cycle 1 and cycle 2, the attacker's next-cycle limit increases from $1M (floor) to $1.2M. The rate limiter is TVL-aware — it cannot distinguish between legitimate and adversarial contexts when computing limits. This is worth noting in incident response: pausing new deposits during a confirmed hack prevents inadvertently boosting the drain rate.
-  </div>
-
-  <hr>
-
-  <h2>On-Chain State</h2>
-
-  <p>The entire rate limiter is implemented with four storage fields. All four are packed into a single 32-byte storage slot for gas efficiency. Force reset clears all four in one write.</p>
-
-  <!-- Figure 4: Storage Layout -->
-  <div class="figure">
-    <div class="fig-title">Figure 4: <span>Rate Limiter Storage Variables</span></div>
-    <div class="storage-grid">
-      <div class="slot-card">
-        <div class="slot-header">Allowance tracking</div>
-        <div class="slot-row">
-          <span class="slot-field">_wrlsAllowance</span>
-          <span class="slot-type">uint128</span>
-          <span class="slot-note">CNS — current spendable</span>
-        </div>
-        <div class="slot-row">
-          <span class="slot-field">_wrlsCollateralPerBlock</span>
-          <span class="slot-type">uint64</span>
-          <span class="slot-note">CNS/block refill rate</span>
-        </div>
-      </div>
-      <div class="slot-card">
-        <div class="slot-header">Cycle timing</div>
-        <div class="slot-row">
-          <span class="slot-field">_wrlsExpiryBlock</span>
-          <span class="slot-type">uint32</span>
-          <span class="slot-note">block cycle expires</span>
-        </div>
-        <div class="slot-row">
-          <span class="slot-field">_wrlsLastBlock</span>
-          <span class="slot-type">uint32</span>
-          <span class="slot-note">last accrual checkpoint</span>
-        </div>
-      </div>
-    </div>
-    <div class="note">
-      <strong>_wrlsAllowance:</strong> decremented on each successful withdrawal; incremented by elapsed blocks × perBlock at the start of each check.<br>
-      <strong>_wrlsCollateralPerBlock:</strong> set once per cycle as <code>hourlyLimit / 8,571</code>. Constant within a cycle.<br>
-      <strong>_wrlsExpiryBlock:</strong> the block at which the current cycle ends. If <code>block &gt; expiryBlock</code>, the next withdrawal starts a new cycle.<br>
-      <strong>_wrlsLastBlock:</strong> updated on every non-bypass withdrawal. During the burst window (<code>block ≤ cycleStart + 2,143</code>), this is initialized to the burst window end block so no refill accrues yet.
-    </div>
-  </div>
-
-  <p>Two additional mappings sit outside this slot: <code>_wrlsBypassAddrs</code> (address → bool) for bypass designations, and the owner-configurable parameters <code>wrlsThousandthsTvl</code> and <code>minWithdrawLimitCNS</code> which are read but not modified during normal withdrawal flow.</p>
-
-  <div class="callout">
-    <strong>Gas cost:</strong> A non-bypass withdrawal that triggers a new cycle writes to all four fields — one cold SSTORE (22,100 gas) and three warm SSTOREs (2,900 gas each). A withdrawal within an existing cycle that accrues refill writes two fields (allowance + lastBlock). A blocked withdrawal writes two fields and reverts. Bypass withdrawals touch none of the rate limiter storage.
+    <strong>Counterintuitive edge case:</strong> Deposits made during an active attack <em>increase</em> the attacker's capacity in subsequent cycles. If TVL rises from $9M to $12M due to a large deposit between cycle 1 and cycle 2, the attacker's next-cycle limit increases from $1M (floor) to $1.2M. The rate limiter is TVL-aware — it cannot distinguish between legitimate and adversarial contexts when computing limits. During an incident new deposits are paused so drain rate is not inadvertently boosted.
   </div>
 
   <div class="cta-row">
