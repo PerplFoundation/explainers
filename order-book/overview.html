@@ -727,59 +727,56 @@
     <rect x="200" y="182" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
     <text x="222" y="195" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m-3</text>
 
-    <!-- Order ID Partition List (right side) -->
-    <text x="450" y="12" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">ORDER PARTITION LIST (FIFO per price)</text>
-
-    <!-- Arrows from price map to partitions -->
-    <!-- m+3 → one order -->
-    <line x1="244" y1="57" x2="290" y2="57" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-    <!-- m+2 → two orders -->
-    <line x1="244" y1="81" x2="290" y2="81" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-    <!-- m+1 → three orders -->
-    <line x1="244" y1="105" x2="290" y2="105" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-    <!-- m-1 → four orders -->
-    <line x1="244" y1="143" x2="290" y2="143" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-    <!-- m-2 → three orders -->
-    <line x1="244" y1="167" x2="290" y2="167" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-    <!-- m-3 → two orders -->
-    <line x1="244" y1="191" x2="290" y2="191" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
-
     <defs>
       <marker id="arr-gray" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
         <path d="M0,0 L0,6 L6,3 z" fill="#2a2a3a"/>
       </marker>
+      <marker id="arr-gray-l" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+        <path d="M6,0 L6,6 L0,3 z" fill="#3a3a5a"/>
+      </marker>
     </defs>
 
-    <!-- Partition list boxes (orders as doubly-linked list) -->
-    <!-- helper macro: order box at cx, cy, label -->
-    <!-- m+3 partition: 1 order at x=300 -->
-    <rect x="292" y="22" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
-    <text x="298" y="33" fill="#606078" font-size="7.5" font-family="Inter">m+3</text>
-    <rect x="320" y="47" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <!-- Order Partition List header — aligned with PRICE MAP header at y=34 -->
+    <text x="470" y="34" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">ORDER PARTITION LIST (FIFO per price)</text>
+
+    <!-- Arrows from price map to partitions (x=244→290, y matches price map row centers) -->
+    <line x1="244" y1="57"  x2="290" y2="57"  stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <line x1="244" y1="81"  x2="290" y2="81"  stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <line x1="244" y1="105" x2="290" y2="105" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <line x1="244" y1="143" x2="290" y2="143" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <line x1="244" y1="167" x2="290" y2="167" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <line x1="244" y1="191" x2="290" y2="191" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+    <!-- Partition rows: aligned to price map row y positions (m+3 at y=48, m+2 at y=72, m+1 at y=96) -->
+
+    <!-- m+3 partition: 1 order (row y=48–66, center y=57) -->
+    <rect x="292" y="48" width="356" height="18" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="60" fill="#606078" font-size="7.5" font-family="Inter">m+3</text>
+    <rect x="320" y="50" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="340" y="61" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o9</text>
 
-    <!-- m+2 partition: 2 orders -->
-    <rect x="292" y="46" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
-    <text x="298" y="57" fill="#606078" font-size="7.5" font-family="Inter">m+2</text>
-    <rect x="320" y="71" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <!-- m+2 partition: 2 orders (row y=72–90, center y=81) -->
+    <rect x="292" y="72" width="356" height="18" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="84" fill="#606078" font-size="7.5" font-family="Inter">m+2</text>
+    <rect x="320" y="74" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="340" y="85" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o6</text>
     <line x1="360" y1="81" x2="372" y2="81" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
     <line x1="372" y1="85" x2="360" y2="85" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
-    <rect x="374" y="71" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="374" y="74" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="394" y="85" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o7</text>
 
-    <!-- m+1 partition: 3 orders -->
-    <rect x="292" y="70" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
-    <text x="298" y="81" fill="#606078" font-size="7.5" font-family="Inter">m+1</text>
-    <rect x="320" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <!-- m+1 partition: 3 orders (row y=96–114, center y=105) -->
+    <rect x="292" y="96" width="356" height="18" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="108" fill="#606078" font-size="7.5" font-family="Inter">m+1</text>
+    <rect x="320" y="98" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="340" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o3</text>
     <line x1="360" y1="105" x2="372" y2="105" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
     <line x1="372" y1="109" x2="360" y2="109" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
-    <rect x="374" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="374" y="98" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="394" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o4</text>
     <line x1="414" y1="105" x2="426" y2="105" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
     <line x1="426" y1="109" x2="414" y2="109" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
-    <rect x="428" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="428" y="98" width="40" height="14" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="448" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o5</text>
 
     <!-- spread row -->
@@ -823,12 +820,6 @@
     <line x1="372" y1="199" x2="360" y2="199" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
     <rect x="374" y="187" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
     <text x="394" y="199" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o16</text>
-
-    <defs>
-      <marker id="arr-gray-l" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
-        <path d="M6,0 L6,6 L0,3 z" fill="#3a3a5a"/>
-      </marker>
-    </defs>
 
     <!-- Connection from Price tree to Price Map -->
     <line x1="166" y1="83" x2="190" y2="83" stroke="#58a6ff30" stroke-width="1.5" stroke-dasharray="3,2"/>
