@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Order Book Data Structure: Interactive — Perpl</title>
+<style>
+  :root {
+    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
+    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
+    --bd: #1e1e2e; --bd2: #2a2a3a;
+    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
+    --amber: #eab308;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
+
+  /* Nav */
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--bd); }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: var(--tx); }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 24px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
+
+  /* Tabs */
+  .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
+  .sec-tab:hover:not(.active) { border-color: var(--bd); color: var(--tx); }
+  .sec-tab.active { background: #0f172a; border-color: var(--blue); color: var(--blue); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Depth control */
+  .depth-ctrl { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 12px 18px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; flex-wrap: wrap; }
+  .depth-label { font-size: 13px; color: var(--tx2); white-space: nowrap; }
+  .depth-label strong { color: var(--tx); font-size: 15px; }
+  .depth-pills { display: flex; gap: 6px; }
+  .depth-pill { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd); background: var(--bg3); color: var(--tx3); font-size: 11px; font-weight: 500; cursor: pointer; transition: all 0.12s; }
+  .depth-pill:hover { color: var(--tx2); border-color: var(--bd2); }
+  .depth-pill.active { border-color: var(--blue); color: var(--blue); background: #60a5fa10; }
+  .depth-note { font-size: 11px; color: var(--tx3); margin-left: auto; }
+
+  /* Action buttons */
+  .action-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; }
+  .act-btn { padding: 9px 20px; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .act-btn:hover { border-color: #444; color: var(--tx); }
+  .act-btn:disabled { opacity: 0.4; cursor: default; }
+  .act-btn.primary { border-color: #22c55e44; background: #22c55e0a; color: var(--green); }
+  .act-btn.primary:hover:not(:disabled) { background: #22c55e18; }
+  .act-btn.danger { border-color: #ef444440; background: #ef44440a; color: #f87171; }
+  .act-btn.danger:hover:not(:disabled) { background: #ef444418; }
+  .act-btn.reset { color: var(--tx3); }
+
+  /* Sim dual layout */
+  .sim-dual { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .sim-dual { grid-template-columns: 1fr; } }
+  .sim-col-head { padding: 10px 16px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .sim-col-head.green { background: #091509; border: 1px solid #22c55e28; border-bottom: none; color: var(--green); }
+  .sim-col-head.red { background: #150909; border: 1px solid #ef444428; border-bottom: none; color: #f87171; }
+  .sim-col-tag { font-weight: 400; font-size: 10px; opacity: 0.7; font-family: 'SF Mono', monospace; }
+  .sim-col-body { background: var(--bg2); border: 1px solid var(--bd); border-radius: 0 0 8px 8px; padding: 16px; }
+
+  /* Bit tree */
+  .bit-tree { margin-bottom: 14px; }
+  .bit-row-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .bit-row-label { font-size: 9px; color: var(--tx3); font-family: 'SF Mono', monospace; width: 34px; text-align: right; flex-shrink: 0; letter-spacing: 0.5px; }
+  .bit-row { display: flex; flex-wrap: wrap; gap: 2px; }
+  .bit-cell { width: 11px; height: 11px; border-radius: 1px; background: var(--bg3); border: 1px solid var(--bd); transition: background 0.25s, border-color 0.25s, box-shadow 0.25s; flex-shrink: 0; }
+  .bit-cell.set { background: #22c55e25; border-color: #22c55e50; }
+  .bit-cell.active-ins { background: var(--green); border-color: var(--green); box-shadow: 0 0 7px #22c55e90; }
+  .bit-cell.active-can { background: var(--red); border-color: var(--red); box-shadow: 0 0 7px #ef444490; }
+  .bit-connector { margin-left: 42px; width: 2px; height: 8px; background: var(--bd2); }
+
+  /* Sorted tree node rows */
+  .tree-viz { margin-bottom: 14px; }
+  .tree-row-label { font-size: 9px; color: var(--tx3); font-family: 'SF Mono', monospace; margin-bottom: 5px; }
+  .tree-node-row { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 5px; min-height: 18px; }
+  .tree-node { width: 14px; height: 14px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--bd); transition: background 0.18s, border-color 0.18s, box-shadow 0.18s; flex-shrink: 0; }
+  .tree-node.traversing { background: var(--blue); border-color: var(--blue); box-shadow: 0 0 6px #60a5fa80; }
+  .tree-node.done-t { background: #60a5fa25; border-color: #60a5fa50; }
+  .tree-node.rebalancing { background: var(--red); border-color: var(--red); box-shadow: 0 0 6px #ef444480; }
+  .tree-node.done-r { background: #ef444425; border-color: #ef444450; }
+  .tree-row-sep { height: 1px; background: var(--bd); margin: 6px 0; }
+
+  /* Step log */
+  .step-log { max-height: 185px; overflow-y: auto; margin-bottom: 12px; scrollbar-width: thin; scrollbar-color: var(--bd2) transparent; }
+  .step-item { display: flex; align-items: baseline; gap: 7px; padding: 3px 0; border-bottom: 1px solid var(--bd); font-size: 11px; opacity: 0; animation: stepIn 0.18s ease forwards; }
+  @keyframes stepIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  .step-badge { padding: 1px 5px; border-radius: 3px; font-family: 'SF Mono', monospace; font-size: 9px; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+  .badge-sload { background: #60a5fa12; border: 1px solid #60a5fa30; color: #60a5fa; }
+  .badge-sstore { background: #ef444412; border: 1px solid #ef444430; color: #f87171; }
+  .step-desc { color: var(--tx2); flex: 1; line-height: 1.5; }
+  .step-gas { color: var(--tx3); font-family: 'SF Mono', monospace; font-size: 10px; white-space: nowrap; margin-left: auto; }
+
+  /* Gas total */
+  .gas-total { display: flex; justify-content: space-between; align-items: center; padding: 9px 12px; border-radius: 6px; background: var(--bg3); font-size: 12px; }
+  .gas-lbl { color: var(--tx3); }
+  .gas-val { font-family: 'SF Mono', monospace; font-size: 15px; font-weight: 700; }
+  .gas-val.green { color: var(--green); }
+  .gas-val.red { color: #f87171; }
+
+  /* Gas scaling panel */
+  .scale-ctrl { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 12px 18px; background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; }
+  .scale-ctrl input[type=range] { flex: 1; accent-color: var(--blue); cursor: pointer; }
+  .chart-wrap { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 10px 10px 6px; }
+  .legend { display: flex; gap: 20px; margin-bottom: 10px; padding-left: 4px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--tx2); }
+  .legend-line { width: 18px; height: 2px; border-radius: 1px; }
+  .legend-dash { width: 18px; height: 0; border-top: 2px dashed #60607870; }
+  canvas { display: block; width: 100%; }
+  .scale-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  @media (max-width: 600px) { .scale-stats { grid-template-columns: 1fr 1fr; } }
+  .stat-card { padding: 14px 16px; border-radius: 8px; background: var(--bg2); border: 1px solid var(--bd); }
+  .stat-lbl { font-size: 11px; color: var(--tx3); margin-bottom: 6px; }
+  .stat-val { font-size: 19px; font-weight: 700; font-family: 'SF Mono', monospace; }
+  .stat-val.green { color: var(--green); }
+  .stat-val.red { color: #f87171; }
+  .stat-val.amber { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../index.html">← All Explainers</a>
+    <a href="overview.html">Overview</a>
+    <a href="index.html" class="active" aria-current="page">Interactive</a>
+  </div>
+</nav>
+
+<div class="page">
+  <h1>Order Book Data Structure</h1>
+  <p class="sub">Simulate insert and cancel operations. Adjust book depth to see how gas costs scale — Perpl's bit-index tree stays flat; sorted trees pay more with every order added.</p>
+
+  <div class="sec-tabs">
+    <button class="sec-tab active" onclick="switchTab('op')">Operation Simulator</button>
+    <button class="sec-tab" onclick="switchTab('scale')">Gas Scaling</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 1 — Operation Simulator
+  ══════════════════════════════════════════ -->
+  <div class="panel active" id="panel-op">
+
+    <div class="depth-ctrl">
+      <span class="depth-label">Book depth: <strong id="depth-display">10,000</strong> orders</span>
+      <div class="depth-pills">
+        <button class="depth-pill"        onclick="setDepth(0)">100</button>
+        <button class="depth-pill"        onclick="setDepth(1)">1 K</button>
+        <button class="depth-pill active" onclick="setDepth(2)">10 K</button>
+        <button class="depth-pill"        onclick="setDepth(3)">50 K</button>
+        <button class="depth-pill"        onclick="setDepth(4)">100 K</button>
+      </div>
+      <span class="depth-note" id="depth-note">Sorted tree: ⌈log₂ 10000⌉ = 14 levels</span>
+    </div>
+
+    <div class="action-row">
+      <button class="act-btn primary" id="btn-insert" onclick="runSim('insert')">▶ Simulate Insert</button>
+      <button class="act-btn danger"  id="btn-cancel" onclick="runSim('cancel')">▶ Simulate Cancel</button>
+      <button class="act-btn reset"   onclick="resetSim()">↺ Reset</button>
+    </div>
+
+    <div class="sim-dual">
+
+      <!-- ── Left: Bit-Index Tree ── -->
+      <div>
+        <div class="sim-col-head green">
+          <span>Bit-Index Tree &nbsp;·&nbsp; Perpl</span>
+          <span class="sim-col-tag">O(1) — constant regardless of depth</span>
+        </div>
+        <div class="sim-col-body">
+          <div class="bit-tree" id="bit-tree-vis"></div>
+          <div class="step-log" id="bit-log"></div>
+          <div class="gas-total">
+            <span class="gas-lbl">Gas used (data structure ops)</span>
+            <span class="gas-val green" id="bit-gas">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Right: Sorted Tree ── -->
+      <div>
+        <div class="sim-col-head red">
+          <span>Sorted Tree &nbsp;·&nbsp; Others</span>
+          <span class="sim-col-tag" id="tree-col-tag">O(log N) — 14 levels deep</span>
+        </div>
+        <div class="sim-col-body">
+          <div class="tree-viz">
+            <div class="tree-row-label">↓ Traversal (SLOAD × <span id="tn-label">14</span>)</div>
+            <div class="tree-node-row" id="trow-traversal"></div>
+            <div class="tree-row-sep"></div>
+            <div class="tree-row-label">↑ Rebalancing (SSTORE × <span id="tr-label">14</span>)</div>
+            <div class="tree-node-row" id="trow-rebalance"></div>
+          </div>
+          <div class="step-log" id="tree-log"></div>
+          <div class="gas-total">
+            <span class="gas-lbl">Gas used (data structure ops)</span>
+            <span class="gas-val red" id="tree-gas">0</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PANEL 2 — Gas Scaling
+  ══════════════════════════════════════════ -->
+  <div class="panel" id="panel-scale">
+
+    <div class="scale-ctrl">
+      <span class="depth-label">Book depth: <strong id="scale-depth-display">10,000</strong> orders</span>
+      <input type="range" id="scale-slider" min="0" max="100" value="57" oninput="updateChart(this.value)">
+    </div>
+
+    <div class="chart-wrap">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-line" style="background:#22c55e"></div>Perpl — Bit-Index Tree</div>
+        <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div>Sorted Tree (others)</div>
+        <div class="legend-item"><div class="legend-dash"></div>Uniswap V2 swap (reference)</div>
+      </div>
+      <canvas id="gas-chart" height="300"></canvas>
+    </div>
+
+    <div class="scale-stats">
+      <div class="stat-card">
+        <div class="stat-lbl">Perpl insert gas</div>
+        <div class="stat-val green" id="stat-perpl">~50,000</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Sorted tree insert gas</div>
+        <div class="stat-val red" id="stat-tree">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Perpl is cheaper by</div>
+        <div class="stat-val amber" id="stat-ratio">—</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const DEPTHS       = [100, 1000, 10000, 50000, 100000];
+const DEPTH_LABELS = ['100', '1,000', '10,000', '50,000', '100,000'];
+const PERPL_GAS    = 50000;   // constant: ~50k per insert (bit-tree writes + overhead)
+const SLOAD        = 2100;    // cold SLOAD
+const SSTORE       = 20000;   // cold SSTORE
+
+// Bit tree grid sizes (simplified display — actual is 256 bits per word)
+const BIT_SIZES    = { root: 8, mid: 16, leaf: 32 };
+const BIT_TARGETS  = { root: 2, mid: 7, leaf: 18 };   // which cell to animate
+
+// Pre-existing bits make the display realistic
+const BIT_PRESET   = {
+  root: new Set([0, 1, 3, 5, 6]),
+  mid:  new Set([0, 1, 3, 4, 9, 12, 13, 15]),
+  leaf: new Set([0, 1, 2, 4, 5, 6, 7, 10, 13, 14, 15, 16, 20, 25, 28, 29])
+};
+
+let currentDepthIdx = 2;
+let animTimers = [];
+
+function logSteps(depth) { return Math.ceil(Math.log2(Math.max(depth, 2))); }
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.sec-tab').forEach((el, i) => {
+    el.classList.toggle('active', (tab === 'op' && i === 0) || (tab === 'scale' && i === 1));
+  });
+  document.getElementById('panel-op').classList.toggle('active', tab === 'op');
+  document.getElementById('panel-scale').classList.toggle('active', tab === 'scale');
+  if (tab === 'scale') {
+    const c = document.getElementById('gas-chart');
+    c.width = c.parentElement.clientWidth - 20;
+    updateChart(document.getElementById('scale-slider').value);
+  }
+}
+
+// ── Depth selector ─────────────────────────────────────────────────────────
+function setDepth(idx) {
+  currentDepthIdx = idx;
+  document.querySelectorAll('.depth-pill').forEach((el, i) => el.classList.toggle('active', i === idx));
+  const d = DEPTHS[idx];
+  const n = logSteps(d);
+  document.getElementById('depth-display').textContent = DEPTH_LABELS[idx];
+  document.getElementById('depth-note').textContent     = `Sorted tree: ⌈log₂ ${d.toLocaleString()}⌉ = ${n} levels`;
+  document.getElementById('tn-label').textContent       = n;
+  document.getElementById('tr-label').textContent       = n;
+  document.getElementById('tree-col-tag').textContent   = `O(log N) — ${n} levels deep`;
+  buildTreeNodes(n);
+  resetSim();
+}
+
+// ── Bit tree DOM ───────────────────────────────────────────────────────────
+function buildBitTree() {
+  const container = document.getElementById('bit-tree-vis');
+  container.innerHTML = '';
+  ['root', 'mid', 'leaf'].forEach((level, li) => {
+    if (li > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'bit-connector';
+      container.appendChild(conn);
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'bit-row-wrap';
+    const lbl = document.createElement('span');
+    lbl.className = 'bit-row-label';
+    lbl.textContent = level.toUpperCase();
+    wrap.appendChild(lbl);
+    const row = document.createElement('div');
+    row.className = 'bit-row';
+    for (let i = 0; i < BIT_SIZES[level]; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'bit-cell' + (BIT_PRESET[level].has(i) ? ' set' : '');
+      cell.id = `bc-${level}-${i}`;
+      row.appendChild(cell);
+    }
+    wrap.appendChild(row);
+    container.appendChild(wrap);
+  });
+}
+
+function resetBitCells() {
+  ['root', 'mid', 'leaf'].forEach(level => {
+    for (let i = 0; i < BIT_SIZES[level]; i++) {
+      const c = document.getElementById(`bc-${level}-${i}`);
+      if (!c) return;
+      c.classList.remove('active-ins', 'active-can');
+    }
+  });
+}
+
+function activateBitCell(level, op) {
+  const cell = document.getElementById(`bc-${level}-${BIT_TARGETS[level]}`);
+  if (!cell) return;
+  cell.classList.add(op === 'insert' ? 'active-ins' : 'active-can');
+  if (op === 'insert') cell.classList.add('set');
+  if (op === 'cancel') cell.classList.remove('set');
+}
+
+// ── Sorted tree nodes DOM ──────────────────────────────────────────────────
+function buildTreeNodes(n) {
+  ['trow-traversal', 'trow-rebalance'].forEach(id => {
+    const row = document.getElementById(id);
+    row.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const node = document.createElement('div');
+      node.className = 'tree-node';
+      node.id = `${id}-${i}`;
+      row.appendChild(node);
+    }
+  });
+}
+
+function resetTreeNodes() {
+  const n = logSteps(DEPTHS[currentDepthIdx]);
+  for (let i = 0; i < n; i++) {
+    const t = document.getElementById(`trow-traversal-${i}`);
+    const r = document.getElementById(`trow-rebalance-${i}`);
+    if (t) t.className = 'tree-node';
+    if (r) r.className = 'tree-node';
+  }
+}
+
+// ── Step log helpers ───────────────────────────────────────────────────────
+function addStep(logId, gasId, badgeClass, badgeTxt, desc, cost) {
+  const log = document.getElementById(logId);
+  const item = document.createElement('div');
+  item.className = 'step-item';
+  item.innerHTML =
+    `<span class="step-badge ${badgeClass}">${badgeTxt}</span>` +
+    `<span class="step-desc">${desc}</span>` +
+    `<span class="step-gas">+${cost.toLocaleString()}</span>`;
+  log.appendChild(item);
+  log.scrollTop = log.scrollHeight;
+  // increment gas counter
+  const el = document.getElementById(gasId);
+  el.textContent = ((parseInt(el.textContent.replace(/,/g, '')) || 0) + cost).toLocaleString();
+}
+
+function clearLog(logId, gasId) {
+  document.getElementById(logId).innerHTML = '';
+  document.getElementById(gasId).textContent = '0';
+}
+
+function addDone(logId, msg, color) {
+  const log = document.getElementById(logId);
+  const el = document.createElement('div');
+  el.style.cssText = `font-size:10px;color:${color};padding:5px 0 2px;opacity:0;animation:stepIn 0.25s 0.05s forwards;`;
+  el.textContent = msg;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+
+// ── Simulation ─────────────────────────────────────────────────────────────
+function sched(fn, delay) {
+  animTimers.push(setTimeout(fn, delay));
+}
+
+function resetSim() {
+  animTimers.forEach(clearTimeout);
+  animTimers = [];
+  resetBitCells();
+  resetTreeNodes();
+  clearLog('bit-log', 'bit-gas');
+  clearLog('tree-log', 'tree-gas');
+}
+
+// Direction labels for traversal steps
+const DIRS = ['left','right','left','right','right','left','right','left','right','left','right','left','right','right','left','right','left','left'];
+
+function runSim(op) {
+  resetSim();
+  const depth  = DEPTHS[currentDepthIdx];
+  const n      = logSteps(depth);
+  const isIns  = op === 'insert';
+  const price  = (93200 + Math.floor(Math.random() * 600)).toLocaleString();
+
+  // ── Bit-Index Tree animation ───────────────────────────────────────
+  let bt = 150;
+
+  // LEAF (always)
+  sched(() => {
+    activateBitCell('leaf', op);
+    addStep('bit-log', 'bit-gas', 'badge-sstore', 'SSTORE',
+      `${isIns ? 'Set' : 'Clear'} bit in LEAF word — price level ${price}`, SSTORE);
+  }, bt); bt += 700;
+
+  // MID (propagate — show worst-case where LEAF word was previously empty)
+  sched(() => {
+    activateBitCell('mid', op);
+    addStep('bit-log', 'bit-gas', 'badge-sstore', 'SSTORE',
+      `LEAF word was zero → ${isIns ? 'set' : 'clear'} bit in MID word`, SSTORE);
+  }, bt); bt += 700;
+
+  // ROOT (propagate)
+  sched(() => {
+    activateBitCell('root', op);
+    addStep('bit-log', 'bit-gas', 'badge-sstore', 'SSTORE',
+      `MID word was zero → ${isIns ? 'set' : 'clear'} bit in ROOT word`, SSTORE);
+  }, bt); bt += 300;
+
+  sched(() => addDone('bit-log', `✓ Done — 3 SSTOREs (worst case). Typical: 1 SSTORE when price range already active.`, 'var(--green)'), bt);
+
+  // ── Sorted Tree animation ──────────────────────────────────────────
+  let tt = 100;
+  const stepMs = Math.max(60, Math.min(110, Math.round(1800 / n)));
+
+  // Traversal SLOADs (going down)
+  for (let i = 0; i < n; i++) {
+    const d = i;
+    sched(() => {
+      const node = document.getElementById(`trow-traversal-${d}`);
+      if (node) node.className = 'tree-node traversing';
+      if (d > 0) {
+        const prev = document.getElementById(`trow-traversal-${d - 1}`);
+        if (prev) prev.className = 'tree-node done-t';
+      }
+      addStep('tree-log', 'tree-gas', 'badge-sload', 'SLOAD',
+        `Depth ${d + 1}: ${price} ${d % 2 === 0 ? '<' : '≥'} node.price → go ${DIRS[d % DIRS.length]}`, SLOAD);
+    }, tt);
+    tt += stepMs;
+  }
+
+  // Insert SSTORE
+  sched(() => {
+    const last = document.getElementById(`trow-traversal-${n - 1}`);
+    if (last) last.className = 'tree-node done-t';
+    addStep('tree-log', 'tree-gas', 'badge-sstore', 'SSTORE',
+      `${isIns ? 'Insert new node' : 'Remove node'} at price ${price}`, SSTORE);
+  }, tt); tt += stepMs + 80;
+
+  // Rebalancing SSTOREs (going back up)
+  for (let i = n - 1; i >= 0; i--) {
+    const d = i;
+    const isRot = (d === n - 1 || d === n - 3 || d === n - 5);
+    sched(() => {
+      const node = document.getElementById(`trow-rebalance-${d}`);
+      if (node) node.className = 'tree-node rebalancing';
+      if (d < n - 1) {
+        const prev = document.getElementById(`trow-rebalance-${d + 1}`);
+        if (prev) prev.className = 'tree-node done-r';
+      }
+      addStep('tree-log', 'tree-gas', 'badge-sstore', 'SSTORE',
+        `Rebalance depth ${d + 1}: ${isRot ? 'rotate subtree' : 'recolor node'}`, SSTORE);
+    }, tt);
+    tt += stepMs;
+  }
+
+  sched(() => {
+    const last = document.getElementById(`trow-rebalance-0`);
+    if (last) last.className = 'tree-node done-r';
+    addDone('tree-log', `✓ Done — ${n} SLOADs + ${n + 1} SSTOREs. Grows every time book depth doubles.`, '#f87171');
+  }, tt + 120);
+}
+
+// ── Gas scaling chart ──────────────────────────────────────────────────────
+function sliderToDepth(v) {
+  // log scale: slider 0→100 maps to depth 10→100,000
+  return Math.round(Math.pow(10, 1 + Number(v) / 100 * 4));
+}
+
+function treeGas(depth) {
+  // n traversal SLOADs + n rebalancing SSTOREs + 1 insert SSTORE + base overhead
+  const n = logSteps(depth);
+  return n * SLOAD + (n + 1) * SSTORE + 30000;
+}
+
+function drawChart(depth) {
+  const canvas = document.getElementById('gas-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const PAD  = { l: 64, r: 18, t: 16, b: 38 };
+  const cW   = W - PAD.l - PAD.r;
+  const cH   = H - PAD.t - PAD.b;
+  const DMIN = 10, DMAX = 100000, GMAX = 500000;
+
+  function xp(d) {
+    return PAD.l + (Math.log10(d) - 1) / 4 * cW;
+  }
+  function yp(g) {
+    return PAD.t + cH - (g / GMAX) * cH;
+  }
+
+  // Grid
+  ctx.strokeStyle = '#1e1e2e'; ctx.lineWidth = 1;
+  [100000, 200000, 300000, 400000].forEach(g => {
+    ctx.beginPath(); ctx.moveTo(PAD.l, yp(g)); ctx.lineTo(PAD.l + cW, yp(g)); ctx.stroke();
+  });
+
+  // Y labels
+  ctx.fillStyle = '#606078'; ctx.font = '10px -apple-system,sans-serif'; ctx.textAlign = 'right';
+  [0, 100000, 200000, 300000, 400000].forEach(g => {
+    ctx.fillText(g === 0 ? '0' : (g / 1000) + 'K', PAD.l - 7, yp(g) + 3);
+  });
+
+  // Y axis label
+  ctx.save(); ctx.translate(11, PAD.t + cH / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#606078'; ctx.font = '10px -apple-system,sans-serif';
+  ctx.fillText('gas per insert', 0, 0); ctx.restore();
+
+  // X labels
+  ctx.textAlign = 'center'; ctx.fillStyle = '#606078';
+  [10, 100, 1000, 10000, 100000].forEach(d => {
+    const x = xp(d);
+    ctx.fillText(d >= 1000 ? (d / 1000) + 'K' : String(d), x, PAD.t + cH + 14);
+    ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, PAD.t + cH); ctx.lineTo(x, PAD.t + cH + 4); ctx.stroke();
+  });
+  ctx.textAlign = 'center'; ctx.fillStyle = '#606078'; ctx.font = '10px -apple-system,sans-serif';
+  ctx.fillText('book depth (orders)', PAD.l + cW / 2, H - 4);
+
+  // Uniswap V2 reference (dashed)
+  ctx.setLineDash([4, 5]); ctx.strokeStyle = '#60607860'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD.l, yp(200000)); ctx.lineTo(PAD.l + cW, yp(200000)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#60607880'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Uniswap V2 swap ~200K', PAD.l + 6, yp(200000) - 5);
+
+  // Sorted tree line (red)
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2; ctx.beginPath();
+  let first = true;
+  for (let px = 0; px <= cW; px += 2) {
+    const d   = Math.pow(10, 1 + px / cW * 4);
+    const gas = Math.min(treeGas(d), GMAX);
+    const cy  = yp(gas);
+    first ? ctx.moveTo(PAD.l + px, cy) : ctx.lineTo(PAD.l + px, cy);
+    first = false;
+  }
+  ctx.stroke();
+
+  // Perpl line (green, flat)
+  ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(PAD.l, yp(PERPL_GAS)); ctx.lineTo(PAD.l + cW, yp(PERPL_GAS)); ctx.stroke();
+  ctx.fillStyle = '#22c55e'; ctx.font = '9px -apple-system,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText('Perpl ~50K', PAD.l + 5, yp(PERPL_GAS) - 5);
+
+  // Cursor
+  if (depth) {
+    const cx  = xp(Math.max(DMIN, Math.min(DMAX, depth)));
+    const tg  = Math.min(treeGas(depth), GMAX);
+    ctx.setLineDash([2, 3]); ctx.strokeStyle = '#ffffff18'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, PAD.t); ctx.lineTo(cx, PAD.t + cH); ctx.stroke();
+    ctx.setLineDash([]);
+    // green dot
+    ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(cx, yp(PERPL_GAS), 4, 0, Math.PI * 2); ctx.fill();
+    // red dot
+    ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(cx, yp(tg), 4, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function updateChart(v) {
+  const depth = sliderToDepth(v);
+  const tg    = treeGas(depth);
+  document.getElementById('scale-depth-display').textContent = depth.toLocaleString();
+  document.getElementById('stat-perpl').textContent = '~' + PERPL_GAS.toLocaleString();
+  document.getElementById('stat-tree').textContent  = '~' + tg.toLocaleString();
+  document.getElementById('stat-ratio').textContent = (tg / PERPL_GAS).toFixed(1) + '×';
+  drawChart(depth);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+buildBitTree();
+const initN = logSteps(DEPTHS[currentDepthIdx]);
+buildTreeNodes(initN);
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('panel-scale').classList.contains('active')) {
+    const c = document.getElementById('gas-chart');
+    c.width = c.parentElement.clientWidth - 20;
+    updateChart(document.getElementById('scale-slider').value);
+  }
+});
+</script>
+</body>
+</html>
