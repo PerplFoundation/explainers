@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<title>Order Book Data Structure — Perpl</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
+  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
+  .site-logo { display: flex; align-items: center; text-decoration: none; }
+  .site-logo img { height: 18px; display: block; }
+  .site-links { display: flex; gap: 6px; }
+  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .site-links a:hover { border-color: #444; color: #e0e0f0; }
+  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+
+  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 28px; color: #e0e0f0; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
+  .subtitle { font-size: 14px; color: #606078; margin-bottom: 48px; }
+  h2 { font-size: 16px; color: #c9d1d9; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
+  p { margin-bottom: 16px; font-size: 15px; }
+  strong { color: #c9d1d9; font-weight: 500; }
+  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #1a1a2a; border: 1px solid #2a2a3a; border-radius: 3px; padding: 1px 6px; color: #a0c0ff; }
+  a { color: #88f; text-decoration: none; }
+  a:hover { color: #bbf; }
+  hr { border: none; border-top: 1px solid #1e1e2e; margin: 48px 0; }
+
+  .eq { margin: 20px 0; padding: 14px 20px; background: #0d0d1a; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; line-height: 2; }
+  .eq .lbl { display: block; font-size: 11px; color: #606078; font-family: inherit; margin-top: 6px; font-style: italic; }
+
+  .callout { margin: 20px 0; padding: 14px 18px; background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 6px; font-size: 14px; color: #7ab; line-height: 1.7; }
+  .callout strong { color: #9cc; }
+  .callout.red { background: #1a0d0d; border-color: #3a1a1a; color: #b87; }
+  .callout.red strong { color: #c99; }
+  .callout.amber { background: #1a160a; border-color: #3a2a0a; color: #b9a; }
+  .callout.amber strong { color: #cba; }
+
+  .figure { margin: 32px 0 40px; }
+  .fig-title { font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .fig-title span { color: #58a6ff; font-weight: 600; }
+  .note { font-size: 11px; color: #9090a8; margin-top: 10px; padding: 10px 14px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
+  .fig-svg { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 8px; display: block; width: 100%; }
+
+  /* Comparison: two-col versus cards */
+  .versus { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 28px 0; border: 1px solid #1e1e2e; border-radius: 8px; overflow: hidden; }
+  .versus-card { padding: 20px; }
+  .versus-card.them { background: #120808; border-right: 1px solid #1e1e2e; }
+  .versus-card.us { background: #080f08; }
+  .versus-tag { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .versus-card.them .versus-tag { color: #f85149; }
+  .versus-card.us .versus-tag { color: #3fb950; }
+  .versus-name { font-size: 14px; font-weight: 600; color: #e0e0f0; margin-bottom: 10px; }
+  .versus-body { font-size: 12px; color: #9090a8; line-height: 1.75; }
+  .versus-metric { margin-top: 14px; padding-top: 12px; border-top: 1px solid #1e1e2e; }
+  .versus-metric-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 5px; }
+  .versus-metric-key { color: #606078; }
+  .versus-metric-val.bad  { color: #f85149; font-family: 'SF Mono', monospace; font-weight: 600; }
+  .versus-metric-val.good { color: #3fb950; font-family: 'SF Mono', monospace; font-weight: 600; }
+
+  /* Complexity table */
+  .cmp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .cmp-table th { text-align: left; padding: 9px 14px; border-bottom: 2px solid #1e1e2e; color: #606078; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: #0a0a0f; }
+  .cmp-table th:first-child { border-radius: 6px 0 0 0; }
+  .cmp-table th:last-child  { border-radius: 0 6px 0 0; }
+  .cmp-table td { padding: 9px 14px; border-bottom: 1px solid #0f0f1a; }
+  .cmp-table tr:last-child td { border: none; }
+  .cmp-table td.op { color: #c9d1d9; font-size: 13px; }
+  .cmp-table td.good { color: #3fb950; font-family: 'SF Mono', monospace; font-weight: 700; }
+  .cmp-table td.bad  { color: #f85149; font-family: 'SF Mono', monospace; font-weight: 700; }
+  .cmp-table td.note { color: #606078; font-size: 11px; }
+
+  .cta-row { display: flex; gap: 12px; margin: 32px 0; }
+  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .cta-primary { background: #6F5CFF; color: #fff; border: 1px solid #6F5CFF; }
+  .cta-primary:hover { background: #5a4ae6; }
+  .cta-secondary { background: #12121a; border: 1px solid #2a2a3a; color: #9090a8; }
+  .cta-secondary:hover { border-color: #444; color: #e0e0f0; }
+
+  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
+
+  @media (max-width: 600px) {
+    .versus { grid-template-columns: 1fr; }
+    .versus-card.them { border-right: none; border-bottom: 1px solid #1e1e2e; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../index.html">← All Explainers</a>
+    <a class="active" href="overview.html">Overview</a>
+  </div>
+</nav>
+
+<div class="page">
+
+<h1>The Order Book Data Structure</h1>
+<p class="subtitle">How Perpl achieves O(1) insert and cancel on a fully on-chain CLOB — while every sorted-tree alternative scales in cost with the size of the book.</p>
+
+<p>Building a central limit order book entirely on-chain is the hardest engineering problem in DeFi. Every comparison, traversal, and structural update costs gas. Most perpetual DEXes responded by moving order matching off-chain entirely, sacrificing the transparency that makes a DEX meaningful. The ones that stayed on-chain paid in user-facing gas costs that make market-making economically punishing.</p>
+
+<p>Perpl's CLOB achieves a complete post-and-cancel cycle at <strong>100k gas</strong> — cheaper than a Uniswap V2 AMM swap at 200k gas. This is possible because of a purpose-built data structure that replaces sorted-tree traversal with direct bitmap lookup. Insert and cancel are O(1) constant time, always, regardless of how deep the book is.</p>
+
+<hr>
+
+<h2>The Industry Default: Sorted Trees</h2>
+
+<p>An order book must efficiently answer two questions: <em>what is the best available price?</em> and <em>what orders exist at that price?</em> The textbook answer for maintaining sorted access with fast insertion and deletion is a balanced binary search tree — a red-black tree or B-tree.</p>
+
+<p>These structures work well in memory. Each internal node stores a price level. Insertion places the new price in its sorted position. The tree self-balances via <strong>rotations and recoloring</strong> to maintain logarithmic height. Finding the best bid or ask is simply reaching the minimum or maximum leaf.</p>
+
+<p>On the EVM, this design is a gas disaster. Balanced tree operations require reading and writing multiple storage slots per operation, and the number grows with the size of the book:</p>
+
+<div class="eq">
+  comparisons  = O(log N) — traverse from root to insertion point<br>
+  rebalancing  = O(log N) — rotations and recolors propagate up toward root<br>
+  total SSTOREs = O(log N) — each structural change writes a storage slot
+  <span class="lbl">N = number of active price levels. At N = 10,000: ~13 storage operations minimum per insert.</span>
+</div>
+
+<!-- Figure 1: Red-Black Tree rebalancing cascade -->
+<div class="figure">
+  <div class="fig-title">Figure 1: <span>Red-Black Tree — Insert Triggers a Rebalancing Cascade</span></div>
+  <svg class="fig-svg" viewBox="0 0 680 330" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Section labels -->
+    <text x="185" y="16" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter" letter-spacing="0.5">TRAVERSAL (reads)</text>
+    <line x1="60" y1="20" x2="310" y2="20" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="490" y="16" text-anchor="middle" fill="#f8514960" font-size="9" font-family="Inter" letter-spacing="0.5">REBALANCING (writes)</text>
+    <line x1="370" y1="20" x2="620" y2="20" stroke="#3a1a1a" stroke-width="1"/>
+
+    <!-- LEFT TREE: traversal path (reads going down) -->
+    <!-- Edges - normal -->
+    <line x1="185" y1="60" x2="120" y2="115" stroke="#1e2a3a" stroke-width="1.5"/>
+    <line x1="185" y1="60" x2="250" y2="115" stroke="#1e1e2e" stroke-width="1.5"/>
+    <line x1="120" y1="133" x2="88"  y2="188" stroke="#1e2a3a" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.5"/>
+    <line x1="120" y1="133" x2="152" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.5"/>
+    <line x1="250" y1="133" x2="218" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.5"/>
+    <line x1="250" y1="133" x2="282" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.5"/>
+    <!-- traversal path highlighted (root → left → left-left) -->
+    <line x1="185" y1="60" x2="120" y2="115" stroke="#58a6ff50" stroke-width="2.5"/>
+    <line x1="120" y1="133" x2="88" y2="188" stroke="#58a6ff50" stroke-width="2.5"/>
+    <!-- new insert edge (dashed) -->
+    <line x1="88" y1="206" x2="68" y2="255" stroke="#f8514950" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+    <!-- Root node (black) -->
+    <circle cx="185" cy="47" r="17" fill="#0f1520" stroke="#3a4a6a" stroke-width="1.5"/>
+    <text x="185" y="52" text-anchor="middle" fill="#8888a0" font-size="11" font-family="SF Mono">30</text>
+
+    <!-- Level 1: 15 (red, traversal), 45 (black) -->
+    <circle cx="120" cy="124" r="17" fill="#1a0808" stroke="#58a6ff" stroke-width="2"/>
+    <text x="120" y="129" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="SF Mono">15</text>
+    <circle cx="250" cy="124" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.6"/>
+    <text x="250" y="129" text-anchor="middle" fill="#606078" font-size="11" font-family="SF Mono">45</text>
+
+    <!-- Level 2: 8 (black, on traversal path), 22, 38, 52 -->
+    <circle cx="88" cy="197" r="17" fill="#1a0808" stroke="#58a6ff" stroke-width="2"/>
+    <text x="88" y="202" text-anchor="middle" fill="#58a6ff" font-size="11" font-family="SF Mono">8</text>
+    <circle cx="152" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.5"/>
+    <text x="152" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">22</text>
+    <circle cx="218" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.5"/>
+    <text x="218" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">38</text>
+    <circle cx="282" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.5"/>
+    <text x="282" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">52</text>
+
+    <!-- New node being inserted -->
+    <circle cx="68" cy="265" r="17" fill="#1a0d0d" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="68" y="270" text-anchor="middle" fill="#f85149" font-size="11" font-family="SF Mono">4</text>
+    <text x="68" y="293" text-anchor="middle" fill="#f85149" font-size="9" font-family="Inter">INSERT</text>
+
+    <!-- Read labels on traversal path -->
+    <rect x="194" y="38" width="40" height="16" rx="3" fill="#0d1520" stroke="#1e2a3a" stroke-width="1"/>
+    <text x="214" y="50" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="Inter">SLOAD</text>
+    <rect x="130" y="115" width="40" height="16" rx="3" fill="#0d1520" stroke="#1e2a3a" stroke-width="1"/>
+    <text x="150" y="127" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="Inter">SLOAD</text>
+    <rect x="98" y="188" width="40" height="16" rx="3" fill="#0d1520" stroke="#1e2a3a" stroke-width="1"/>
+    <text x="118" y="200" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="Inter">SLOAD</text>
+
+    <!-- Divider -->
+    <line x1="330" y1="30" x2="330" y2="310" stroke="#1e1e2e" stroke-width="1" stroke-dasharray="4,4"/>
+    <text x="330" y="322" text-anchor="middle" fill="#2a2a3a" font-size="9" font-family="Inter">→</text>
+
+    <!-- RIGHT TREE: rebalancing cascade (writes going up) -->
+    <!-- Same structure, but showing rebalancing SSTORE writes -->
+    <line x1="490" y1="60" x2="425" y2="115" stroke="#1e1e2e" stroke-width="1.5"/>
+    <line x1="490" y1="60" x2="555" y2="115" stroke="#1e1e2e" stroke-width="1.5"/>
+    <line x1="425" y1="133" x2="393" y2="188" stroke="#1e1e2e" stroke-width="1.5"/>
+    <line x1="425" y1="133" x2="457" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.4"/>
+    <line x1="555" y1="133" x2="523" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.4"/>
+    <line x1="555" y1="133" x2="587" y2="188" stroke="#1e1e2e" stroke-width="1.5" opacity="0.4"/>
+    <line x1="393" y1="206" x2="368" y2="255" stroke="#f8514950" stroke-width="1.5"/>
+
+    <!-- Rebalancing cascade: bottom-up arrows in red -->
+    <path d="M 375 252 Q 340 220 368 196" fill="none" stroke="#f85149" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <path d="M 405 184 Q 370 152 415 133" fill="none" stroke="#f85149" stroke-width="1.5" marker-end="url(#arr-red)"/>
+    <path d="M 430 120 Q 400 88 473 62" fill="none" stroke="#f85149" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#arr-red)"/>
+
+    <defs>
+      <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#f85149" opacity="0.7"/>
+      </marker>
+    </defs>
+
+    <!-- Root (recolored) -->
+    <circle cx="490" cy="47" r="17" fill="#1a0d0d" stroke="#f85149" stroke-width="1.5"/>
+    <text x="490" y="52" text-anchor="middle" fill="#f85149" font-size="11" font-family="SF Mono">30</text>
+
+    <!-- Level 1: 15 rotated/recolored, 45 -->
+    <circle cx="425" cy="124" r="17" fill="#0f1520" stroke="#f85149" stroke-width="1.5"/>
+    <text x="425" y="129" text-anchor="middle" fill="#f85149" font-size="11" font-family="SF Mono">8</text>
+    <circle cx="555" cy="124" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.5"/>
+    <text x="555" y="129" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">45</text>
+
+    <!-- Level 2 -->
+    <circle cx="393" cy="197" r="17" fill="#1a0d0d" stroke="#f85149" stroke-width="1.5"/>
+    <text x="393" y="202" text-anchor="middle" fill="#f85149" font-size="11" font-family="SF Mono">4</text>
+    <circle cx="457" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.4"/>
+    <text x="457" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">15</text>
+    <circle cx="523" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.4"/>
+    <text x="523" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">22</text>
+    <circle cx="587" cy="197" r="17" fill="#0f1520" stroke="#2a2a3a" stroke-width="1.5" opacity="0.4"/>
+    <text x="587" y="202" text-anchor="middle" fill="#505070" font-size="11" font-family="SF Mono">52</text>
+
+    <!-- New node -->
+    <circle cx="368" cy="265" r="17" fill="#0f1520" stroke="#3fb950" stroke-width="1.5"/>
+    <text x="368" y="270" text-anchor="middle" fill="#3fb950" font-size="11" font-family="SF Mono">4</text>
+
+    <!-- SSTORE badges on rebalancing path -->
+    <rect x="326" y="256" width="46" height="16" rx="3" fill="#1a0808" stroke="#f8514950" stroke-width="1"/>
+    <text x="349" y="268" text-anchor="middle" fill="#f85149" font-size="9" font-family="Inter">SSTORE</text>
+    <rect x="326" y="186" width="46" height="16" rx="3" fill="#1a0808" stroke="#f8514950" stroke-width="1"/>
+    <text x="349" y="198" text-anchor="middle" fill="#f85149" font-size="9" font-family="Inter">SSTORE</text>
+    <rect x="326" y="116" width="46" height="16" rx="3" fill="#1a0808" stroke="#f8514950" stroke-width="1"/>
+    <text x="349" y="128" text-anchor="middle" fill="#f85149" font-size="9" font-family="Inter">SSTORE</text>
+
+    <!-- Bottom summary -->
+    <rect x="30" y="305" width="270" height="18" rx="3" fill="#0d1520" stroke="#1e2a3a" stroke-width="1"/>
+    <text x="165" y="318" text-anchor="middle" fill="#58a6ff" font-size="10" font-family="Inter">3 reads to find insertion point</text>
+    <rect x="360" y="305" width="290" height="18" rx="3" fill="#1a0808" stroke="#3a1a1a" stroke-width="1"/>
+    <text x="505" y="318" text-anchor="middle" fill="#f85149" font-size="10" font-family="Inter">3 rewrites to rebalance — scales with book depth</text>
+  </svg>
+  <div class="note">A single insert into a red-black tree with N price levels requires O(log N) reads to find the insertion point, then O(log N) writes as rotations and recolors cascade upward. Deletion is equally expensive. Both operations grow with book depth — there is no constant-time path.</div>
+</div>
+
+<p>Rebalancing is the core problem. After inserting a new node, the tree's red-black invariants may be violated and must be restored by rotating subtrees and recoloring nodes — potentially propagating all the way to the root. Each rotation writes two nodes. Each recolor writes one. A delete triggers "double-black" fixup, which can be even more expensive.</p>
+
+<div class="callout red">
+  <strong>The market maker tax:</strong> A market maker updates quotes as price moves — typically a cancel followed by a re-post at the new price. On a sorted-tree CLOB, that's two O(log N) write operations per requote. Every storage write on EVM costs gas. As the order book fills up, each requote gets more expensive — directly increasing the minimum spread a market maker can profitably quote.
+</div>
+
+<hr>
+
+<h2>Perpl's Bit-Index Tree: O(1) by Design</h2>
+
+<p>Perpl's key observation: prices are <strong>integers in a bounded range</strong>. They don't need to be maintained in a sorted tree — they can be indexed in a bitmap. If a price level has orders, its bit is set to 1. If empty, it's 0. Finding the best available price is finding the lowest or highest set bit — a single bitwise scan of a 256-bit word.</p>
+
+<p>The bit-index tree scales this bitmap idea across three levels of hierarchy. Each level is a single 256-bit storage slot. A bit set at a higher level signals that at least one price in that sub-range is occupied. This structure covers over 16 million distinct price levels using exactly three slot reads to locate any price — and exactly three slot writes (at most) to insert or delete any order.</p>
+
+<div class="eq">
+  levels = 3 &nbsp;&nbsp;&nbsp;&nbsp; capacity = 256³ = 16,777,216 price levels<br>
+  insert = set bit in leaf → propagate up if level was zero → O(1)<br>
+  cancel = clear bit in leaf → propagate up if level is now zero → O(1)
+  <span class="lbl">Each level is one 256-bit word. The maximum structural change is three bit-flips. Always.</span>
+</div>
+
+<!-- Figure 2: Bit-Index Tree -->
+<div class="figure">
+  <div class="fig-title">Figure 2: <span>Bit-Index Tree — Insert an Order at Price P</span></div>
+  <svg class="fig-svg" viewBox="0 0 680 270" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Level labels on left -->
+    <text x="6" y="73"  fill="#606078" font-size="9" font-family="Inter" dominant-baseline="middle">ROOT</text>
+    <text x="6" y="142" fill="#606078" font-size="9" font-family="Inter" dominant-baseline="middle">MID</text>
+    <text x="6" y="211" fill="#606078" font-size="9" font-family="Inter" dominant-baseline="middle">LEAF</text>
+
+    <!-- Level descriptions on right -->
+    <text x="672" y="66" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">1 slot · 256 bits</text>
+    <text x="672" y="77" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">identifies active mid-bands</text>
+    <text x="672" y="135" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">1 slot · 256 bits</text>
+    <text x="672" y="146" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">identifies active price ranges</text>
+    <text x="672" y="204" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">1 slot · 256 bits</text>
+    <text x="672" y="215" text-anchor="end" fill="#3a3a5a" font-size="9" font-family="Inter">each bit = one price level</text>
+
+    <!-- ROOT ROW: 16 cells representing bits (simplified from 256) -->
+    <!-- cells from x=46 to x=606, spacing 35px each, 16 cells -->
+    <!-- x positions: 46, 81, 116, 151, 186, 221, 256, 291, 326, 361, 396, 431, 466, 501, 536, 571 -->
+    <!-- active bit at index 2 (x=116) -->
+    <text x="46" y="56" fill="#2a2a3a" font-size="8" font-family="SF Mono">0</text>
+    <rect x="46" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="60" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <rect x="81" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="95" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <!-- active bit at position 2 -->
+    <text x="116" y="56" fill="#22c55e80" font-size="8" font-family="SF Mono">2</text>
+    <rect x="116" y="60" width="28" height="26" rx="3" fill="#0a1a0a" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="130" y="78" text-anchor="middle" fill="#22c55e" font-size="10" font-family="SF Mono" font-weight="700">1</text>
+
+    <rect x="151" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="165" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="186" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="200" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <!-- another active bit at position 7 -->
+    <text x="256" y="56" fill="#22c55e80" font-size="8" font-family="SF Mono">7</text>
+    <rect x="256" y="60" width="28" height="26" rx="3" fill="#0a1a0a" stroke="#22c55e40" stroke-width="1"/>
+    <text x="270" y="78" text-anchor="middle" fill="#22c55e70" font-size="10" font-family="SF Mono" font-weight="700">1</text>
+
+    <rect x="221" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="235" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="291" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="305" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="326" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="340" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="361" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="375" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="396" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="410" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="431" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="445" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="466" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="480" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="501" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="515" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="536" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="550" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="571" y="60" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="585" y="78" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <!-- Connector: root bit 2 → MID section -->
+    <line x1="130" y1="86" x2="130" y2="100" stroke="#22c55e50" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="130" y1="100" x2="270" y2="100" stroke="#22c55e50" stroke-width="1.5"/>
+    <line x1="270" y1="100" x2="270" y2="129" stroke="#22c55e50" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="200" y="98" text-anchor="middle" fill="#22c55e50" font-size="8" font-family="Inter">expands to ↓</text>
+
+    <!-- MID ROW: 16 cells, one active at index 4 -->
+    <rect x="46"  y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="60"  y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="81"  y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="95"  y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="116" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="130" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="151" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="165" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <!-- active mid bit at position 4 = price band "2.4" -->
+    <text x="186" y="120" fill="#22c55e80" font-size="8" font-family="SF Mono">4</text>
+    <rect x="186" y="129" width="28" height="26" rx="3" fill="#0a1a0a" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="200" y="147" text-anchor="middle" fill="#22c55e" font-size="10" font-family="SF Mono" font-weight="700">1</text>
+    <rect x="221" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="235" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="256" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="270" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="291" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="305" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="326" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="340" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="361" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="375" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="396" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="410" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="431" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="445" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="466" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="480" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="501" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="515" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="536" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="550" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="571" y="129" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="585" y="147" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <!-- Connector: mid bit 4 → LEAF section -->
+    <line x1="200" y1="155" x2="200" y2="168" stroke="#22c55e50" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="200" y1="168" x2="410" y2="168" stroke="#22c55e50" stroke-width="1.5"/>
+    <line x1="410" y1="168" x2="410" y2="198" stroke="#22c55e50" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="305" y="166" text-anchor="middle" fill="#22c55e50" font-size="8" font-family="Inter">expands to ↓</text>
+
+    <!-- LEAF ROW: 16 cells, inserting new bit at index 9 -->
+    <rect x="46"  y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="60"  y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="81"  y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="95"  y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="116" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="130" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <!-- already occupied at index 3 -->
+    <rect x="151" y="198" width="28" height="26" rx="3" fill="#0a1a0a" stroke="#22c55e40" stroke-width="1"/>
+    <text x="165" y="216" text-anchor="middle" fill="#22c55e70" font-size="10" font-family="SF Mono">1</text>
+    <rect x="186" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="200" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="221" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="235" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="256" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="270" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="291" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="305" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="326" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="340" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <!-- NEW BIT BEING SET at index 9 — flashing insert -->
+    <text x="361" y="189" fill="#3fb950" font-size="8" font-family="SF Mono">9 ← new</text>
+    <rect x="361" y="198" width="28" height="26" rx="3" fill="#0a2a0a" stroke="#3fb950" stroke-width="2"/>
+    <text x="375" y="216" text-anchor="middle" fill="#3fb950" font-size="10" font-family="SF Mono" font-weight="700">1</text>
+    <rect x="396" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="410" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="431" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="445" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="466" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="480" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="501" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="515" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="536" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="550" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+    <rect x="571" y="198" width="28" height="26" rx="3" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="585" y="216" text-anchor="middle" fill="#2a2a3a" font-size="10" font-family="SF Mono">0</text>
+
+    <!-- Upward propagation arrows (conditional) -->
+    <path d="M 375 198 L 375 180 L 200 180 L 200 155" fill="none" stroke="#3fb95060" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-green)"/>
+    <path d="M 200 129 L 200 108 L 130 108 L 130 86" fill="none" stroke="#3fb95040" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-green-dim)"/>
+
+    <defs>
+      <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#3fb950" opacity="0.6"/>
+      </marker>
+      <marker id="arr-green-dim" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L8,3 z" fill="#3fb950" opacity="0.35"/>
+      </marker>
+    </defs>
+
+    <!-- Propagation labels -->
+    <text x="620" y="183" fill="#3fb95070" font-size="8.5" font-family="Inter">if mid was 0,</text>
+    <text x="620" y="194" fill="#3fb95070" font-size="8.5" font-family="Inter">set mid bit</text>
+    <text x="620" y="113" fill="#3fb95050" font-size="8.5" font-family="Inter">if root was 0,</text>
+    <text x="620" y="124" fill="#3fb95050" font-size="8.5" font-family="Inter">set root bit</text>
+
+    <!-- Bottom summary -->
+    <rect x="46" y="242" width="588" height="20" rx="4" fill="#0a1a0a" stroke="#22c55e30" stroke-width="1"/>
+    <text x="340" y="256" text-anchor="middle" fill="#3fb950" font-size="10" font-family="Inter">
+      Insert = 1 SSTORE (leaf) + up to 2 conditional SSTOREs (mid, root) = O(1) regardless of book size
+    </text>
+  </svg>
+  <div class="note">Inserting at a new price: flip the leaf bit. If the mid-level word for that range was previously zero, flip the mid bit too. If the root was zero, flip the root. At most 3 writes — always. Cancel works in reverse: clear the leaf bit, clear mid if the word is now zero, clear root if the mid word is now zero. The structure never rotates, never rebalances, never cascades unpredictably.</div>
+</div>
+
+<hr>
+
+<h2>Complexity at a Glance</h2>
+
+<div class="figure">
+  <div class="fig-title">Figure 3: <span>Operation Complexity — Sorted Tree vs Bit-Index Tree</span></div>
+  <div style="background:#0d0d18;border:1px solid #1e1e2e;border-radius:8px;overflow:hidden;">
+    <table class="cmp-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Red-Black / B-Tree</th>
+          <th>Perpl Bit-Index Tree</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="op">Insert (post order)</td>
+          <td class="bad">O(log N)</td>
+          <td class="good">O(1)</td>
+          <td class="note">N = active price levels</td>
+        </tr>
+        <tr>
+          <td class="op">Delete (cancel order)</td>
+          <td class="bad">O(log N)</td>
+          <td class="good">O(1)</td>
+          <td class="note">Delete fixup can cascade to root</td>
+        </tr>
+        <tr>
+          <td class="op">Find best bid / ask</td>
+          <td class="bad">O(log N)</td>
+          <td class="good">O(1)</td>
+          <td class="note">Bit-scan on 256-bit word</td>
+        </tr>
+        <tr>
+          <td class="op">Find next price level</td>
+          <td class="bad">O(log N)</td>
+          <td class="good">O(1)</td>
+          <td class="note">At most 3 slot reads per jump</td>
+        </tr>
+        <tr>
+          <td class="op">Match (fill orders)</td>
+          <td class="note" style="color:#9090a8;">O(M)</td>
+          <td class="note" style="color:#9090a8;">O(M)</td>
+          <td class="note">M = orders filled. Identical — both must touch each filled order</td>
+        </tr>
+        <tr>
+          <td class="op">Worst-case SSTOREs per insert</td>
+          <td class="bad">~log₂(N) × 2</td>
+          <td class="good">3</td>
+          <td class="note">At N=10,000: tree ≈ 26 writes, Perpl ≤ 3</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note">Matching is O(M) for both approaches — you must touch each filled order to settle it. The difference is entirely in insert and cancel, which happen with every post and every requote.</div>
+</div>
+
+<hr>
+
+<h2>The Gas Reality</h2>
+
+<p>Abstract complexity becomes concrete gas cost on the EVM. Every storage write (SSTORE) costs gas — 20,000 gas for a cold slot (first write in a transaction), and 2,900 gas for a warm slot (already accessed). A sorted tree with 10,000 price levels requires at minimum 13 traversal reads and several rebalancing writes on each insert — and this cost grows as more orders accumulate.</p>
+
+<p>Perpl's post-and-cancel cycle runs at <strong>100k gas total</strong>, including full solvency checks, order storage, and all other computation. Uniswap V2 — the baseline for "a lightweight DeFi swap" — costs 200k gas. Perpl's CLOB insert+cancel is cheaper than an AMM swap.</p>
+
+<!-- Figure 4: Gas chart -->
+<div class="figure">
+  <div class="fig-title">Figure 4: <span>Gas Cost vs Order Book Depth — Perpl Stays Flat, Sorted Trees Scale</span></div>
+  <svg class="fig-svg" viewBox="0 0 680 240" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Grid -->
+    <line x1="100" y1="20"  x2="650" y2="20"  stroke="#1e1e2e" stroke-width="1"/>
+    <line x1="100" y1="60"  x2="650" y2="60"  stroke="#1e1e2e" stroke-width="1"/>
+    <line x1="100" y1="100" x2="650" y2="100" stroke="#1e1e2e" stroke-width="1"/>
+    <line x1="100" y1="140" x2="650" y2="140" stroke="#1e1e2e" stroke-width="1"/>
+    <line x1="100" y1="180" x2="650" y2="180" stroke="#1e1e2e" stroke-width="1"/>
+
+    <!-- Y axis labels (gas costs) -->
+    <text x="94" y="24"  text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">500k</text>
+    <text x="94" y="64"  text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">400k</text>
+    <text x="94" y="104" text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">300k</text>
+    <text x="94" y="144" text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">200k</text>
+    <text x="94" y="184" text-anchor="end" fill="#606078" font-size="9" font-family="SF Mono">100k</text>
+
+    <!-- X axis labels (book depth) -->
+    <text x="100" y="200" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">0</text>
+    <text x="237" y="200" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">100</text>
+    <text x="375" y="200" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">1,000</text>
+    <text x="512" y="200" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">10,000</text>
+    <text x="650" y="200" text-anchor="middle" fill="#606078" font-size="9" font-family="Inter">100,000</text>
+    <text x="375" y="215" text-anchor="middle" fill="#3a3a5a" font-size="9" font-family="Inter">Active price levels in order book</text>
+
+    <!-- Gas scale: 100k=180, 200k=140, 300k=100, 400k=60, 500k=20 → each 100k = 40px -->
+    <!-- X scale: 100=237, 1000=375, 10000=512, 100000=650 (log-ish: 137px per decade) -->
+
+    <!-- Uniswap V2 reference line at 200k = y=140 -->
+    <line x1="100" y1="140" x2="650" y2="140" stroke="#8888a080" stroke-width="1" stroke-dasharray="5,4"/>
+    <text x="655" y="143" fill="#8888a0" font-size="9" font-family="Inter">Uniswap V2 swap (200k)</text>
+
+    <!-- Sorted tree line (grows logarithmically) -->
+    <!-- Points: (0,100)→y≈172, (100,237)→y=148, (1000,375)→y=136, (10000,512)→y=128, (100000,650)→y=116 -->
+    <!-- At N=0: ~80k (base only) → y=180-80*0.4=148 -->
+    <!-- At N=100: log(100)=7 → +35k writes → ~220k → y=180-220*0.4=92 wait let me recalc -->
+    <!-- Scale: 100k = 40px down from y=180, so 200k=140, 300k=100, 400k=60 -->
+    <!-- N=100: ~220k → y=180-(220/100*40)=180-88=92, x=237 -->
+    <!-- N=1000: ~260k → y=180-(260/100*40)=180-104=76, x=375 -->
+    <!-- N=10000: ~300k → y=180-(300/100*40)=180-120=60, x=512 -->
+    <!-- N=100000: ~360k → y=180-(360/100*40)=180-144=36, x=650 -->
+
+    <!-- Sorted tree area fill (subtle) -->
+    <polygon points="100,172 237,92 375,76 512,60 650,36 650,180 100,180" fill="#f8514908"/>
+
+    <!-- Sorted tree line -->
+    <polyline points="100,172 237,92 375,76 512,60 650,36"
+              fill="none" stroke="#f85149" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="100" cy="172" r="4" fill="#f85149"/>
+    <circle cx="237" cy="92"  r="4" fill="#f85149"/>
+    <circle cx="375" cy="76"  r="4" fill="#f85149"/>
+    <circle cx="512" cy="60"  r="4" fill="#f85149"/>
+    <circle cx="650" cy="36"  r="4" fill="#f85149"/>
+
+    <!-- Perpl flat line at 100k = y=180 -->
+    <!-- Actually y=180 is the bottom edge. 100k→y=180, 200k→y=140. 100k = y=180. -->
+    <!-- Area fill for Perpl -->
+    <polygon points="100,180 650,180 650,180 100,180" fill="#22c55e10"/>
+    <!-- Perpl flat line at y=180 (100k) -->
+    <line x1="100" y1="180" x2="650" y2="180" stroke="#22c55e" stroke-width="2.5"/>
+    <circle cx="100" cy="180" r="4" fill="#22c55e"/>
+    <circle cx="237" cy="180" r="4" fill="#22c55e"/>
+    <circle cx="375" cy="180" r="4" fill="#22c55e"/>
+    <circle cx="512" cy="180" r="4" fill="#22c55e"/>
+    <circle cx="650" cy="180" r="4" fill="#22c55e"/>
+
+    <!-- Labels -->
+    <text x="656" y="34"  fill="#f85149"  font-size="9.5" font-family="Inter" font-weight="600">Sorted tree</text>
+    <text x="656" y="177" fill="#22c55e" font-size="9.5" font-family="Inter" font-weight="600">Perpl</text>
+
+    <!-- Arrow showing the divergence at N=10,000 -->
+    <line x1="512" y1="64" x2="512" y2="176" stroke="#ffffff10" stroke-width="1" stroke-dasharray="3,3"/>
+    <text x="520" y="118" fill="#606078" font-size="8.5" font-family="Inter">~3× at N=10k</text>
+
+    <!-- Legend -->
+    <line x1="108" y1="223" x2="128" y2="223" stroke="#22c55e" stroke-width="2.5"/>
+    <text x="133" y="227" fill="#606078" font-size="9" font-family="Inter">Perpl bit-index tree (constant)</text>
+    <line x1="310" y1="223" x2="330" y2="223" stroke="#f85149" stroke-width="2.5"/>
+    <text x="335" y="227" fill="#606078" font-size="9" font-family="Inter">Sorted tree (grows with book depth)</text>
+  </svg>
+  <div class="note">Gas estimates for the sorted tree assume warm slots (SSTOREs at 2,900 gas) after initial traversal. Real-world costs are higher when tree nodes are cold, which is typical for orders at new price levels. Perpl's 100k gas figure is the actual measured cost from deployed contracts on Monad, including full solvency checks.</div>
+</div>
+
+<p>The gap compounds with frequency. A market maker running 200 requotes per hour faces 200 post+cancel cycles. On Perpl that's 20M gas per hour — a predictable, constant budget. On a sorted tree CLOB at N=10,000, the same 200 cycles consume 60M+ gas per hour, and the cost continues climbing as the book deepens. At scale, this difference determines whether tight-spread market making is economically viable.</p>
+
+<hr>
+
+<h2>Why This Defines Market Maker Quality</h2>
+
+<p>Market makers provide the liquidity that makes a CLOB useful. Their value is the spread: the gap between the best bid and best ask. Narrow spreads mean tighter prices for takers. But spreads are not set arbitrarily — they are bounded below by the cost of maintaining them.</p>
+
+<p>A market maker's core loop is: <em>post a quote → price moves → cancel → post new quote</em>. The gas cost of that loop sets the minimum economically viable spread. Every requote must at minimum cover its gas cost through expected fee income. Higher gas per requote = wider minimum spread = worse prices for everyone.</p>
+
+<div class="versus">
+  <div class="versus-card them">
+    <div class="versus-tag">Sorted tree CLOB</div>
+    <div class="versus-name">O(log N) per post + cancel</div>
+    <div class="versus-body">Every requote traverses the tree to find the insertion point, then rebalances. The cost scales with how many price levels are active. A deep book is a more expensive book to quote on.</div>
+    <div class="versus-metric">
+      <div class="versus-metric-row"><span class="versus-metric-key">Post cost (N=10,000)</span><span class="versus-metric-val bad">~150k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Cancel cost (N=10,000)</span><span class="versus-metric-val bad">~150k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Requote cycle</span><span class="versus-metric-val bad">~300k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Cost grows with?</span><span class="versus-metric-val bad">Book depth</span></div>
+    </div>
+  </div>
+  <div class="versus-card us">
+    <div class="versus-tag">Perpl bit-index tree</div>
+    <div class="versus-name">O(1) per post + cancel</div>
+    <div class="versus-body">Every requote flips bits at fixed tree levels. Cost is identical whether there are 10 price levels or 10 million. A liquid, deep book costs no more to quote on than an empty one.</div>
+    <div class="versus-metric">
+      <div class="versus-metric-row"><span class="versus-metric-key">Post cost (any N)</span><span class="versus-metric-val good">~50k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Cancel cost (any N)</span><span class="versus-metric-val good">~50k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Requote cycle</span><span class="versus-metric-val good">100k gas</span></div>
+      <div class="versus-metric-row"><span class="versus-metric-key">Cost grows with?</span><span class="versus-metric-val good">Nothing</span></div>
+    </div>
+  </div>
+</div>
+
+<p>The Change order compounds this further. Because Perpl's order storage slots are not tied to any specific price level, a market maker can <strong>move an order to a new price</strong> in a single transaction rather than canceling and reposting. The Change operation shifts the order's slot from one price partition to another — no deallocation, no reallocation. This eliminates half the storage cost of a requote entirely.</p>
+
+<div class="callout">
+  <strong>Shared storage across price levels:</strong> The partition map list that holds orders at each price level uses the same pool of order slots regardless of which price they're at. Order o15 at price m-2 can be moved to price m-3 by updating its partition pointers — no new slot needed. This is what makes Change orders possible and is a direct consequence of the bit-index tree's clean separation between price indexing and order storage.
+</div>
+
+<hr>
+
+<h2>The Full Order Book Architecture</h2>
+
+<p>The bit-index tree handles price discovery. Orders at each price level are stored in a <strong>partition map list</strong> — a doubly-linked FIFO queue per price level, built on Solidity mappings. Orders at the same price execute in the order they were posted (price-time priority). The combined structure is two bit-index trees and one partition map list:</p>
+
+<!-- Figure 5: Full order book architecture -->
+<div class="figure">
+  <div class="fig-title">Figure 5: <span>Order Book Architecture — Two Bit-Index Trees + Partition Map List</span></div>
+  <svg class="fig-svg" viewBox="0 0 680 310" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Price Bit-Index Tree (top-left) -->
+    <rect x="18" y="18" width="148" height="130" rx="6" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="92" y="34" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="Inter" font-weight="600" letter-spacing="0.3">PRICE BIT-INDEX TREE</text>
+    <!-- Tree nodes -->
+    <rect x="78" y="42" width="28" height="18" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="92" y="55" text-anchor="middle" fill="#9090a8" font-size="8" font-family="Inter">Root</text>
+    <line x1="92" y1="60" x2="66" y2="72" stroke="#2a2a3a" stroke-width="1"/>
+    <line x1="92" y1="60" x2="118" y2="72" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="50" y="72" width="32" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="66" y="84" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Mid</text>
+    <text x="108" y="84" text-anchor="middle" fill="#606078" font-size="7.5" font-family="Inter">...</text>
+    <rect x="92" y="72" width="32" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="108" y="84" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Mid</text>
+    <line x1="66" y1="88" x2="42" y2="100" stroke="#2a2a3a" stroke-width="1"/>
+    <line x1="66" y1="88" x2="70" y2="100" stroke="#2a2a3a" stroke-width="1"/>
+    <line x1="108" y1="88" x2="118" y2="100" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="28" y="100" width="28" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="42" y="112" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Leaf</text>
+    <text x="70" y="112" text-anchor="middle" fill="#606078" font-size="7.5" font-family="Inter">...</text>
+    <rect x="56" y="100" width="28" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="70" y="112" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Leaf</text>
+    <text x="97" y="112" text-anchor="middle" fill="#606078" font-size="7.5" font-family="Inter">...</text>
+    <rect x="104" y="100" width="28" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="118" y="112" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Leaf</text>
+    <!-- annotations -->
+    <text x="26" y="130" fill="#606078" font-size="7.5" font-family="Inter">· each node = 1 slot</text>
+    <text x="26" y="141" fill="#606078" font-size="7.5" font-family="Inter">· ~256³ price levels</text>
+
+    <!-- Order ID Bit-Index Tree (bottom-left) -->
+    <rect x="18" y="162" width="148" height="100" rx="6" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="92" y="178" text-anchor="middle" fill="#a78bfa" font-size="9" font-family="Inter" font-weight="600" letter-spacing="0.3">ORDER ID TREE</text>
+    <rect x="78" y="186" width="28" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="92" y="198" text-anchor="middle" fill="#9090a8" font-size="8" font-family="Inter">Root</text>
+    <line x1="92" y1="202" x2="66" y2="214" stroke="#2a2a3a" stroke-width="1"/>
+    <line x1="92" y1="202" x2="118" y2="214" stroke="#2a2a3a" stroke-width="1"/>
+    <rect x="50" y="214" width="32" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="66" y="226" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Leaf</text>
+    <text x="108" y="226" text-anchor="middle" fill="#606078" font-size="7.5" font-family="Inter">...</text>
+    <rect x="92" y="214" width="32" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="108" y="226" text-anchor="middle" fill="#9090a8" font-size="7.5" font-family="Inter">Leaf</text>
+    <text x="26" y="244" fill="#606078" font-size="7.5" font-family="Inter">· each node = 1 slot</text>
+    <text x="26" y="255" fill="#606078" font-size="7.5" font-family="Inter">· ~256² = 65k order IDs</text>
+
+    <!-- Price Map + Partition List (center + right) -->
+    <!-- Price map column -->
+    <rect x="190" y="18" width="64" height="272" rx="6" fill="#0f0f1a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="34" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">PRICE MAP</text>
+
+    <!-- Price levels in map -->
+    <!-- ASK label -->
+    <text x="182" y="82" text-anchor="end" fill="#ef4444" font-size="8" font-family="Inter">Ask</text>
+    <rect x="200" y="48" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="61" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m+3</text>
+    <rect x="200" y="72" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="85" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m+2</text>
+    <rect x="200" y="96" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="109" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m+1</text>
+
+    <!-- Spread marker -->
+    <line x1="190" y1="123" x2="254" y2="123" stroke="#22c55e30" stroke-width="1" stroke-dasharray="3,3"/>
+    <text x="182" y="127" text-anchor="end" fill="#22c55e" font-size="8" font-family="Inter">Spread</text>
+    <rect x="200" y="117" width="44" height="12" rx="2" fill="#0a1a0a" stroke="#22c55e30" stroke-width="1"/>
+    <text x="222" y="127" text-anchor="middle" fill="#22c55e60" font-size="8" font-family="SF Mono">m</text>
+
+    <!-- BID label -->
+    <text x="182" y="160" text-anchor="end" fill="#3fb950" font-size="8" font-family="Inter">Bid</text>
+    <rect x="200" y="134" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="147" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m-1</text>
+    <rect x="200" y="158" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="171" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m-2</text>
+    <rect x="200" y="182" width="44" height="18" rx="3" fill="#12121a" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="222" y="195" text-anchor="middle" fill="#9090a8" font-size="8.5" font-family="SF Mono">m-3</text>
+
+    <!-- Order ID Partition List (right side) -->
+    <text x="450" y="12" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter" letter-spacing="0.3">ORDER PARTITION LIST (FIFO per price)</text>
+
+    <!-- Arrows from price map to partitions -->
+    <!-- m+3 → one order -->
+    <line x1="244" y1="57" x2="290" y2="57" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <!-- m+2 → two orders -->
+    <line x1="244" y1="81" x2="290" y2="81" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <!-- m+1 → three orders -->
+    <line x1="244" y1="105" x2="290" y2="105" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <!-- m-1 → four orders -->
+    <line x1="244" y1="143" x2="290" y2="143" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <!-- m-2 → three orders -->
+    <line x1="244" y1="167" x2="290" y2="167" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+    <!-- m-3 → two orders -->
+    <line x1="244" y1="191" x2="290" y2="191" stroke="#2a2a3a" stroke-width="1.5" marker-end="url(#arr-gray)"/>
+
+    <defs>
+      <marker id="arr-gray" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 z" fill="#2a2a3a"/>
+      </marker>
+    </defs>
+
+    <!-- Partition list boxes (orders as doubly-linked list) -->
+    <!-- helper macro: order box at cx, cy, label -->
+    <!-- m+3 partition: 1 order at x=300 -->
+    <rect x="292" y="22" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="33" fill="#606078" font-size="7.5" font-family="Inter">m+3</text>
+    <rect x="320" y="47" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="61" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o9</text>
+
+    <!-- m+2 partition: 2 orders -->
+    <rect x="292" y="46" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="57" fill="#606078" font-size="7.5" font-family="Inter">m+2</text>
+    <rect x="320" y="71" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="85" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o6</text>
+    <line x1="360" y1="81" x2="372" y2="81" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="372" y1="85" x2="360" y2="85" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="374" y="71" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="394" y="85" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o7</text>
+
+    <!-- m+1 partition: 3 orders -->
+    <rect x="292" y="70" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="81" fill="#606078" font-size="7.5" font-family="Inter">m+1</text>
+    <rect x="320" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o3</text>
+    <line x1="360" y1="105" x2="372" y2="105" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="372" y1="109" x2="360" y2="109" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="374" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="394" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o4</text>
+    <line x1="414" y1="105" x2="426" y2="105" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="426" y1="109" x2="414" y2="109" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="428" y="95" width="40" height="20" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="448" y="109" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o5</text>
+
+    <!-- spread row -->
+    <rect x="292" y="116" width="356" height="12" rx="2" fill="#0a1a0a" stroke="#22c55e20" stroke-width="1"/>
+    <text x="470" y="126" text-anchor="middle" fill="#22c55e40" font-size="7.5" font-family="Inter">— spread —</text>
+
+    <!-- m-1 partition: 4 orders -->
+    <rect x="292" y="128" width="356" height="24" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="141" fill="#606078" font-size="7.5" font-family="Inter">m-1</text>
+    <rect x="320" y="133" width="40" height="18" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="146" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o0</text>
+    <line x1="360" y1="142" x2="372" y2="142" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="372" y1="146" x2="360" y2="146" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="374" y="133" width="40" height="18" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="394" y="146" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o1</text>
+    <line x1="414" y1="142" x2="426" y2="142" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="426" y1="146" x2="414" y2="146" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="428" y="133" width="40" height="18" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="448" y="146" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o2</text>
+
+    <!-- m-2 partition: 3 orders -->
+    <rect x="292" y="156" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="168" fill="#606078" font-size="7.5" font-family="Inter">m-2</text>
+    <rect x="320" y="161" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="173" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o10</text>
+    <line x1="360" y1="169" x2="372" y2="169" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="372" y1="173" x2="360" y2="173" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="374" y="161" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="394" y="173" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o11</text>
+    <line x1="414" y1="169" x2="426" y2="169" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="426" y1="173" x2="414" y2="173" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="428" y="161" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="448" y="173" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o12</text>
+
+    <!-- m-3 partition: 2 orders -->
+    <rect x="292" y="182" width="356" height="22" rx="3" fill="#0d0d18" stroke="#1e1e2e" stroke-width="1"/>
+    <text x="298" y="194" fill="#606078" font-size="7.5" font-family="Inter">m-3</text>
+    <rect x="320" y="187" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="340" y="199" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o15</text>
+    <line x1="360" y1="195" x2="372" y2="195" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray)"/>
+    <line x1="372" y1="199" x2="360" y2="199" stroke="#3a3a5a" stroke-width="1" marker-end="url(#arr-gray-l)"/>
+    <rect x="374" y="187" width="40" height="16" rx="3" fill="#12121a" stroke="#2a2a3a" stroke-width="1"/>
+    <text x="394" y="199" text-anchor="middle" fill="#58a6ff" font-size="9" font-family="SF Mono">o16</text>
+
+    <defs>
+      <marker id="arr-gray-l" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+        <path d="M6,0 L6,6 L0,3 z" fill="#3a3a5a"/>
+      </marker>
+    </defs>
+
+    <!-- Connection from Price tree to Price Map -->
+    <line x1="166" y1="83" x2="190" y2="83" stroke="#58a6ff30" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="178" y="78" text-anchor="middle" fill="#58a6ff30" font-size="7" font-family="Inter">index</text>
+
+    <!-- Connection from Order ID tree to partition list -->
+    <line x1="166" y1="222" x2="220" y2="222" stroke="#a78bfa30" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="220" y1="222" x2="220" y2="180" stroke="#a78bfa30" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="220" y1="180" x2="292" y2="180" stroke="#a78bfa30" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="256" y="175" text-anchor="middle" fill="#a78bfa30" font-size="7" font-family="Inter">IDs</text>
+
+    <!-- Caption labels below diagram -->
+    <text x="92" y="278" text-anchor="middle" fill="#58a6ff" font-size="8.5" font-family="Inter">Price index</text>
+    <text x="92" y="289" text-anchor="middle" fill="#606078" font-size="8" font-family="Inter">3-level, ~16M levels</text>
+    <text x="92" y="302" text-anchor="middle" fill="#a78bfa" font-size="8.5" font-family="Inter">Order ID index</text>
+
+    <text x="222" y="278" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter">Price → list head</text>
+    <text x="470" y="230" text-anchor="middle" fill="#606078" font-size="8.5" font-family="Inter">Orders in FIFO order per price (price-time priority)</text>
+    <text x="470" y="242" text-anchor="middle" fill="#3a3a5a" font-size="8" font-family="Inter">Doubly-linked for O(1) removal of any order by ID</text>
+  </svg>
+  <div class="note">The price bit-index tree (left) indexes which price levels have active orders — covering ~16M price levels with 3 storage slots max. Each occupied price maps to a FIFO queue of orders (right). The order ID bit-index tree (lower left) tracks available order slots and serves as the ID counter. Orders move between price queues (via Change) without deallocating their storage slot.</div>
+</div>
+
+<p>The result is a CLOB that supports over 16 million price levels, up to 65,535 simultaneous open orders per contract, and price-time priority matching — all fully on-chain, fully transparent, and at gas costs that make market making economically viable for the first time on an EVM chain.</p>
+
+<div class="cta-row">
+  <a class="cta cta-primary" href="../change-order/">&#9654; How the Change order works</a>
+  <a class="cta cta-secondary" href="../index.html">← All Explainers</a>
+</div>
+
+<div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</div>
+</body>
+</html>
