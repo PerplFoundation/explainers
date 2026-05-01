@@ -4,32 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Margin Regimes: Isolated vs Cross vs Hybrid</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Margin Regimes: Isolated vs Cross vs Hybrid — Perpl</title>
 <style>
+  /* Page-specific styles only — chrome lives in /styles.css.
+     The page also locally extends the canonical :root with --cyan and --orange. */
   :root {
-    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
-    --tx: #e0e0f0; --tx2: #9898b0; --tx3: #8888a0;
-    --bd: #1e1e2e; --bd2: #2a2a3a;
-    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
-    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
+    --cyan: #06b6d4;
     --orange: #f97316;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); line-height: 1.6; }
-  :focus-visible { outline: 2px solid #6F5CFF; outline-offset: 2px; }
-  button { font-family: inherit; }
-
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: var(--tx); }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-
-  main { max-width: 1000px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; color: #e0e0f0; font-weight: 600; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
 
   .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
   .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; display: flex; align-items: center; gap: 8px; user-select: none; }
@@ -210,12 +193,6 @@
   .arrow-down { display: flex; justify-content: center; margin: 8px 0; color: var(--tx3); font-size: 16px; }
 
   @media (max-width: 768px) {
-    .site-nav { padding: 8px 12px; gap: 8px; }
-    .site-logo img { height: 16px; }
-    .site-links { gap: 4px; }
-    .site-links a { padding: 4px 6px; font-size: 10px; white-space: nowrap; }
-    main { padding: 16px; }
-    h1 { font-size: 20px; }
     .sec-tabs { flex-wrap: wrap; }
     .reg-tabs { flex-wrap: wrap; }
     .eff-grid { grid-template-columns: 1fr; }
@@ -230,17 +207,20 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <a href="overview.html" class="site-logo">
+  <a href="../" class="site-logo">
     <img src="../Colour=Primary_White.svg" alt="Perpl">
   </a>
   <div class="site-links">
+    <a href="../">← All Explainers</a>
     <a href="overview.html">Overview</a>
-    <a class="active" href="index.html" aria-current="page">Interactive Sim</a>
+    <a class="active" href="index.html" aria-current="page">Interactive</a>
   </div>
 </nav>
 
-<main>
+<main class="app" id="main">
   <h1>Margin Regimes: Who Pays When It All Goes Wrong?</h1>
   <p class="sub">Same positions, same crash. Different margin regimes, very different outcomes.</p>
 

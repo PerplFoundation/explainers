@@ -4,31 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Change vs Post/Cancel</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Change vs Post/Cancel Simulator — Perpl</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Page-specific styles only — chrome lives in /styles.css.
+     This page is a full-viewport simulator, so body needs to be a
+     non-scrolling flex column. */
   body {
-    background: #0a0a0f;
-    color: #a0a0b8;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
-
-  /* ── Site nav ── */
-  .site-nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 32px; background: #08080e;
-    border-bottom: 1px solid #16161e; flex-shrink: 0;
-  }
-  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a {
-    padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a;
-    background: #16161e; color: #8888a0; font-size: 11px; font-weight: 500;
-    text-decoration: none; transition: all 0.15s;
-  }
-  .site-links a:hover { border-color: #444; color: #ccc; }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+  /* Override canonical sticky nav — this page's nav is part of a flex column */
+  .site-nav { position: static; flex-shrink: 0; }
 
   /* ── Top bar ── */
   .top-bar {
@@ -62,11 +51,11 @@
   }
   .btn-sel {
     background: linear-gradient(135deg, #6F5CFF18, #16161e);
-    border-color: #6F5CFF66; color: #6F5CFF;
+    border-color: #6F5CFF66; color: var(--indigo);
     box-shadow: 0 0 12px #6F5CFF20;
   }
   .speed-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #666680; }
-  .speed-row input { width: 80px; accent-color: #6F5CFF; }
+  .speed-row input { width: 80px; accent-color: var(--perpl); }
 
   /* ── Status bar + wave progress ── */
   .status-wrap {
@@ -89,7 +78,7 @@
   }
   .wave-dot.active {
     background: linear-gradient(135deg, #6F5CFF22, #16161e);
-    border-color: #6F5CFF66; color: #6F5CFF;
+    border-color: #6F5CFF66; color: var(--indigo);
     box-shadow: 0 0 8px #6F5CFF20;
   }
   .wave-dot.done {
@@ -127,7 +116,7 @@
   .panel-head .name { font-size: 14px; font-weight: 600; }
   .panel-head .subtitle { font-size: 11px; color: #555568; font-weight: 500; }
   .pc-name { color: #ef4444; }
-  .ch-name { color: #6F5CFF; }
+  .ch-name { color: var(--indigo); }
 
   /* Logos */
   .monad-logo { display: flex; align-items: center; gap: 6px; }
@@ -135,7 +124,7 @@
   .monad-logo span { font-size: 11px; color: #836EF9; font-weight: 600; letter-spacing: 0.3px; }
   .perpl-logo { display: flex; align-items: center; gap: 5px; }
   .perpl-logo svg { width: 18px; height: 18px; }
-  .perpl-logo span { font-size: 11px; color: #6F5CFF; font-weight: 600; letter-spacing: 0.3px; }
+  .perpl-logo span { font-size: 11px; color: var(--indigo); font-weight: 600; letter-spacing: 0.3px; }
 
   .tag {
     font-size: 9px; padding: 3px 10px; border-radius: 4px; font-weight: 700;
@@ -146,7 +135,7 @@
     border: 1px solid #ef444430; box-shadow: 0 0 8px #ef444412;
   }
   .tag-p {
-    background: #6F5CFF18; color: #6F5CFF;
+    background: #6F5CFF18; color: var(--indigo);
     border: 1px solid #6F5CFF30; box-shadow: 0 0 8px #6F5CFF12;
   }
 
@@ -176,7 +165,7 @@
   .action-body .neg { color: #ef4444; }
   .action-body .pos { color: #22c55e; }
   .action-body .mut { color: #a78bfa; }
-  .panel-ch .action-body .pos { color: #6F5CFF; }
+  .panel-ch .action-body .pos { color: var(--indigo); }
 
   /* ── Depth card with ring ── */
   .depth-card {
@@ -389,19 +378,24 @@
     color: #ef4444; background: #ef444412; border: 1px solid #ef444430;
   }
   .conflict-label.parallel-label {
-    color: #6F5CFF; background: #6F5CFF12; border: 1px solid #6F5CFF30;
+    color: var(--indigo); background: #6F5CFF12; border: 1px solid #6F5CFF30;
   }
 </style>
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <span class="site-logo">Perpl</span>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
+    <a href="../">← All Explainers</a>
     <a href="index.html">Overview</a>
-    <a class="active" href="interactive.html">Interactive Sim</a>
+    <a class="active" href="interactive.html" aria-current="page">Interactive</a>
   </div>
 </nav>
+
+<main id="main" style="display: contents;">
 
 <div class="top-bar">
   <h1>Order Book Depth: Change vs Post/Cancel</h1>
@@ -978,5 +972,8 @@ window.onerror = function(msg, src, line) {
 
 resetSim();
 </script>
+
+</main>
+
 </body>
 </html>

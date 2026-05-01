@@ -4,29 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Virtualized Funding: Interactive Sim</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Virtualized Funding Simulator — Perpl</title>
 <style>
+  /* Page-specific styles only — chrome lives in /styles.css.
+     Locally extends canonical :root with --cyan and --orange. */
   :root {
-    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
-    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
-    --bd: #1e1e2e; --bd2: #2a2a3a;
-    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
-    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
+    --cyan: #06b6d4;
     --orange: #f97316;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
-
-  .site-nav { display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: #08080e; border-bottom: 1px solid #16161e; }
-  .site-logo { font-size: 13px; font-weight: 600; color: #ccc; letter-spacing: 0.5px; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; }
-  .site-links a:hover { border-color: #444; color: var(--tx); }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-
-  .page { max-width: 1060px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
 
   .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
   .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
@@ -161,22 +147,25 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <span class="site-logo">Perpl</span>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
+    <a href="../">← All Explainers</a>
     <a href="overview.html">Overview</a>
-    <a class="active" href="index.html">Interactive Sim</a>
+    <a class="active" href="index.html" aria-current="page">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="app" id="main">
   <h1>Virtualized Funding</h1>
   <p class="sub">Three interactives: the gas problem, how F<sub>sum</sub> works, and how different systems compare.</p>
 
   <div class="sec-tabs">
-    <div class="sec-tab active" onclick="setPanel('gas')">The Gas Problem</div>
-    <div class="sec-tab" onclick="setPanel('fsim')">F<sub>sum</sub> Walkthrough</div>
-    <div class="sec-tab" onclick="setPanel('compare')">System Comparison</div>
+    <button class="sec-tab active" onclick="setPanel('gas')">The Gas Problem</button>
+    <button class="sec-tab" onclick="setPanel('fsim')">F<sub>sum</sub> Walkthrough</button>
+    <button class="sec-tab" onclick="setPanel('compare')">System Comparison</button>
   </div>
 
   <!-- ── PANEL 1: Gas Problem ─────────────────────── -->
@@ -300,8 +289,8 @@
           <div class="ctrl-row">
             <label>Side</label>
             <div class="side-btns">
-              <div class="side-btn active long" id="side-long" onclick="setSide('long')">LONG</div>
-              <div class="side-btn" id="side-short" onclick="setSide('short')">SHORT</div>
+              <button class="side-btn active long" id="side-long" onclick="setSide('long')">LONG</button>
+              <button class="side-btn" id="side-short" onclick="setSide('short')">SHORT</button>
             </div>
           </div>
           <div class="ctrl-row">
@@ -454,7 +443,7 @@
       <strong>The key insight:</strong> Perpl decouples the funding <em>event</em> (updating the market-level F<sub>sum</sub> — O(1)) from funding <em>settlement</em> (computing each position's payment — deferred to the next trade or close). Positions never need to be touched at funding time. Their cumulative payment is computed lazily and exactly using just two stored values: F<sub>sum</sub> at open and F<sub>sum</sub> at close.
     </div>
   </div>
-</div>
+</main>
 
 <script>
 // ── Funding event data ──────────────────────────────

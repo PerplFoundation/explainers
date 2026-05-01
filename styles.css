@@ -1,0 +1,320 @@
+/* ============================================================
+   Perpl Explainer — Canonical Chrome Stylesheet
+   ============================================================
+   Single source of truth for shared chrome (palette, nav, container,
+   typography, CTAs, footer, mobile, focus, reduced-motion).
+
+   Every explainer should:
+     <link rel="stylesheet" href="/styles.css">
+
+   Page-specific styles (figures, simulators, callouts, diagrams)
+   stay inline in each explainer's <style> block.
+
+   See STYLE.md for design rationale, page-type rules, and the
+   contributor guide.
+   ============================================================ */
+
+
+/* ── Tokens ─────────────────────────────────────────────── */
+
+:root {
+  /* Backgrounds */
+  --bg:  #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a26;
+
+  /* Text — descending emphasis */
+  --tx:  #e0e0f0;   /* body, headings, strong */
+  --tx2: #9898b0;   /* subtitle, secondary */
+  --tx3: #8888a0;   /* muted, labels, fig titles */
+  --tx4: #70708a;   /* footer, lowest emphasis */
+
+  /* Borders */
+  --bd:  #1e1e2e;
+  --bd2: #2a2a3a;
+
+  /* Brand */
+  --perpl:  #6F5CFF; /* Perpl Purple — FILLED moments only (buttons with white text, focus rings, skip-link bg, brand fills inside SVGs). Borderline AA as text on dark. */
+  --indigo: #A2A4FF; /* Indigo — TEXT ON DARK. Active nav, CTA text, prose accents. Passes AAA on --bg. */
+
+  /* State */
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --red-text: #f87171; /* softer red for text — --red itself is harsh on dark */
+  --amber:    #eab308;
+  --blue:     #60a5fa;
+  --purple:   #a78bfa;
+}
+
+
+/* ── Reset & document defaults ─────────────────────────── */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--tx);
+  line-height: 1.6;
+}
+
+button, input, select, textarea { font-family: inherit; }
+button { cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--perpl); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+/* ── Skip-to-content link ──────────────────────────────── */
+
+.skip {
+  position: absolute; top: -40px; left: 0;
+  padding: 8px 16px;
+  background: var(--perpl); color: #fff;
+  text-decoration: none;
+  border-radius: 0 0 6px 0;
+  z-index: 100;
+  font-size: 13px; font-weight: 500;
+  transition: top 0.15s;
+}
+.skip:focus { top: 0; }
+
+
+/* ── Site nav ──────────────────────────────────────────── */
+
+.site-nav {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 32px;
+  /* Force a fixed nav height so the logo sits at the same Y position on
+     every page. Without this, the landing page (logo only, ~35px tall)
+     and explainer pages (logo + .site-links pills, ~45px tall) render
+     at different heights and align-items: center moves the logo up/down. */
+  height: 48px;
+  background: rgba(10, 10, 15, 0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bd);
+}
+.site-logo { display: flex; align-items: center; text-decoration: none; }
+.site-logo img { height: 18px; display: block; }
+
+.site-links { display: flex; gap: 6px; }
+.site-links a {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid var(--bd2);
+  background: var(--bg2);
+  color: var(--tx3);
+  font-size: 11px; font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.site-links a:hover { border-color: #444; color: var(--tx); }
+.site-links a.active {
+  border-color: #A2A4FF44;
+  background: #A2A4FF12;
+  color: var(--indigo);
+}
+
+
+/* ── Containers (page-type modifiers) ──────────────────── */
+
+main.prose {
+  /* Pure prose explainer (overview pages with paragraphs + minor figures) */
+  max-width: 680px; margin: 0 auto; padding: 80px 24px 80px;
+}
+main.prose-wide {
+  /* Hybrid: prose with large embedded SVG figures (e.g. order-book/overview) */
+  max-width: 760px; margin: 0 auto; padding: 80px 24px 80px;
+}
+main.app {
+  /* Interactive / simulator (index pages) */
+  max-width: 1160px; margin: 0 auto; padding: 28px 24px 80px;
+}
+main.diagrams {
+  /* Diagram-grid pages */
+  max-width: 1100px; margin: 0 auto; padding: 40px 60px;
+}
+
+
+/* ── Typography ────────────────────────────────────────── */
+
+h1, h2, h3 { color: var(--tx); font-weight: 600; line-height: 1.3; }
+strong { color: var(--tx); font-weight: 500; }
+em { color: var(--tx); font-style: italic; }
+hr { border: none; border-top: 1px solid var(--bd); margin: 48px 0; }
+
+/* Prose pages — larger sizes for reading */
+main.prose h1, main.prose-wide h1 { font-size: 24px; margin-bottom: 12px; }
+main.prose h2, main.prose-wide h2 { font-size: 16px; margin-top: 48px; margin-bottom: 12px; }
+main.prose h3, main.prose-wide h3 { font-size: 14px; margin-top: 32px; margin-bottom: 10px; }
+main.prose p,  main.prose-wide p  { font-size: 16px; margin-bottom: 16px; }
+main.prose .subtitle, main.prose-wide .subtitle {
+  font-size: 14px; color: var(--tx2); margin-bottom: 48px;
+}
+
+/* Interactive pages — denser */
+main.app h1 { font-size: 22px; margin-bottom: 4px; }
+main.app .sub {
+  font-size: 13px; color: var(--tx2);
+  margin-bottom: 32px; line-height: 1.6;
+}
+
+a { color: #88f; text-decoration: none; }
+a:hover { color: #bbf; }
+
+code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  background: var(--bg3);
+  border: 1px solid var(--bd2);
+  border-radius: 3px;
+  padding: 1px 6px;
+  color: #a0c0ff;
+}
+
+
+/* ── CTAs ──────────────────────────────────────────────── */
+
+.cta-row {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin: 32px 0;
+}
+
+.cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.cta-primary {
+  /* Neutral default */
+  background: #1a1a2e;
+  border: 1px solid #A2A4FF30;
+  color: var(--indigo);
+}
+.cta-primary:hover { background: #252540; color: #c0c1ff; }
+
+/* Section-themed CTAs — bg tinted with section accent, --indigo text preserved */
+.cta-primary.theme-green { background: #1a2a1a; }
+.cta-primary.theme-amber { background: #2a2a1a; }
+.cta-primary.theme-blue  { background: #1a1f2e; }
+.cta-primary.theme-red   { background: #2a1a1a; }
+.cta-primary.theme-green:hover,
+.cta-primary.theme-amber:hover,
+.cta-primary.theme-blue:hover,
+.cta-primary.theme-red:hover { filter: brightness(1.4); }
+
+.cta-secondary {
+  background: #1a1a2a;
+  border: 1px solid #3a3a6a;
+  color: #99b;
+}
+.cta-secondary:hover { background: #2a2a3a; color: #bbf; }
+
+
+/* ── Figure lightbox ───────────────────────────────────── */
+/* Pages with SVG figures can opt in by including <script src="/lightbox.js" defer>.
+   The script wraps each .fig-svg in a .fig-zoom-wrap, adds a "click to enlarge"
+   badge, and opens a native <dialog> on click. */
+
+.fig-zoom-wrap { position: relative; }
+.fig-zoomable { cursor: zoom-in; transition: opacity 0.15s; display: block; }
+.fig-zoomable:hover { opacity: 0.92; }
+
+.fig-zoom-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  font-size: 10px; font-weight: 500;
+  color: var(--tx2);
+  background: var(--bg);
+  border: 1px solid var(--bd2);
+  padding: 4px 9px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.fig-zoom-wrap:hover .fig-zoom-badge,
+.fig-zoom-wrap:focus-within .fig-zoom-badge { opacity: 0.9; }
+
+dialog#figure-lightbox {
+  background: var(--bg2);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  /* Explicit width — without it the native <dialog> defaults to
+     fit-content, which collapses around the SVG's intrinsic size and
+     makes the lightbox smaller than the inline figure. */
+  width: min(1200px, 92vw);
+  max-height: 95vh;
+  padding: 36px 24px 24px;
+  margin: auto;
+  color: var(--tx);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+dialog#figure-lightbox::backdrop {
+  background: rgba(10, 10, 15, 0.85);
+  backdrop-filter: blur(8px);
+}
+dialog#figure-lightbox .lightbox-content {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+}
+.lightbox-svg {
+  background: #0d0d18;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 82vh;
+}
+.lightbox-close {
+  position: absolute;
+  top: 8px; right: 12px;
+  background: transparent; border: none;
+  color: var(--tx2);
+  font-size: 24px; line-height: 1;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.lightbox-close:hover { color: var(--tx); background: var(--bg3); }
+
+
+/* ── Footer ────────────────────────────────────────────── */
+
+.footer {
+  margin-top: 64px; padding-top: 24px;
+  border-top: 1px solid var(--bd);
+  font-size: 11px;
+  color: var(--tx4);
+  text-align: center;
+}
+
+
+/* ── Mobile ────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .site-nav { padding: 8px 12px; gap: 8px; }
+  .site-logo img { height: 16px; }
+  .site-links { gap: 4px; }
+  .site-links a { padding: 4px 6px; font-size: 10px; white-space: nowrap; }
+
+  main.prose, main.prose-wide { padding: 60px 16px 60px; }
+  main.prose h1, main.prose-wide h1 { font-size: 22px; }
+
+  main.app { padding: 24px 16px 60px; }
+  main.app h1 { font-size: 20px; }
+}

@@ -4,25 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
 <title>Number Systems: Interactive</title>
 <style>
-  :root {
-    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
-    --tx: #e0e0f0; --tx2: #9090a8; --tx3: #606078;
-    --bd: #1e1e2e; --bd2: #2a2a3a;
-    --red: #ef4444; --green: #22c55e; --blue: #60a5fa;
-    --amber: #eab308; --purple: #a78bfa; --cyan: #06b6d4;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); }
-
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: #12121a; color: var(--tx2); font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: var(--tx); }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+  /* Locally extends :root with --cyan */
+  :root { --cyan: #06b6d4; }
 
   /* ── Play button ── */
   .play-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -39,10 +25,6 @@
   .cmp-ctrl-row input[type=number] { flex: 1; background: var(--bg3); border: 1px solid var(--bd2); border-radius: 4px; padding: 5px 8px; font-size: 13px; color: var(--tx); font-family: 'SF Mono', monospace; }
   .cmp-ctrl-row input[type=range] { flex: 1; }
   .cmp-dec-val { font-family: 'SF Mono', monospace; font-weight: 700; min-width: 18px; text-align: right; }
-
-  .page { max-width: 1060px; margin: 0 auto; padding: 24px; }
-  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-  .sub { font-size: 13px; color: var(--tx2); margin-bottom: 20px; line-height: 1.6; }
 
   .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
   .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
@@ -198,16 +180,18 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
   <a href="overview.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
     <a href="../index.html">← All Explainers</a>
     <a href="overview.html">Overview</a>
-    <a class="active" href="index.html">Interactive</a>
+    <a class="active" aria-current="page" href="index.html">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="app" id="main">
   <h1>Number Systems</h1>
   <p class="sub">How Perpl represents prices, sizes, and collateral on-chain — and the tradeoffs behind each choice.</p>
 
@@ -481,7 +465,8 @@
       </div>
     </div>
   </div>
-</div>
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+</main>
 
 <script>
 // ── Constants ─────────────────────────────────────────

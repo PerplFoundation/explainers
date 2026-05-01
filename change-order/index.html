@@ -4,45 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Change: The Order Type That Unlocks Parallel Market Making</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Change: The Order Type That Unlocks Parallel Market Making — Perpl</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #0a0a0f;
-    color: #9090a8;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    line-height: 1.7;
-  }
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: #e0e0f0; }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
+  /* Page-specific styles only — chrome lives in /styles.css */
 
-  .page {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 80px 24px 80px;
-  }
-
-  h1 {
-    font-size: 28px; color: #e0e0f0; font-weight: 600;
-    line-height: 1.3; margin-bottom: 12px;
-  }
-  .subtitle {
-    font-size: 14px; color: #606078; margin-bottom: 48px;
-  }
-
-  h2 {
-    font-size: 16px; color: #c9d1d9; font-weight: 600;
-    margin-top: 48px; margin-bottom: 12px;
-  }
-
-  p { margin-bottom: 16px; font-size: 15px; }
-
-  strong { color: #c9d1d9; font-weight: 500; }
+  /* Page-specific container width — slightly wider than the standard
+     prose-wide because this page has multi-column tables and figures. */
+  main.prose-wide { max-width: 860px; }
 
   .callout {
     padding: 20px 24px; margin: 28px 0;
@@ -86,11 +55,6 @@
     font-size: 13px; font-weight: 500; text-decoration: none;
     transition: all 0.15s;
   }
-  .cta-primary {
-    background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9;
-  }
-  .cta-primary:hover { background: #2a3a2a; color: #9cb; }
-
   .table-wrap { margin: 24px 0; overflow-x: auto; }
   table {
     width: 100%; border-collapse: collapse; font-size: 13px;
@@ -105,11 +69,6 @@
   }
   td.bad { color: #b77; }
   td.good { color: #7a9; }
-
-  .footer {
-    margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e;
-    font-size: 11px; color: #606078; text-align: center;
-  }
 
   /* ── Figure styles ── */
   .figure {
@@ -287,15 +246,18 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <a href="index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
-    <a class="active" href="index.html">Overview</a>
-    <a href="interactive.html">Interactive Sim</a>
+    <a href="../">← All Explainers</a>
+    <a class="active" href="index.html" aria-current="page">Overview</a>
+    <a href="interactive.html">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="prose-wide" id="main">
 
   <h1>Change: The Order Type That Unlocks Parallel Market Making</h1>
   <p class="subtitle">A native order modification primitive designed for parallel execution on Monad.</p>
@@ -836,7 +798,7 @@
     Perpl: Fully on-chain perpetual DEX on Monad
   </div>
 
-</div>
+</main>
 
 </body>
 </html>

@@ -4,35 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Virtualized Funding: Gas-Free Settlement at Any Scale</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Virtualized Funding: Gas-Free Settlement at Any Scale — Perpl</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: #e0e0f0; }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
-  h1 { font-size: 28px; color: #e0e0f0; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
-  .subtitle { font-size: 14px; color: #606078; margin-bottom: 48px; }
-  h2 { font-size: 16px; color: #c9d1d9; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
-  p { margin-bottom: 16px; font-size: 15px; }
-  strong { color: #c9d1d9; font-weight: 500; }
-  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #1a1a2a; border: 1px solid #2a2a3a; border-radius: 3px; padding: 1px 6px; color: #a0c0ff; }
+  /* Page-specific styles only — chrome lives in /styles.css */
+
   .eq { margin: 24px 0; padding: 16px 20px; background: #141420; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 14px; color: #c0d0ff; text-align: center; }
   .eq .label { font-size: 11px; color: #606078; font-family: inherit; margin-top: 8px; display: block; }
   .callout { margin: 24px 0; padding: 16px 20px; background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 6px; font-size: 14px; color: #7ab; line-height: 1.7; }
   .callout strong { color: #9cc; }
-  a { color: #88f; text-decoration: none; }
-  a:hover { color: #bbf; }
-  .cta-row { display: flex; gap: 12px; margin-top: 40px; }
-  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .cta-primary { background: #1a2a1a; border: 1px solid #2a5a2a; color: #7b9; }
-  .cta-primary:hover { background: #2a3a2a; color: #9cb; }
-  .footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
+
   .compare-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0; }
   .cm-cell { background: #12121a; border: 1px solid #1e1e2e; border-radius: 10px; padding: 20px 16px; text-align: center; }
   .cm-name { font-size: 13px; color: #9090a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
@@ -126,15 +107,18 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <a href="overview.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
-    <a class="active" href="overview.html">Overview</a>
-    <a href="index.html">Interactive Sim</a>
+    <a href="../">← All Explainers</a>
+    <a class="active" href="overview.html" aria-current="page">Overview</a>
+    <a href="index.html">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="prose-wide" id="main">
 
   <h1>Virtualized Funding: Gas-Free Settlement at Any Scale</h1>
   <p class="subtitle">How Perpl settles funding payments for 100,000+ positions with two storage reads instead of 100,000 writes.</p>
@@ -477,6 +461,6 @@
     Perpl: Fully on-chain perpetual DEX on Monad
   </div>
 
-</div>
+</main>
 </body>
 </html>

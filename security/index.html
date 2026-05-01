@@ -4,29 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Withdrawal Rate Limiter — Perpl Security</title>
+<link rel="stylesheet" href="../styles.css">
+<title>Withdrawal Rate Limiter Simulator — Perpl</title>
 <style>
-  :root {
-    --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a26;
-    --tx: #e0e0f0; --tx2: #9898b0; --tx3: #8888a0;
-    --bd: #1e1e2e; --bd2: #2a2a3a;
-    --green: #22c55e; --red: #ef4444; --amber: #eab308;
-    --blue: #60a5fa; --purple: #a78bfa; --perpl: #6F5CFF;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--tx); line-height: 1.6; }
-  :focus-visible { outline: 2px solid #6F5CFF; outline-offset: 2px; }
-  button { font-family: inherit; cursor: pointer; }
-
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--bd); }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid var(--bd2); background: var(--bg2); color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: var(--tx); }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: var(--perpl); }
-
-  .page { max-width: 1160px; margin: 0 auto; padding: 28px 24px 80px; }
+  /* Page-specific styles only — chrome lives in /styles.css */
 
   .hero { margin-bottom: 28px; }
   .hero h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
@@ -39,7 +20,7 @@
   .sc-btn:hover { border-color: var(--bd); color: var(--tx); }
   .sc-btn.sn { border-color: var(--green); background: #22c55e08; color: var(--green); }
   .sc-btn.sh { border-color: var(--red); background: #ef444408; color: var(--red); }
-  .sc-btn.so { border-color: var(--perpl); background: #6F5CFF08; color: var(--perpl); }
+  .sc-btn.so { border-color: var(--indigo); background: #6F5CFF08; color: var(--indigo); }
   .sc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bd2); flex-shrink: 0; transition: background 0.15s; }
   .sc-btn.sn .sc-dot { background: var(--green); }
   .sc-btn.sh .sc-dot { background: var(--red); }
@@ -62,10 +43,10 @@
 
   /* ── Override panel ── */
   .override-panel { background: var(--bg2); border: 1px solid #6F5CFF30; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
-  .override-title { font-size: 11px; color: var(--perpl); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+  .override-title { font-size: 11px; color: var(--indigo); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
   .override-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .ov-section { background: var(--bg3); border-radius: 8px; padding: 14px; }
-  .ov-label { font-size: 12px; font-weight: 600; color: var(--perpl); margin-bottom: 6px; }
+  .ov-label { font-size: 12px; font-weight: 600; color: var(--indigo); margin-bottom: 6px; }
   .ov-desc { font-size: 11px; color: var(--tx2); line-height: 1.65; margin-bottom: 12px; }
   .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
   .toggle { position: relative; width: 38px; height: 20px; flex-shrink: 0; }
@@ -75,7 +56,7 @@
   .toggle input:checked + .tslider { background: var(--perpl); }
   .toggle input:checked + .tslider::before { transform: translateX(18px); }
   .tlabel { font-size: 12px; color: var(--tx2); }
-  .tlabel.on { color: var(--perpl); font-weight: 500; }
+  .tlabel.on { color: var(--indigo); font-weight: 500; }
   .code-pill { font-size: 10px; font-family: 'SF Mono', monospace; color: var(--tx3); margin-top: 6px; }
   .btn-reset { width: 100%; padding: 9px; border-radius: 6px; border: 1px solid var(--red); background: #ef444408; color: var(--red); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 8px; user-select: none; }
   .btn-reset:hover { background: #ef44441a; }
@@ -122,7 +103,7 @@
   .log-entry.pass    { border-color: var(--green); }
   .log-entry.attack  { border-color: #f97316; }
   .log-entry.fail    { border-color: var(--red); }
-  .log-entry.bypass  { border-color: var(--perpl); }
+  .log-entry.bypass  { border-color: var(--indigo); }
   .log-entry.reset   { border-color: var(--amber); }
   .log-entry.deposit { border-color: var(--blue); }
   @keyframes eIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
@@ -132,7 +113,7 @@
   .le-actor.pass    { color: var(--green); }
   .le-actor.attack  { color: #f97316; }
   .le-actor.fail    { color: var(--red); }
-  .le-actor.bypass  { color: var(--perpl); }
+  .le-actor.bypass  { color: var(--indigo); }
   .le-actor.reset   { color: var(--amber); }
   .le-actor.deposit { color: var(--blue); }
   .le-detail { color: var(--tx3); margin-top: 2px; line-height: 1.4; }
@@ -174,16 +155,18 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
-    <a href="../index.html">← All Explainers</a>
+    <a href="../">← All Explainers</a>
     <a href="overview.html">Overview</a>
     <a class="active" href="index.html" aria-current="page">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="app" id="main">
 
   <div class="hero">
     <h1>Withdrawal Rate Limiter: Containing a Hack in Real Time</h1>
@@ -433,7 +416,7 @@
     </div>
   </div>
 
-</div><!-- /page -->
+</main><!-- /page -->
 
 <script>
 // ── Constants ────────────────────────────────────────────────────

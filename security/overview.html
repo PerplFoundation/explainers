@@ -4,28 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
-<title>Withdrawal Rate Limiter — Perpl Security</title>
+<link rel="stylesheet" href="../styles.css">
+<script src="../lightbox.js" defer></script>
+<title>Withdrawal Rate Limiter — Perpl</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #0a0a0f; color: #9090a8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; }
-  .site-nav { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 8px 32px; background: rgba(10,10,15,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid #1e1e2e; }
-  .site-logo { display: flex; align-items: center; text-decoration: none; }
-  .site-logo img { height: 18px; display: block; }
-  .site-links { display: flex; gap: 6px; }
-  .site-links a { padding: 4px 12px; border-radius: 4px; border: 1px solid #2a2a3a; background: #12121a; color: #8888a0; font-size: 11px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .site-links a:hover { border-color: #444; color: #e0e0f0; }
-  .site-links a.active { border-color: #6F5CFF44; background: #6F5CFF12; color: #6F5CFF; }
-
-  .page { max-width: 760px; margin: 0 auto; padding: 48px 24px 80px; }
-  h1 { font-size: 28px; color: #e0e0f0; font-weight: 600; line-height: 1.3; margin-bottom: 12px; }
-  .subtitle { font-size: 14px; color: #606078; margin-bottom: 48px; }
-  h2 { font-size: 16px; color: #c9d1d9; font-weight: 600; margin-top: 48px; margin-bottom: 12px; }
-  p { margin-bottom: 16px; font-size: 15px; }
-  strong { color: #c9d1d9; font-weight: 500; }
-  code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 13px; background: #1a1a2a; border: 1px solid #2a2a3a; border-radius: 3px; padding: 1px 6px; color: #a0c0ff; }
-  a { color: #88f; text-decoration: none; }
-  a:hover { color: #bbf; }
-  hr { border: none; border-top: 1px solid #1e1e2e; margin: 48px 0; }
+  /* Page-specific styles only — chrome lives in /styles.css */
 
   .eq { margin: 20px 0; padding: 14px 20px; background: #0d0d1a; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; line-height: 2; }
   .eq .lbl { display: block; font-size: 11px; color: #606078; font-family: inherit; margin-top: 6px; font-style: italic; }
@@ -41,11 +24,6 @@
   .fig-title { font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
   .fig-title span { color: #58a6ff; font-weight: 600; }
   .note { font-size: 11px; color: #9090a8; margin-top: 10px; padding: 10px 14px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
-
-  .cta-row { display: flex; gap: 12px; margin: 32px 0; }
-  .cta { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500; text-decoration: none; transition: all 0.15s; }
-  .cta-primary { background: #1a1a0a; border: 1px solid #3a3a1a; color: #aa9; }
-  .cta-primary:hover { background: #2a2a1a; color: #ccb; }
 
   /* Figure 1: Allowance curve */
   .curve-svg { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 8px; display: block; width: 100%; }
@@ -77,8 +55,6 @@
   .drain-table td.dim { color: #606078; }
   .drain-table td.label { color: #9090a8; font-family: inherit; }
 
-.footer { margin-top: 64px; padding-top: 24px; border-top: 1px solid #1e1e2e; font-size: 11px; color: #606078; text-align: center; }
-
   @media (max-width: 600px) {
     .state-flow { flex-direction: column; align-items: flex-start; }
   }
@@ -86,15 +62,18 @@
 </head>
 <body>
 
+<a class="skip" href="#main">Skip to content</a>
+
 <nav class="site-nav">
-  <a href="../index.html" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
   <div class="site-links">
-    <a class="active" href="overview.html">Overview</a>
+    <a href="../">← All Explainers</a>
+    <a class="active" href="overview.html" aria-current="page">Overview</a>
     <a href="index.html">Interactive</a>
   </div>
 </nav>
 
-<div class="page">
+<main class="prose-wide" id="main">
 
   <h1>Withdrawal Rate Limiter</h1>
   <p class="subtitle">How the protocol caps fund outflows to survive an exploit — burst window, linear refill, bypass addresses, and owner force reset.</p>
@@ -139,7 +118,8 @@
   <!-- Figure 1: Allowance Curve -->
   <div class="figure">
     <div class="fig-title">Figure 1: <span>Theoretical Withdrawal Allowance Over One Cycle</span></div>
-    <svg class="curve-svg" viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg">
+    <svg class="fig-svg curve-svg" viewBox="0 0 560 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="sec-curve-title">
+      <title id="sec-curve-title">Theoretical withdrawal allowance over one cycle: an upfront burst followed by linear refill until the cycle resets.</title>
       <!-- Grid lines -->
       <line x1="68" y1="18"  x2="548" y2="18"  stroke="#1e1e2e" stroke-width="1"/>
       <line x1="68" y1="55"  x2="548" y2="55"  stroke="#1e1e2e" stroke-width="1"/>
@@ -417,6 +397,6 @@
 
   <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
 
-</div>
+</main>
 </body>
 </html>
