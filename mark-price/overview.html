@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<script src="../lightbox.js" defer></script>
+<title>Mark Price Oracle Guard — Perpl</title>
+<style>
+  /* Page-specific styles only — chrome lives in /styles.css */
+
+  .eq { margin: 20px 0; padding: 14px 20px; background: #0d0d1a; border: 1px solid #2a2a3a; border-radius: 6px; font-family: 'SF Mono', monospace; font-size: 13px; color: #a0c0ff; line-height: 2; }
+  .eq .lbl { display: block; font-size: 11px; color: #606078; font-family: inherit; margin-top: 6px; font-style: italic; }
+
+  .callout { margin: 20px 0; padding: 14px 18px; background: #0d1420; border: 1px solid #1a2a3a; border-radius: 6px; font-size: 14px; color: #8aa; line-height: 1.7; }
+  .callout strong { color: #adf; }
+  .callout.red { background: #1a0d0d; border-color: #3a1a1a; color: #b87; }
+  .callout.red strong { color: #c99; }
+  .callout.amber { background: #1a160a; border-color: #3a2a0a; color: #b9a; }
+  .callout.amber strong { color: #cba; }
+  .callout.green { background: #0d1a0d; border-color: #1a3a1a; color: #7ab; }
+  .callout.green strong { color: #9cc; }
+
+  .figure { margin: 32px 0 40px; }
+  .fig-title { font-size: 10px; color: #606078; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  .fig-title span { color: #60a5fa; font-weight: 600; }
+  .note { font-size: 11px; color: #9090a8; margin-top: 10px; padding: 10px 14px; background: #12121a; border-left: 3px solid #2a2a3a; border-radius: 0 4px 4px 0; line-height: 1.6; }
+
+  .fig-svg { background: #0d0d18; border: 1px solid #1e1e2e; border-radius: 8px; display: block; width: 100%; }
+
+  /* Roles table */
+  .roles-table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+  .roles-table th { text-align: left; padding: 9px 12px; border-bottom: 1px solid #1e1e2e; color: #606078; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; background: #0a0a0f; }
+  .roles-table td { padding: 10px 12px; border-bottom: 1px solid #0d0d18; font-size: 12px; color: #9898b0; line-height: 1.55; vertical-align: top; }
+  .roles-table tr:hover td { background: #0d0d18; }
+  .roles-table td.role { color: #A2A4FF; font-weight: 600; white-space: nowrap; }
+  .roles-table td.role code { font-size: 10px; }
+
+  /* "Can't do" list */
+  .cant { list-style: none; margin: 12px 0; padding: 0; }
+  .cant li { display: flex; gap: 12px; padding: 12px 16px; background: #12121a; border: 1px solid #1e1e2e; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; color: #9898b0; }
+  .cant .x { color: #ef4444; font-weight: 700; flex-shrink: 0; font-size: 15px; line-height: 1.4; }
+  .cant strong { color: #e0e0f0; display: block; margin-bottom: 2px; }
+  .cant .need { color: #70708a; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a class="active" href="overview.html" aria-current="page">Overview</a>
+    <a href="index.html">Interactive</a>
+  </div>
+</nav>
+
+<main class="prose-wide" id="main">
+
+  <h1>Mark Price Oracle Guard</h1>
+  <p class="subtitle">How Perpl bounds every mark-price update to the live spot oracle — the tolerance band, oracle freshness, role separation, and why a stolen price key still can't move the market.</p>
+
+  <p>The mark price is the number the exchange settles everything against. Unrealized profit and loss, margin, the liquidation trigger, and funding all key off it. If the mark could be set to any value, an attacker who controlled it could manufacture liquidations, drain margin from healthy positions, or mint funding payments out of nothing. It is the single most safety-critical price in the system.</p>
+
+  <p>Perpl computes the mark <em>off-chain</em> — a pricing bot blends the order book, external venue feeds, and a Chainlink spot price into a single number — and then submits that number on-chain through an admin key. That key signs continuously and lives on a server, not in a vault, so it is exposed by design. The question the guard has to answer is blunt: <strong>what is the worst that happens if that key is stolen, or if someone simply submits a wrong price?</strong> The answer is that the damage is bounded to a few percent, for a few seconds — and the code that bounds it is one tolerance check.</p>
+
+  <hr>
+
+  <h2>How the mark price is made</h2>
+
+  <p>The mark is produced by an off-chain pricing bot running as two active-active replicas. Each tick it reads three independent inputs, blends them, applies a basis clamp and a funding clamp, and proposes the result on-chain.</p>
+
+  <!-- Figure 1: generation flow -->
+  <div class="figure">
+    <div class="fig-title">Figure 1: <span>How the mark price is produced</span></div>
+    <svg class="fig-svg" viewBox="0 0 640 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mp-gen-title">
+      <title id="mp-gen-title">Three inputs — the order book, external venue feeds, and a Chainlink spot price — feed a pricing bot, which submits the mark price on-chain through the price administrator's admin key.</title>
+
+      <!-- inputs -->
+      <g font-family="Inter" text-anchor="middle">
+        <rect x="24"  y="24" width="164" height="46" rx="7" fill="#12121a" stroke="#2a2a3a"/>
+        <text x="106" y="44" fill="#e0e0f0" font-size="12" font-weight="600">Order book</text>
+        <text x="106" y="60" fill="#8888a0" font-size="10">impact-mid / book price</text>
+
+        <rect x="24"  y="102" width="164" height="46" rx="7" fill="#12121a" stroke="#2a2a3a"/>
+        <text x="106" y="122" fill="#e0e0f0" font-size="12" font-weight="600">Exchange price feeds</text>
+        <text x="106" y="138" fill="#8888a0" font-size="10">external venue references</text>
+
+        <rect x="24"  y="180" width="164" height="46" rx="7" fill="#12121a" stroke="#2a2a3a"/>
+        <text x="106" y="200" fill="#e0e0f0" font-size="12" font-weight="600">Chainlink spot price</text>
+        <text x="106" y="216" fill="#8888a0" font-size="10">signed data-streams report</text>
+      </g>
+
+      <!-- arrows to bot -->
+      <g stroke="#3a3a5a" stroke-width="1.5" fill="none" marker-end="url(#mp-arr)">
+        <path d="M188 47 C 236 47, 236 110, 286 118"/>
+        <path d="M188 125 H 286"/>
+        <path d="M188 203 C 236 203, 236 140, 286 132"/>
+      </g>
+
+      <!-- pricing bot -->
+      <rect x="286" y="90" width="150" height="70" rx="9" fill="#0d1730" stroke="#2f6fed"/>
+      <text x="361" y="116" text-anchor="middle" fill="#8ab4ff" font-size="12.5" font-weight="700" font-family="Inter">Pricing bot</text>
+      <text x="361" y="134" text-anchor="middle" fill="#9db4e8" font-size="10" font-family="Inter">blend + basis / funding</text>
+      <text x="361" y="148" text-anchor="middle" fill="#9db4e8" font-size="10" font-family="Inter">clamps · 2 replicas</text>
+
+      <!-- arrow to hot key -->
+      <path d="M436 125 H 496" stroke="#3a3a5a" stroke-width="1.5" fill="none" marker-end="url(#mp-arr)"/>
+      <text x="466" y="116" text-anchor="middle" fill="#8888a0" font-size="9.5" font-family="Inter">proposes</text>
+
+      <!-- hot key -->
+      <rect x="496" y="96" width="120" height="58" rx="9" fill="#1a160a" stroke="#eab308"/>
+      <text x="556" y="120" text-anchor="middle" fill="#eab308" font-size="12" font-weight="700" font-family="Inter">Price key</text>
+      <text x="556" y="137" text-anchor="middle" fill="#b8a888" font-size="9.5" font-family="Inter">admin key · signs + submits</text>
+
+      <!-- caption strip -->
+      <text x="320" y="243" text-anchor="middle" fill="#606078" font-size="9.5" font-family="Inter">Nothing above is trusted on-chain — the contract sees only the final proposed number, then checks it.</text>
+
+      <defs>
+        <marker id="mp-arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#3a3a5a"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="note">The off-chain pipeline is where the mark comes from, but none of it is enforced on-chain. The contract cannot see the order book the bot read or the feeds it blended — it sees one number arriving from the price key. Every safety property below is therefore a property of the on-chain check, not of the bot.</div>
+  </div>
+
+  <hr>
+
+  <h2>The on-chain guard</h2>
+
+  <p>Every proposed mark passes through one function — <code>_updateMarkPricePNS</code> — before it is written. The proposal only becomes the live mark if it clears an ordered series of gates. Any failure rejects the update and leaves the previous mark in place.</p>
+
+  <p>The gates, in order: the caller holds the <code>PriceAdministrator</code> role and the exchange is not halted; the perpetual is not mid-unwind; the on-chain <strong>oracle price is fresh</strong>; and the proposed mark is <strong>within tolerance of that oracle</strong>. Only after all pass does the contract call <code>setMark</code> and emit <code>MarkUpdated</code>.</p>
+
+  <!-- Figure 2: guard decision flow -->
+  <div class="figure">
+    <div class="fig-title">Figure 2: <span>What happens to a proposed mark price</span></div>
+    <svg class="fig-svg" viewBox="0 0 680 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mp-guard-title">
+      <title id="mp-guard-title">A proposed mark price is checked against oracle freshness and then against the tolerance band. Failing either rejects the update; passing both accepts it. The tolerance check uses the live signed oracle price as its reference.</title>
+
+      <defs>
+        <marker id="mp-ay" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#4a7a5a"/></marker>
+        <marker id="mp-ar" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#8a4444"/></marker>
+        <marker id="mp-ab" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#2f6fed"/></marker>
+        <marker id="mp-an" markerWidth="9" markerHeight="9" refX="6.5" refY="3" orient="auto"><path d="M0,0 L6.5,3 L0,6 Z" fill="#3a3a5a"/></marker>
+      </defs>
+
+      <!-- proposed mark -->
+      <rect x="24" y="44" width="120" height="50" rx="8" fill="#1a160a" stroke="#eab308"/>
+      <text x="84" y="65" text-anchor="middle" fill="#eab308" font-size="12" font-weight="700" font-family="Inter">Proposed mark</text>
+      <text x="84" y="81" text-anchor="middle" fill="#b8a888" font-size="10" font-family="Inter">from the price key</text>
+
+      <!-- proposed -> fresh -->
+      <path d="M144 69 H 194" stroke="#3a3a5a" stroke-width="1.6" fill="none" marker-end="url(#mp-an)"/>
+
+      <!-- gate 1: freshness -->
+      <polygon points="248,36 300,69 248,102 196,69" fill="#101018" stroke="#6a6a82"/>
+      <text x="248" y="66" text-anchor="middle" fill="#e0e0f0" font-size="11.5" font-weight="600" font-family="Inter">Oracle</text>
+      <text x="248" y="80" text-anchor="middle" fill="#e0e0f0" font-size="11.5" font-weight="600" font-family="Inter">fresh?</text>
+
+      <!-- fresh -> tol (yes) -->
+      <path d="M300 69 H 370" stroke="#4a7a5a" stroke-width="1.8" fill="none" marker-end="url(#mp-ay)"/>
+      <text x="335" y="61" text-anchor="middle" fill="#4ba36a" font-size="10" font-weight="600" font-family="Inter">yes</text>
+
+      <!-- gate 2: tolerance -->
+      <polygon points="432,32 492,69 432,106 372,69" fill="#1a160a" stroke="#eab308"/>
+      <text x="432" y="65" text-anchor="middle" fill="#eab308" font-size="11.5" font-weight="600" font-family="Inter">Within</text>
+      <text x="432" y="79" text-anchor="middle" fill="#eab308" font-size="11.5" font-weight="600" font-family="Inter">tolerance?</text>
+
+      <!-- tol -> accepted (yes) -->
+      <path d="M492 69 H 546" stroke="#4a7a5a" stroke-width="1.8" fill="none" marker-end="url(#mp-ay)"/>
+      <text x="519" y="61" text-anchor="middle" fill="#4ba36a" font-size="10" font-weight="600" font-family="Inter">yes</text>
+
+      <!-- accepted -->
+      <rect x="548" y="44" width="112" height="50" rx="8" fill="#0d1a0d" stroke="#22c55e"/>
+      <text x="604" y="65" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="700" font-family="Inter">Mark accepted</text>
+      <text x="604" y="81" text-anchor="middle" fill="#6fae82" font-size="9" font-family="Inter">setMark · MarkUpdated</text>
+
+      <!-- oracle reference feeding gate 2 (straight up) -->
+      <rect x="317" y="242" width="230" height="50" rx="8" fill="#0d1730" stroke="#2f6fed"/>
+      <text x="432" y="263" text-anchor="middle" fill="#8ab4ff" font-size="11.5" font-weight="700" font-family="Inter">Signed spot oracle price</text>
+      <text x="432" y="279" text-anchor="middle" fill="#9db4e8" font-size="9.5" font-family="Inter">Chainlink data-streams</text>
+      <path d="M432 242 V 108" stroke="#2f6fed" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#mp-ab)"/>
+      <text x="442" y="175" text-anchor="start" fill="#6f8fd0" font-size="9.5" font-family="Inter">the reference</text>
+
+      <!-- rejected -->
+      <rect x="96" y="242" width="210" height="50" rx="8" fill="#1a0d0d" stroke="#ef4444"/>
+      <text x="201" y="263" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700" font-family="Inter">Rejected</text>
+      <text x="201" y="279" text-anchor="middle" fill="#c98080" font-size="9" font-family="Inter">previous mark stays in place</text>
+
+      <!-- fresh -> rejected (no · stale) -->
+      <path d="M248 102 V 175 H 201 V 242" stroke="#8a4444" stroke-width="1.6" fill="none" stroke-dasharray="5,3" marker-end="url(#mp-ar)"/>
+      <text x="258" y="135" text-anchor="start" fill="#c07070" font-size="10" font-weight="600" font-family="Inter">no · stale</text>
+
+      <!-- tol -> rejected (no · too far) -->
+      <path d="M400 86 L 384 108 V 210 H 240 V 242" stroke="#8a4444" stroke-width="1.6" fill="none" marker-end="url(#mp-ar)"/>
+      <text x="378" y="152" text-anchor="end" fill="#c07070" font-size="10" font-weight="600" font-family="Inter">no · too far</text>
+    </svg>
+    <div class="note">The two gates that stop a bad price are freshness and tolerance. A stale oracle rejects the update — it does not wave it through (see "A stale oracle freezes the mark", below). A proposal too far from the oracle reverts with <code>MarkExceedsTol</code>. The reference for "too far" is the live signed oracle price, not the previous mark.</div>
+  </div>
+
+  <hr>
+
+  <h2>The tolerance band</h2>
+
+  <p>The tolerance gate is a single inequality. A proposed mark passes only if its distance from the oracle price, as a fraction of the oracle price, is under the configured tolerance:</p>
+
+  <div class="eq">
+    | mark − oracle |  ×  100,000  &lt;  priceTolPer100K  ×  oracle
+    <span class="lbl">Rearranged from |mark − oracle| / oracle &lt; priceTolPer100K / 100,000 — multiplication only, to avoid on-chain division.</span>
+  </div>
+
+  <p>The tolerance is stored per-market as <code>priceTolPer100K</code>, a figure out of 100,000. The default is <strong>5,000 — a 5% band</strong>. The contract caps it at <code>_MAX_PRICE_TOL = 20,000</code>, so the band can never exceed 20%, no matter who sets it.</p>
+
+  <div class="eq">
+    oracle = $100.00,  priceTolPer100K = 5,000  (5%)
+    <span class="lbl">Accepted range: $95.00 … $105.00. Propose $130.00 → |30| × 100,000 = 3,000,000 ≥ 5,000 × 100 = 500,000 → revert MarkExceedsTol.</span>
+  </div>
+
+  <p>The check measures absolute distance, so it is <strong>symmetric</strong>: a mark too far above the oracle and one too far below are rejected identically. A long profits when the mark is marked up and a short when it is marked down — the band closes both exits, so no position can force a favorable settlement past it.</p>
+
+  <!-- Figure 3: tolerance band -->
+  <div class="figure">
+    <div class="fig-title">Figure 3: <span>The accept band around the oracle price</span></div>
+    <svg class="fig-svg" viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="mp-band-title">
+      <title id="mp-band-title">A price axis centered on the oracle price. A green accept band spans plus or minus the tolerance around the oracle; anything outside is rejected. A proposal inside the band is accepted; one outside reverts.</title>
+
+      <!-- reject zones -->
+      <rect x="40"  y="58" width="150" height="40" fill="#ef444410"/>
+      <rect x="450" y="58" width="150" height="40" fill="#ef444410"/>
+      <!-- accept band -->
+      <rect x="190" y="58" width="260" height="40" fill="#22c55e14" stroke="#22c55e40"/>
+
+      <!-- axis -->
+      <line x1="40" y1="98" x2="600" y2="98" stroke="#2a2a3a" stroke-width="1.5"/>
+
+      <!-- oracle center -->
+      <line x1="320" y1="48" x2="320" y2="112" stroke="#60a5fa" stroke-width="2"/>
+      <circle cx="320" cy="98" r="4.5" fill="#60a5fa"/>
+      <text x="320" y="40" text-anchor="middle" fill="#8ab4ff" font-size="11" font-weight="700" font-family="Inter">oracle $100</text>
+
+      <!-- band edges -->
+      <line x1="190" y1="62" x2="190" y2="94" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <line x1="450" y1="62" x2="450" y2="94" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="190" y="126" text-anchor="middle" fill="#6fae82" font-size="10" font-family="SF Mono">$95</text>
+      <text x="450" y="126" text-anchor="middle" fill="#6fae82" font-size="10" font-family="SF Mono">$105</text>
+      <text x="320" y="126" text-anchor="middle" fill="#6fae82" font-size="10" font-family="Inter">−5% accept band +5%</text>
+
+      <!-- labels for zones -->
+      <text x="115" y="52" text-anchor="middle" fill="#c07070" font-size="9.5" font-family="Inter">rejected</text>
+      <text x="525" y="52" text-anchor="middle" fill="#c07070" font-size="9.5" font-family="Inter">rejected</text>
+
+      <!-- accepted proposal marker -->
+      <polygon points="360,90 366,102 354,102" fill="#22c55e"/>
+      <text x="360" y="150" text-anchor="middle" fill="#6fae82" font-size="9.5" font-family="Inter">$103 · accepted</text>
+
+      <!-- rejected proposal marker -->
+      <polygon points="560,90 566,102 554,102" fill="#ef4444"/>
+      <text x="560" y="150" text-anchor="middle" fill="#c07070" font-size="9.5" font-family="Inter">$130 · rejected</text>
+    </svg>
+    <div class="note">The band moves with the oracle. Because the reference is the <em>live</em> signed oracle price and not the previous mark, an attacker cannot walk the mark away one small step at a time — every step is re-measured against the real spot, so the mark is always pinned to within the band of the true price.</div>
+  </div>
+
+  <div class="cta-row">
+    <a class="cta cta-primary theme-blue" href="index.html">&#9654; Try the interactive guard</a>
+  </div>
+
+  <hr>
+
+  <h2>Separation of powers</h2>
+
+  <p>The price key is powerful but narrow. It can propose a mark and relay oracle reports — nothing else. The two things that would actually let someone move the market freely — widening the band and turning the oracle off — live behind different keys entirely.</p>
+
+  <table class="roles-table">
+    <thead>
+      <tr><th>Role</th><th>Can do</th><th>Key type</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="role">Price administrator</td>
+        <td>Submit the proposed mark; relay signed oracle reports on-chain.</td>
+        <td>Admin key</td>
+      </tr>
+      <tr>
+        <td class="role">Tolerance administrator</td>
+        <td>Set the band width <code>priceTolPer100K</code>, capped at 20%.</td>
+        <td>Separate admin key</td>
+      </tr>
+      <tr>
+        <td class="role">Owner</td>
+        <td>Disable the oracle (<code>setIgnOracle</code>), halt the exchange, unwind, and set tolerance.</td>
+        <td>Multisig</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>That separation is what turns a stolen price key from a catastrophe into a bounded, transient nuisance. With the price key alone, an attacker is stuck inside the band around a price they cannot forge:</p>
+
+  <ul class="cant">
+    <li><span class="x">✕</span><div><strong>Forge the oracle price.</strong>The oracle only updates from a signature-verified Chainlink data-streams report (<code>_updateOraclePrice</code> → <code>_verifyLinkReport</code>). The price key relays reports; it cannot choose the value inside one.</div></li>
+    <li><span class="x">✕</span><div><strong>Widen the tolerance band.</strong><span class="need">Needs the tolerance-administrator key — and even that is capped at 20%.</span></div></li>
+    <li><span class="x">✕</span><div><strong>Turn the oracle off, or halt trading.</strong><span class="need">Needs the owner multisig.</span></div></li>
+  </ul>
+
+  <div class="callout red">
+    <strong>Why this matters — Ostium, July 2026.</strong> An attacker compromised Ostium's oracle signer and, in one looped transaction, opened positions at market then printed a favorable close price — marked <em>up</em> to cash a long, or <em>down</em> to cash a short — booking fake profit the vault paid out. Around ten loops compounded roughly $18M before trading was paused. The failure was not a contract bug; it was a single key that <em>was</em> the price source. Perpl differs in exactly the place that mattered: the oracle price is an independently-signed Chainlink report the price key relays but cannot forge, and every mark is then bounded to that oracle by a <strong>symmetric</strong> tolerance gate — too far above or too far below is rejected the same way. <a href="https://www.coindesk.com/business/2026/07/15/ostium-suffers-usd18-million-exploit-as-oracle-attack-wave-continues-to-hit-defi" target="_blank" rel="noopener">CoinDesk</a>
+  </div>
+
+  <div class="callout">
+    <strong>The whole design in one line:</strong> the mark can only ever land within a few percent of a price that is signed by an independent oracle and that the price key cannot forge — and the two levers that could remove that constraint are held by different keys.
+  </div>
+
+  <hr>
+
+  <h2>A stale oracle freezes the mark</h2>
+
+  <p>The freshness gate has a property worth stating plainly, because the safe behavior is the counterintuitive one. The oracle price must be newer than <code>refPriceMaxAgeSec</code> for a mark update to be accepted. If the oracle stops updating and goes stale, the tolerance check has no trustworthy reference — so the contract <strong>rejects the mark update</strong>. It does not fall back to accepting whatever was proposed.</p>
+
+  <div class="callout amber">
+    <strong>Freezing is the safe failure.</strong> A stale oracle makes the mark <em>un-updatable</em>, not free. An attacker cannot unlock arbitrary mark control by starving the oracle feed — the worst they achieve is a frozen mark, which stops fresh liquidations rather than enabling fake ones. The mark can go at most <code>refPriceMaxAgeSec</code> without an update; the oracle at most twice that.
+  </div>
+
+  <p>This is the mechanism a trader sees as a rejected update or a settlement guard when an oracle feed lags: the protocol chooses to stop rather than to trust a price it can no longer verify is current.</p>
+
+  <hr>
+
+  <h2>What a bad price can still do</h2>
+
+  <p>The guard bounds the damage; it does not reduce it to zero. Inside the band, a compromised price key can still nudge the mark by up to the tolerance — up to 5% off the true spot at the default setting. That is real, but it is small, and it is transient: the very next honest update snaps the mark back to the oracle, because every update is re-checked against the live reference.</p>
+
+  <p>The tolerance width is the trade-off dial. A tighter band contains a compromise more strictly but rejects more legitimate updates during fast, real moves between oracle ticks; a wider band absorbs volatility but gives a bad key more room. The tolerance administrator can tighten it in calm conditions, and the owner multisig can respond to an incident by halting or disabling the affected market outright.</p>
+
+  <div class="callout red">
+    <strong>Key property:</strong> the guard cannot stop a wrong price from being proposed — it can only cap how wrong the accepted price is, and for how long. Its value is the ceiling it puts on damage: a few percent, until the next valid update, with no path for a single stolen key to widen that ceiling.
+  </div>
+
+  <div class="cta-row">
+    <a class="cta cta-primary theme-blue" href="index.html">&#9654; Try the interactive guard</a>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</main>
+</body>
+</html>
