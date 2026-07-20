@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<title>Mark Price Oracle Guard Simulator — Perpl</title>
+<style>
+  /* Page-specific styles only — chrome lives in /styles.css */
+
+  .hero { margin-bottom: 24px; }
+  .hero h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; color: var(--tx2); line-height: 1.7; max-width: 720px; }
+
+  /* ── Scenario bar ── */
+  .sc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sc-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; }
+  .sc-btn { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; user-select: none; }
+  .sc-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .sc-btn.on-good { border-color: var(--green); background: #22c55e08; color: var(--green); }
+  .sc-btn.on-bad  { border-color: var(--red);   background: #ef444408; color: var(--red); }
+  .sc-btn.on-amber{ border-color: var(--amber); background: #eab30808; color: var(--amber); }
+  .sc-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bd2); flex-shrink: 0; }
+  .sc-btn.on-good .sc-dot { background: var(--green); }
+  .sc-btn.on-bad  .sc-dot { background: var(--red); }
+  .sc-btn.on-amber .sc-dot { background: var(--amber); }
+
+  /* ── Insight callout ── */
+  .insight-box { padding: 11px 15px; border-radius: 6px; font-size: 12.5px; line-height: 1.7; margin-bottom: 18px; transition: all 0.25s; }
+  .insight-box.neutral { background: var(--bg2); border: 1px solid var(--bd); color: var(--tx3); }
+  .insight-box.good    { background: #22c55e0a; border: 1px solid #22c55e25; color: #86efac; }
+  .insight-box.bad     { background: #ef44440a; border: 1px solid #ef444425; color: #fca5a5; }
+  .insight-box.amber   { background: #eab3080a; border: 1px solid #eab30825; color: #fde68a; }
+  .insight-box strong { font-weight: 600; }
+
+  /* ── Controls panel ── */
+  .ctrl-panel { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .ctrl-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 20px; align-items: end; }
+  .ctrl { display: flex; flex-direction: column; gap: 7px; }
+  .ctrl-label { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: baseline; }
+  .ctrl-label b { color: var(--tx); font-family: 'SF Mono', monospace; font-size: 14px; font-weight: 700; letter-spacing: 0; }
+  .ctrl-label .role-tag { font-size: 9px; color: #A2A4FF; letter-spacing: 0.3px; text-transform: none; }
+  input[type="range"] { width: 100%; accent-color: var(--perpl); cursor: pointer; }
+
+  .fresh-toggle { display: flex; gap: 6px; }
+  .fresh-btn { flex: 1; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx3); font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .fresh-btn.sel-fresh { border-color: var(--green); background: #22c55e12; color: var(--green); }
+  .fresh-btn.sel-stale { border-color: var(--red); background: #ef444412; color: var(--red); }
+
+  .btn-submit { padding: 12px 22px; border-radius: 8px; border: 1px solid var(--perpl); background: var(--perpl); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-submit:hover { background: #5a4ae6; }
+
+  /* ── Main grid ── */
+  .main-grid { display: grid; grid-template-columns: 250px 1fr 270px; gap: 14px; margin-bottom: 16px; }
+  .card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px; }
+  .card-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 12px; }
+
+  /* Left: state readout */
+  .srow { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bd); font-size: 12px; }
+  .srow:last-of-type { border: none; }
+  .sk { color: var(--tx2); }
+  .sv { font-family: 'SF Mono', monospace; font-weight: 600; font-size: 13px; color: var(--tx); }
+  .sv.blue { color: #8ab4ff; }
+  .sv.green { color: #4ade80; }
+  .sv.red { color: #f87171; }
+  .gate-chips { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+  .chip { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 11.5px; background: var(--bg3); border: 1px solid var(--bd); color: var(--tx2); }
+  .chip .ci { width: 16px; text-align: center; font-weight: 700; }
+  .chip.pass { border-color: #22c55e35; color: #86efac; } .chip.pass .ci { color: var(--green); }
+  .chip.fail { border-color: #ef444435; color: #fca5a5; } .chip.fail .ci { color: var(--red); }
+
+  /* Center: band visualization */
+  .viz-card { display: flex; flex-direction: column; }
+  .verdict { padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; }
+  .verdict .vi { font-size: 16px; }
+  .verdict.accept { background: #22c55e12; border: 1px solid #22c55e40; color: #4ade80; }
+  .verdict.reject { background: #ef444412; border: 1px solid #ef444440; color: #f87171; }
+  .verdict .vsub { font-weight: 400; color: var(--tx3); font-size: 11px; font-family: 'SF Mono', monospace; margin-left: auto; }
+  .band-svg { width: 100%; display: block; }
+
+  /* Right: activity log */
+  .log-list { display: flex; flex-direction: column; gap: 5px; max-height: 320px; overflow-y: auto; }
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--bd2); border-radius: 2px; }
+  .log-entry { display: flex; gap: 8px; padding: 8px 10px; border-radius: 6px; background: var(--bg3); font-size: 11px; border-left: 3px solid transparent; animation: eIn 0.25s ease; }
+  .log-entry.accept { border-color: var(--green); }
+  .log-entry.reject { border-color: var(--red); }
+  .log-entry.tol    { border-color: var(--indigo); }
+  @keyframes eIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  .le-body { flex: 1; min-width: 0; }
+  .le-actor { font-weight: 600; }
+  .le-actor.accept { color: #4ade80; }
+  .le-actor.reject { color: #f87171; }
+  .le-actor.tol    { color: var(--indigo); }
+  .le-key { display: inline-block; font-size: 9px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; padding: 1px 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+  .le-key.price { background: #eab30818; color: #d9a521; border: 1px solid #eab30838; }
+  .le-key.tol   { background: #A2A4FF18; color: #A2A4FF; border: 1px solid #A2A4FF38; }
+  .le-detail { color: var(--tx3); margin-top: 2px; line-height: 1.45; font-family: 'SF Mono', monospace; font-size: 10.5px; }
+  .le-time { flex-shrink: 0; font-size: 10px; color: var(--tx3); }
+  .log-empty { font-size: 11px; color: var(--tx3); text-align: center; padding: 28px 0; }
+
+  /* Can't-do strip */
+  .cant-strip { background: var(--bg2); border: 1px solid #ef444425; border-radius: 10px; padding: 14px 18px; }
+  .cant-title { font-size: 11px; color: #f87171; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .cant-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cant-item { display: flex; gap: 9px; font-size: 12px; color: var(--tx2); line-height: 1.5; }
+  .cant-item .x { color: #ef4444; font-weight: 700; flex-shrink: 0; }
+  .cant-item strong { color: var(--tx); display: block; }
+  .cant-item span { color: var(--tx3); font-size: 11px; }
+  .cant-item.hl { background: #ef444414; border-radius: 8px; box-shadow: 0 0 0 1px #ef444445; margin: -6px; padding: 6px; transition: all 0.25s; }
+  .cant-item.hl strong { color: #f87171; }
+
+  @media (max-width: 900px) {
+    .ctrl-grid { grid-template-columns: 1fr 1fr; }
+    .main-grid { grid-template-columns: 1fr; }
+    .cant-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html" aria-current="page">Interactive</a>
+  </div>
+</nav>
+
+<main class="app" id="main">
+
+  <div class="hero">
+    <h1>Mark Price Oracle Guard</h1>
+    <p class="hero-sub">Propose a mark price and watch the on-chain guard decide. The oracle price is the reference; the tolerance band is how far the mark is allowed to stray from it. Play the honest bot, then play an attacker with a stolen price key — and see why the worst they can do is bounded.</p>
+  </div>
+
+  <div class="sc-row">
+    <span class="sc-label">Scenario</span>
+    <button class="sc-btn" id="sc-honest"  type="button"><span class="sc-dot"></span>Honest update</button>
+    <button class="sc-btn" id="sc-oslong"  type="button"><span class="sc-dot"></span>Ostium · long ↑</button>
+    <button class="sc-btn" id="sc-osshort" type="button"><span class="sc-dot"></span>Ostium · short ↓</button>
+    <button class="sc-btn" id="sc-stale"   type="button"><span class="sc-dot"></span>Oracle stalls</button>
+  </div>
+
+  <div class="insight-box neutral" id="insight">Drag the proposed mark and press <strong>Submit</strong>. The guard accepts the mark only if the oracle is fresh <em>and</em> the mark is within the tolerance band of the oracle price.</div>
+
+  <div class="ctrl-panel">
+    <div class="ctrl-grid">
+      <div class="ctrl">
+        <div class="ctrl-label"><span>Proposed mark price</span><b id="lbl-mark">$102.00</b></div>
+        <input type="range" id="in-mark" min="60" max="140" step="0.5" value="102" aria-label="Proposed mark price">
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-label"><span>Tolerance band</span><b id="lbl-tol">5%</b></div>
+        <input type="range" id="in-tol" min="1" max="20" step="1" value="5" aria-label="Tolerance band percent">
+        <div class="ctrl-label" style="margin-top:-2px"><span class="role-tag">set by tolerance-admin · cap 20%</span></div>
+      </div>
+      <div class="ctrl">
+        <div class="ctrl-label"><span>Oracle</span></div>
+        <div class="fresh-toggle" role="group" aria-label="Oracle freshness">
+          <button class="fresh-btn" id="fresh-on"  type="button">Fresh</button>
+          <button class="fresh-btn" id="fresh-off" type="button">Stale</button>
+        </div>
+      </div>
+      <div class="ctrl">
+        <button class="btn-submit" id="btn-submit" type="button">Submit mark &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-grid">
+
+    <!-- Left: state -->
+    <div class="card">
+      <div class="card-label">On-chain state</div>
+      <div class="srow"><span class="sk">Spot oracle price</span><span class="sv blue" id="st-oracle">$100.00</span></div>
+      <div class="srow"><span class="sk">Accept band</span><span class="sv" id="st-band">$95.00 – $105.00</span></div>
+      <div class="srow"><span class="sk">Proposed mark</span><span class="sv" id="st-prop">$102.00</span></div>
+      <div class="srow"><span class="sk">Deviation from oracle</span><span class="sv" id="st-dev">+2.00%</span></div>
+      <div class="srow"><span class="sk">Live mark (last accepted)</span><span class="sv green" id="st-mark">$100.00</span></div>
+
+      <div class="gate-chips">
+        <div class="chip" id="chip-fresh"><span class="ci">✓</span><span id="chip-fresh-t">Oracle fresh</span></div>
+        <div class="chip" id="chip-tol"><span class="ci">✓</span><span id="chip-tol-t">Within tolerance</span></div>
+      </div>
+    </div>
+
+    <!-- Center: band viz -->
+    <div class="card viz-card">
+      <div class="verdict accept" id="verdict"><span class="vi">✓</span><span id="verdict-t">Would be accepted</span><span class="vsub" id="verdict-sub">setMark</span></div>
+      <svg class="band-svg" id="band" viewBox="0 0 620 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Price axis showing the tolerance band around the oracle price and the proposed mark's position relative to it">
+        <!-- reject zones -->
+        <rect id="z-left"  x="40"  y="70" width="120" height="46" fill="#ef444410"/>
+        <rect id="z-right" x="460" y="70" width="120" height="46" fill="#ef444410"/>
+        <!-- accept band -->
+        <rect id="band-rect" x="160" y="70" width="300" height="46" fill="#22c55e14" stroke="#22c55e45"/>
+        <!-- axis -->
+        <line x1="40" y1="116" x2="600" y2="116" stroke="#2a2a3a" stroke-width="1.5"/>
+        <!-- ticks -->
+        <g id="ticks" font-family="SF Mono" font-size="9" fill="#606078" text-anchor="middle"></g>
+        <!-- band edge labels -->
+        <line id="edge-lo" x1="160" y1="74" x2="160" y2="112" stroke="#22c55e" stroke-width="1.4" stroke-dasharray="3,2"/>
+        <line id="edge-hi" x1="460" y1="74" x2="460" y2="112" stroke="#22c55e" stroke-width="1.4" stroke-dasharray="3,2"/>
+        <text id="edge-lo-t" x="160" y="138" text-anchor="middle" fill="#6fae82" font-size="10" font-family="SF Mono">$95</text>
+        <text id="edge-hi-t" x="460" y="138" text-anchor="middle" fill="#6fae82" font-size="10" font-family="SF Mono">$105</text>
+        <!-- zone labels -->
+        <text x="100" y="60" text-anchor="middle" fill="#c07070" font-size="9.5" font-family="Inter">reject · mark ↓</text>
+        <text x="520" y="60" text-anchor="middle" fill="#c07070" font-size="9.5" font-family="Inter">reject · mark ↑</text>
+        <!-- oracle center -->
+        <line id="oracle-line" x1="310" y1="64" x2="310" y2="120" stroke="#60a5fa" stroke-width="2"/>
+        <circle id="oracle-dot" cx="310" cy="116" r="4.5" fill="#60a5fa"/>
+        <text id="oracle-lbl" x="310" y="52" text-anchor="middle" fill="#8ab4ff" font-size="11" font-weight="700" font-family="Inter">oracle $100</text>
+        <!-- live mark marker (faint) -->
+        <line id="mark-line" x1="310" y1="112" x2="310" y2="164" stroke="#4ade80" stroke-width="1.2" stroke-dasharray="2,2" opacity="0.6"/>
+        <text id="mark-lbl" x="310" y="176" text-anchor="middle" fill="#4ade80" font-size="9" font-family="SF Mono" opacity="0.7">live $100</text>
+        <!-- proposed mark marker -->
+        <polygon id="prop-tri" points="360,104 367,118 353,118" fill="#eab308"/>
+        <line id="prop-line" x1="360" y1="118" x2="360" y2="150" stroke="#eab308" stroke-width="1.6"/>
+        <text id="prop-lbl" x="360" y="198" text-anchor="middle" fill="#eab308" font-size="10.5" font-weight="700" font-family="SF Mono">proposed $102</text>
+      </svg>
+    </div>
+
+    <!-- Right: log -->
+    <div class="card">
+      <div class="card-label">Submission log</div>
+      <div class="log-list" id="log" role="log" aria-live="polite" aria-atomic="false">
+        <div class="log-empty" id="log-empty">No submissions yet.<br>Press Submit to try a mark.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cant-strip">
+    <div class="cant-title">What a stolen price key still can't do</div>
+    <div class="cant-grid">
+      <div class="cant-item" id="cant-forge"><span class="x">✕</span><div><strong>Forge the oracle</strong><span>the reference is a signed Chainlink report — the key relays it, it can't pick the value</span></div></div>
+      <div class="cant-item"><span class="x">✕</span><div><strong>Widen the band</strong><span>needs the tolerance-admin key, and it's capped at 20%</span></div></div>
+      <div class="cant-item"><span class="x">✕</span><div><strong>Turn the oracle off, or halt</strong><span>needs the owner multisig</span></div></div>
+    </div>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // ── Model constants (mirror the SC guard) ──
+  const ORACLE = 100.00;            // fixed spot oracle reference ($)
+  const DENOM  = 100000;            // _DENOMINATOR_100K
+  // Axis: price 60..140 maps to x 40..600
+  const PX0 = 40, PX1 = 600, P0 = 60, P1 = 140;
+  const xOf = p => PX0 + (Math.max(P0, Math.min(P1, p)) - P0) / (P1 - P0) * (PX1 - PX0);
+
+  const S = { mark: 102.0, tol: 5, fresh: true, liveMark: ORACLE };
+
+  const $ = id => document.getElementById(id);
+  const money = v => "$" + v.toFixed(2);
+
+  // withinTolerance — exact integer form: |mark-oracle|*DENOM < tolPer100K*oracle
+  function withinTol(mark, tol) {
+    const oracleC = Math.round(ORACLE * 100);
+    const markC   = Math.round(mark * 100);
+    const tolPer100K = tol * 1000;                 // e.g. 5% -> 5000
+    const absDiffC = Math.abs(markC - oracleC);
+    return absDiffC * DENOM < tolPer100K * oracleC;
+  }
+
+  function evalGuard(st) {
+    if (!st.fresh) return { ok:false, reason:"stale", detail:"oracle age > refPriceMaxAgeSec" };
+    if (!withinTol(st.mark, st.tol)) return { ok:false, reason:"tol", detail:"revert MarkExceedsTol" };
+    return { ok:true, reason:"ok", detail:"setMark · emit MarkUpdated" };
+  }
+
+  // ── Static ticks ──
+  (function ticks(){
+    const g = $("ticks"); let s = "";
+    for (let p = 60; p <= 140; p += 10) {
+      s += '<text x="'+xOf(p).toFixed(1)+'" y="156">$'+p+'</text>';
+    }
+    g.innerHTML = s;
+  })();
+
+  function render() {
+    const lo = ORACLE * (1 - S.tol/100), hi = ORACLE * (1 + S.tol/100);
+    const g = evalGuard(S);
+    const dev = (S.mark - ORACLE) / ORACLE * 100;
+
+    // labels
+    $("lbl-mark").textContent = money(S.mark);
+    $("lbl-tol").textContent  = S.tol + "%";
+
+    // state card
+    $("st-oracle").textContent = money(ORACLE);
+    $("st-band").textContent   = money(lo) + " – " + money(hi);
+    $("st-prop").textContent   = money(S.mark);
+    const devEl = $("st-dev");
+    devEl.textContent = (dev>=0?"+":"") + dev.toFixed(2) + "%";
+    devEl.className = "sv " + (withinTol(S.mark,S.tol) ? "green" : "red");
+    $("st-mark").textContent   = money(S.liveMark);
+
+    // fresh buttons
+    $("fresh-on").className  = "fresh-btn" + (S.fresh ? " sel-fresh" : "");
+    $("fresh-off").className = "fresh-btn" + (!S.fresh ? " sel-stale" : "");
+
+    // gate chips
+    const freshChip = $("chip-fresh"), tolChip = $("chip-tol");
+    freshChip.className = "chip " + (S.fresh ? "pass":"fail");
+    freshChip.querySelector(".ci").textContent = S.fresh ? "✓":"✕";
+    $("chip-fresh-t").textContent = S.fresh ? "Oracle fresh" : "Oracle stale — mark frozen";
+    const wt = withinTol(S.mark, S.tol);
+    tolChip.className = "chip " + (wt ? "pass":"fail");
+    tolChip.querySelector(".ci").textContent = wt ? "✓":"✕";
+    $("chip-tol-t").textContent = wt ? "Within tolerance" : "Outside tolerance band";
+
+    // verdict
+    const v = $("verdict"), vt = $("verdict-t"), vs = $("verdict-sub");
+    if (g.ok) { v.className="verdict accept"; v.querySelector(".vi").textContent="✓"; vt.textContent="Would be accepted"; vs.textContent="setMark"; }
+    else { v.className="verdict reject"; v.querySelector(".vi").textContent="✕";
+           vt.textContent = g.reason==="stale" ? "Would be rejected — stale oracle" : "Would be rejected — too far";
+           vs.textContent = g.reason==="stale" ? "no MarkUpdated" : "MarkExceedsTol"; }
+
+    // band viz
+    const xlo = xOf(lo), xhi = xOf(hi), xor = xOf(ORACLE), xmk = xOf(S.mark), xlv = xOf(S.liveMark);
+    $("band-rect").setAttribute("x", xlo); $("band-rect").setAttribute("width", Math.max(0,xhi-xlo));
+    $("z-left").setAttribute("x", PX0); $("z-left").setAttribute("width", Math.max(0,xlo-PX0));
+    $("z-right").setAttribute("x", xhi); $("z-right").setAttribute("width", Math.max(0,PX1-xhi));
+    $("edge-lo").setAttribute("x1",xlo); $("edge-lo").setAttribute("x2",xlo);
+    $("edge-hi").setAttribute("x1",xhi); $("edge-hi").setAttribute("x2",xhi);
+    $("edge-lo-t").setAttribute("x",xlo); $("edge-lo-t").textContent = money(lo);
+    $("edge-hi-t").setAttribute("x",xhi); $("edge-hi-t").textContent = money(hi);
+    $("oracle-line").setAttribute("x1",xor); $("oracle-line").setAttribute("x2",xor);
+    $("oracle-dot").setAttribute("cx",xor); $("oracle-lbl").setAttribute("x",xor);
+    $("mark-line").setAttribute("x1",xlv); $("mark-line").setAttribute("x2",xlv);
+    $("mark-lbl").setAttribute("x",xlv); $("mark-lbl").textContent = "live " + money(S.liveMark);
+
+    const good = g.ok;
+    const col = S.fresh ? (wt ? "#22c55e" : "#ef4444") : "#ef4444";
+    $("prop-tri").setAttribute("points", (xmk)+",104 "+(xmk+7)+",118 "+(xmk-7)+",118");
+    $("prop-tri").setAttribute("fill", col);
+    $("prop-line").setAttribute("x1",xmk); $("prop-line").setAttribute("x2",xmk);
+    $("prop-line").setAttribute("stroke", col);
+    const anchor = xmk > 540 ? "end" : (xmk < 90 ? "start" : "middle");
+    $("prop-lbl").setAttribute("x", xmk > 540 ? 600 : (xmk < 90 ? 40 : xmk));
+    $("prop-lbl").setAttribute("text-anchor", anchor);
+    $("prop-lbl").setAttribute("fill", col);
+    $("prop-lbl").textContent = "proposed " + money(S.mark);
+  }
+
+  // ── Log ──
+  let n = 0, lastLoggedTol = 5;
+  function pushLog(node){ const empty=$("log-empty"); if(empty) empty.remove(); const log=$("log"); log.insertBefore(node, log.firstChild); }
+
+  function submit() {
+    const g = evalGuard(S);
+    if (g.ok) S.liveMark = S.mark;
+    const dev = ((S.mark-ORACLE)/ORACLE*100);
+    const head = g.ok ? "Accepted" : (g.reason==="stale" ? "Rejected · stale" : "Rejected · MarkExceedsTol");
+    const e = document.createElement("div");
+    e.className = "log-entry " + (g.ok ? "accept":"reject");
+    e.innerHTML =
+      '<div class="le-body"><span class="le-actor '+(g.ok?"accept":"reject")+'">'+head+'</span>' +
+      '<span class="le-key price">price-admin key</span>' +
+      '<div class="le-detail">mark '+money(S.mark)+' · dev '+(dev>=0?"+":"")+dev.toFixed(1)+'% · band '+S.tol+'% · '+g.detail+'</div></div>' +
+      '<span class="le-time">#'+(++n)+'</span>';
+    pushLog(e);
+    if (g.ok) setInsight("good", "<strong>Accepted.</strong> The mark landed inside the band, so <code>setMark</code> ran and <code>MarkUpdated</code> was emitted. The live mark is now "+money(S.mark)+".");
+    else if (g.reason==="stale") setInsight("amber", "<strong>Frozen, not freed.</strong> With a stale oracle the guard has no trustworthy reference, so it rejects the update. Starving the oracle can't unlock arbitrary mark control — the worst outcome is a stuck mark.");
+    else setInsight("bad", "<strong>Blocked.</strong> The proposal was "+Math.abs(dev).toFixed(1)+"% from the oracle, past the "+S.tol+"% band, so it reverted with <code>MarkExceedsTol</code>. Even a fully compromised price-admin key is trapped inside the band.");
+    render();
+  }
+
+  // Tolerance-band changes are a SEPARATE on-chain role — log them as such.
+  function logTol(t) {
+    if (t === lastLoggedTol) return;
+    lastLoggedTol = t;
+    const e = document.createElement("div");
+    e.className = "log-entry tol";
+    e.innerHTML =
+      '<div class="le-body"><span class="le-actor tol">Tolerance band → '+t+'%</span>' +
+      '<span class="le-key tol">tolerance-admin key</span>' +
+      '<div class="le-detail">setPriceTolPer100K · a different key from the price-admin key · cap 20%</div></div>' +
+      '<span class="le-time">#'+(++n)+'</span>';
+    pushLog(e);
+    setInsight("neutral", "<strong>Different key.</strong> Widening or tightening the band is a <em>separate</em> on-chain role — the tolerance-admin key. A stolen price-admin key can nudge a mark inside the band, but it can't touch the band itself. Loosening the guard is out of reach for the key that submits prices.");
+  }
+
+  function setInsight(kind, html) {
+    const el = $("insight");
+    el.className = "insight-box " + kind;
+    el.innerHTML = html;
+  }
+
+  // ── Scenarios ──
+  function forgeHighlight(on){ const el=$("cant-forge"); if(el) el.className = "cant-item" + (on?" hl":""); }
+
+  function scenario(name) {
+    ["sc-honest","sc-oslong","sc-osshort","sc-stale"].forEach(id => $(id).className = "sc-btn");
+    forgeHighlight(name==="oslong" || name==="osshort");
+    if (name==="honest") {
+      S.mark=102.0; S.tol=5; S.fresh=true;
+      $("sc-honest").className="sc-btn on-good";
+      $("in-mark").value=102; $("in-tol").value=5;
+      setInsight("good", "<strong>Honest bot.</strong> The pricing bot proposes a mark a hair off the oracle — well inside the 5% band. Press Submit: it's accepted, and the live mark tracks the oracle.");
+    } else if (name==="oslong") {
+      S.mark=140.0; S.tol=5; S.fresh=true;
+      $("sc-oslong").className="sc-btn on-bad";
+      $("in-mark").value=140; $("in-tol").value=5;
+      setInsight("bad", "<strong>Ostium replay — the long side ($18M, Jul 2026).</strong> Ostium's attacker compromised the oracle signer and, in one looped transaction, opened at market then printed a favorable close price — for a long, the price marked <em>up</em> — booking fake profit from the vault (~10 loops, margin $1K→$700K). On Perpl a stolen price-admin key can't forge that oracle, and a mark pushed up to $140 (+40%) is rejected anyway. Submit → <code>MarkExceedsTol</code>.");
+    } else if (name==="osshort") {
+      S.mark=60.0; S.tol=5; S.fresh=true;
+      $("sc-osshort").className="sc-btn on-bad";
+      $("in-mark").value=60; $("in-tol").value=5;
+      setInsight("bad", "<strong>Ostium replay — the short side.</strong> The very same attack pays a <em>short</em> by marking the price <em>down</em> instead. The tolerance band is symmetric, so a mark dropped to $60 (−40%) is rejected exactly like the up-push. Neither direction — and no forged oracle — gets through. Submit → <code>MarkExceedsTol</code>.");
+    } else {
+      S.mark=101.0; S.tol=5; S.fresh=false;
+      $("sc-stale").className="sc-btn on-amber";
+      $("in-mark").value=101; $("in-tol").value=5;
+      setInsight("amber", "<strong>Oracle stalls.</strong> The oracle feed lags and goes stale. Now even a perfectly reasonable $101 proposal is rejected — the guard freezes the mark rather than trusting a price it can't verify is current.");
+    }
+    lastLoggedTol = S.tol;
+    render();
+  }
+
+  // ── Wire up ──
+  $("in-mark").addEventListener("input", e => { S.mark = parseFloat(e.target.value); clearScenario(); render(); });
+  $("in-tol").addEventListener("input",  e => { S.tol  = parseInt(e.target.value,10); clearScenario(); render(); });
+  $("in-tol").addEventListener("change", e => logTol(parseInt(e.target.value,10)));
+  $("fresh-on").addEventListener("click",  () => { S.fresh=true;  clearScenario(); render(); });
+  $("fresh-off").addEventListener("click", () => { S.fresh=false; clearScenario(); render(); });
+  $("btn-submit").addEventListener("click", submit);
+  $("sc-honest").addEventListener("click",  () => scenario("honest"));
+  $("sc-oslong").addEventListener("click",  () => scenario("oslong"));
+  $("sc-osshort").addEventListener("click", () => scenario("osshort"));
+  $("sc-stale").addEventListener("click",   () => scenario("stale"));
+
+  function clearScenario(){ ["sc-honest","sc-oslong","sc-osshort","sc-stale"].forEach(id => $(id).className="sc-btn"); forgeHighlight(false); }
+
+  // Deep-link a scenario via #honest / #oslong / #osshort / #stale
+  const h = (location.hash || "").replace("#","");
+  if (h==="honest"||h==="oslong"||h==="osshort"||h==="stale") scenario(h); else render();
+})();
+</script>
+
+</body>
+</html>
