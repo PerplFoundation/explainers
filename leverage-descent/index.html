@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Interactive: push a Perpl market toward its open-interest cap and watch the leverage descent price out new size, in a normal scenario and under a JELLY-style attack.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<title>Leverage Descent Simulator — Perpl</title>
+<style>
+  /* Page-specific styles only — chrome lives in /styles.css. */
+
+  .sec-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+  .sec-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 8px; border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2); transition: all 0.15s; user-select: none; }
+  .sec-tab:hover:not(.active) { border-color: var(--bd); color: var(--tx); }
+  .sec-tab.active { background: #0a1a0a; border-color: var(--green); color: var(--green); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── Sandbox layout ─────────────────────────────── */
+  .sim-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+  @media (max-width: 900px) { .sim-layout { grid-template-columns: 1fr; } }
+
+  .viz-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 12px; padding: 20px; }
+  .viz-title { font-size: 12px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+  .curve-svg { width: 100%; height: auto; display: block; }
+
+  .gauge-wrap { margin-top: 20px; }
+  .gauge-lbl { display: flex; justify-content: space-between; font-size: 11px; color: var(--tx3); margin-bottom: 6px; }
+  .gauge { position: relative; height: 28px; background: var(--bg3); border: 1px solid var(--bd); border-radius: 6px; overflow: hidden; }
+  .gauge .g-cur { position: absolute; inset: 0 auto 0 0; background: var(--perpl); }
+  .gauge .g-fwd { position: absolute; inset: 0 auto 0 0; background: #6F5CFF44; }
+  .gauge .g-th { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.5px dashed var(--tx3); }
+  .gauge .g-th span { position: absolute; top: -16px; transform: translateX(-50%); font-size: 11px; color: var(--tx3); }
+
+  .readout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 22px; }
+  .ro { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 13px; }
+  .ro .k { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tx3); }
+  .ro .v { font-family: 'SF Mono', monospace; font-size: 22px; font-weight: 700; margin-top: 5px; }
+  .ro .s { font-size: 11px; color: var(--tx3); margin-top: 3px; }
+  .ro.hl .v { color: var(--green); }
+
+  /* control rail */
+  .controls { background: var(--bg2); border: 1px solid var(--bd); border-radius: 12px; padding: 18px; }
+  .controls h4 { font-size: 11px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; }
+  .ctl { margin-bottom: 18px; }
+  .ctl-lbl { display: flex; justify-content: space-between; font-size: 12px; color: var(--tx2); margin-bottom: 8px; }
+  .ctl-lbl .cur { color: var(--indigo); font-weight: 600; font-family: 'SF Mono', monospace; }
+  input[type=range] { width: 100%; accent-color: var(--perpl); cursor: pointer; }
+  .segs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg { font-size: 12px; padding: 6px 12px; border-radius: 7px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx2); cursor: pointer; transition: all 0.15s; }
+  .seg[aria-pressed=true] { border-color: var(--green); background: #22c55e14; color: var(--green); }
+  .presets { display: flex; flex-direction: column; gap: 7px; }
+  .preset { text-align: left; font-size: 12.5px; padding: 10px 12px; border-radius: 9px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx); cursor: pointer; line-height: 1.4; transition: all 0.15s; }
+  .preset:hover { border-color: var(--bd); }
+  .preset[aria-pressed=true] { border-color: var(--green); background: #22c55e0c; }
+  .preset b { display: block; font-size: 11px; letter-spacing: 0.04em; color: var(--indigo); text-transform: uppercase; margin-bottom: 3px; }
+
+  .verdict { margin-top: 16px; border-radius: 10px; padding: 13px 15px; font-size: 13px; line-height: 1.6; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx2); }
+  .verdict.ok   { border-color: #22c55e40; background: #22c55e0a; color: #8fd0a8; }
+  .verdict.warn { border-color: #eab30840; background: #eab3080a; color: #d8c78a; }
+  .verdict.stop { border-color: #ef444440; background: #ef44440a; color: #e6a3a0; }
+  .verdict strong { color: var(--tx); }
+
+  .disc { font-size: 12px; color: var(--tx3); margin-top: 14px; line-height: 1.6; }
+
+  /* ── JELLY panel ─────────────────────────────────── */
+  .jelly-intro { font-size: 13px; color: var(--tx2); line-height: 1.7; margin-bottom: 20px; max-width: 88ch; }
+  .jelly-intro strong { color: var(--tx); }
+  .stress-bar { background: var(--bg2); border: 1px solid var(--bd); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; }
+  .run-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .run-btn { padding: 8px 18px; font-size: 13px; font-weight: 600; border-radius: 7px; border: 1px solid var(--red); background: #ef44441a; color: var(--red-text); cursor: pointer; transition: all 0.15s; }
+  .run-btn:hover:not(:disabled) { background: #ef44442e; }
+  .run-btn:disabled { opacity: 0.4; cursor: default; }
+  .reset-btn { padding: 8px 14px; font-size: 12px; border-radius: 7px; border: 1px solid var(--bd2); background: var(--bg3); color: var(--tx2); cursor: pointer; }
+  .reset-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .price-tag { font-size: 12px; color: var(--tx3); font-family: 'SF Mono', monospace; margin-left: auto; }
+  .price-tag b { color: var(--tx); }
+  .price-tag.crashed b { color: var(--red-text); }
+  .jgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .jgrid { grid-template-columns: 1fr; } }
+  .jcard { border: 1px solid var(--bd); border-radius: 12px; padding: 20px; background: var(--bg2); }
+  .jcard.bad  { border-color: #ef444440; }
+  .jcard.good { border-color: #22c55e40; }
+  .jcard .tag { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+  .jcard.bad .tag  { color: var(--red-text); }
+  .jcard.good .tag { color: var(--green); }
+  .jcard h4 { font-size: 16px; margin: 4px 0 14px; color: var(--tx); }
+  .wf-row { margin-top: 12px; }
+  .wf-lb { display: flex; justify-content: space-between; font-size: 12px; color: var(--tx2); margin-bottom: 4px; }
+  .wf-lb .n { font-family: 'SF Mono', monospace; color: var(--tx); }
+  .wf-track { height: 15px; background: var(--bg3); border: 1px solid var(--bd); border-radius: 5px; overflow: hidden; position: relative; }
+  .wf-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 4px; transition: width 0.5s ease, background 0.4s; }
+  .wf-hint { font-size: 12px; color: var(--tx3); margin-top: 3px; line-height: 1.4; }
+  .vault-wrap { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--bd); }
+  .vault-lb { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: var(--tx2); }
+  .vault-lb .n { font-family: 'SF Mono', monospace; font-weight: 600; }
+  .vault { height: 22px; border-radius: 6px; border: 1px solid var(--bd); overflow: hidden; position: relative; background: var(--bg3); }
+  .vaultfill { position: absolute; inset: 0 auto 0 0; transition: width 0.5s ease, background 0.4s; }
+  .jverdict { margin-top: 14px; font-size: 12.5px; font-family: 'SF Mono', monospace; line-height: 1.55; }
+  .jcard.bad .jverdict  { color: var(--red-text); }
+  .jcard.good .jverdict { color: var(--green); }
+  .orders { border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; margin-top: 4px; }
+  .ord-head, .ord-row { display: grid; grid-template-columns: 1fr auto 82px; gap: 10px; align-items: center; padding: 6px 12px; }
+  .ord-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tx3); background: var(--bg3); border-bottom: 1px solid var(--bd); }
+  .ord-row { font-size: 12px; color: var(--tx2); border-bottom: 1px solid var(--bd); }
+  .ord-row:last-child { border-bottom: 0; }
+  .ord-row .mono { font-family: 'SF Mono', monospace; color: var(--tx); text-align: right; }
+  .ord-badge { font-family: 'SF Mono', monospace; font-size: 11px; font-weight: 600; text-align: center; padding: 2px 0; border-radius: 4px; color: var(--tx3); background: var(--bg3); }
+  .ord-badge.rejected { background: #ef44441e; color: var(--red-text); }
+  .ord-badge.filled { background: #22c55e1e; color: var(--green); }
+  .ord-cap { font-size: 12px; color: var(--tx3); margin-top: 8px; line-height: 1.5; }
+
+  /* ── Comparison panel ────────────────────────────── */
+  .cmp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .cmp-grid { grid-template-columns: 1fr 1fr; } }
+  .cmp-card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 12px; padding: 20px 18px; position: relative; }
+  .cmp-card.highlight { border-color: #22c55e44; }
+  .cmp-tag { position: absolute; top: 14px; right: 14px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 3px; text-transform: uppercase; }
+  .tag-good { background: #22c55e18; color: var(--green); }
+  .tag-cex  { background: #60a5fa18; color: var(--blue); }
+  .tag-dex  { background: #60a5fa18; color: var(--blue); }
+  .tag-app  { background: #a78bfa18; color: var(--purple); }
+  .cmp-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .cmp-type { font-size: 12px; color: var(--tx3); margin-bottom: 16px; }
+  .cmp-row { margin-bottom: 11px; }
+  .cmp-k { font-size: 11px; color: var(--tx3); margin-bottom: 2px; }
+  .cmp-v { font-size: 12.5px; }
+  .cmp-v.good { color: var(--green); } .cmp-v.warn { color: var(--amber); } .cmp-v.neutral { color: var(--tx2); }
+  .cmp-note { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 16px; font-size: 12.5px; color: var(--tx2); line-height: 1.8; margin-top: 20px; }
+  .cmp-note strong { color: var(--tx); }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html" aria-current="page">Interactive</a>
+  </div>
+</nav>
+
+<main class="app" id="main">
+  <h1>The Leverage Descent</h1>
+  <p class="sub">Push a market toward its open-interest cap and watch the maximum leverage on new size descend, so a position opened near the cap is over-collateralised enough to cover itself. Three views: the descent, a JELLY-style stress test, and how other venues handle the same risk.</p>
+
+  <div class="sec-tabs" role="tablist">
+    <button class="sec-tab active" id="tab-descent" onclick="setPanel('descent')">The descent</button>
+    <button class="sec-tab" id="tab-jelly" onclick="setPanel('jelly')">JELLY stress test</button>
+    <button class="sec-tab" id="tab-compare" onclick="setPanel('compare')">How venues compare</button>
+  </div>
+
+  <!-- ── PANEL 1: descent sandbox ─────────────────── -->
+  <div class="panel active" id="panel-descent">
+    <div class="sim-layout">
+      <div>
+        <div class="viz-card">
+          <div class="viz-title">Max leverage vs. forward-looking open interest</div>
+          <svg class="curve-svg" id="curve" viewBox="0 0 680 300" role="img" aria-label="Leverage-descent curve"></svg>
+          <div class="gauge-wrap">
+            <div class="gauge-lbl"><span>open interest</span><span id="gaugeCap">cap</span></div>
+            <div class="gauge" id="gauge" role="img" aria-label="Open interest gauge">
+              <div class="g-cur" id="gCur"></div><div class="g-fwd" id="gFwd"></div>
+              <div class="g-th" style="left:90%"><span>90</span></div>
+              <div class="g-th" style="left:95%"><span>95</span></div>
+              <div class="g-th" style="left:100%"><span>100</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="readout">
+          <div class="ro"><div class="k">Forward OI</div><div class="v" id="roFwd">35%</div><div class="s" id="roFwdSub">of cap</div></div>
+          <div class="ro hl"><div class="k">Max leverage</div><div class="v" id="roLev">10.0×</div><div class="s" id="roLevSub">static 10×</div></div>
+          <div class="ro"><div class="k">Collateral for order</div><div class="v" id="roCol">$0</div><div class="s" id="roColSub">the static minimum</div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="controls">
+          <h4>Market</h4>
+          <div class="segs" id="mktBtns">
+            <button class="seg" data-mkt="major">Major</button>
+            <button class="seg" data-mkt="alt" aria-pressed="true">Alt</button>
+            <button class="seg" data-mkt="tail">Long-tail</button>
+          </div>
+          <div class="ctl" style="margin-top:18px">
+            <div class="ctl-lbl">Current open interest <span class="cur"><span id="oiLbl">30</span>% of cap</span></div>
+            <input type="range" id="oi" min="0" max="100" step="1" value="30" aria-label="Current open interest as percent of cap">
+          </div>
+          <div class="ctl">
+            <div class="ctl-lbl">Your order size <span class="cur"><span id="ordLbl">5</span>% of cap</span></div>
+            <input type="range" id="ord" min="0" max="20" step="0.5" value="5" aria-label="Order size as percent of cap">
+          </div>
+          <h4 style="margin-top:6px">Guided scenarios</h4>
+          <div class="presets" id="presets">
+            <button class="preset" data-p="normal"><b>Normal</b>A third full, open at full leverage. The descent is dormant.</button>
+            <button class="preset" data-p="approach"><b>Approaching the cap</b>OI in the 90-95% band. Leverage descends; the same order costs more collateral.</button>
+            <button class="preset" data-p="atcap"><b>At the cap</b>Forward OI at 100%. Opening is pinned to 0.01×, about 100× collateral. Closing stays free.</button>
+          </div>
+        </div>
+        <div class="verdict ok" id="verdict"></div>
+      </div>
+    </div>
+    <p class="disc">Illustrative numbers. The mechanism, the 90 / 95 / 100% thresholds and the 0.01× floor mirror the on-chain contract; the market caps shown are round example values, not any live market's real limit.</p>
+  </div>
+
+  <!-- ── PANEL 2: JELLY ───────────────────────────── -->
+  <div class="panel" id="panel-jelly">
+    <p class="jelly-intro">In March 2025 a trader opened an oversized $JELLY short on another venue, then sent the price. The trigger for the blow-up was mundane: once the market's OI cap was hit, orders were <strong>rejected, including the vault's own <em>close</em> orders</strong>, so it couldn't de-risk, and the loss cascaded into the backstop. <strong>Both sides below hold the same oversized short and try to close as the price craters.</strong> A hard OI cap rejects the closes and traps the vault; Perpl's descent never gates closing, so it exits at will, and even a position held to liquidation is over-collateralised. Set the crash, then run the attack.</p>
+
+    <div class="stress-bar">
+      <div class="ctl-lbl">Price crash on liquidation <span class="cur"><span id="jLbl">50</span>%</span></div>
+      <input type="range" id="jelly" min="10" max="80" step="5" value="50" aria-label="Price crash percentage on liquidation">
+      <div class="run-row">
+        <button id="runBtn" class="run-btn">▶ Run the attack</button>
+        <button id="resetBtn" class="reset-btn">↺ Reset</button>
+        <span class="price-tag" id="priceTag">price <b id="priceVal">$1.00</b></span>
+      </div>
+    </div>
+
+    <div class="jgrid">
+      <div class="jcard bad" id="cardW" role="img" aria-label="Without a cap and descent: the vault's close orders are rejected when the OI cap is hit, so it is trapped and the forced-liquidation loss lands on the backstop, which goes insolvent.">
+        <div class="tag">Without · hard OI cap</div>
+        <h4>Trapped, then liquidated</h4>
+        <div class="orders">
+          <div class="ord-head"><span>Close Short</span><span>Size</span><span>Status</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">466,730</span><span class="ord-badge" id="jwS1">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">452,780</span><span class="ord-badge" id="jwS2">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">447,750</span><span class="ord-badge" id="jwS3">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">184,610</span><span class="ord-badge" id="jwS4">pending</span></div>
+        </div>
+        <div class="ord-cap" id="jwOrdCap">The vault tries to close its short before the crash.</div>
+        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>loss on forced liquidation</span><span class="n" id="jwLoss">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jwLossBar" style="background:var(--red)"></div></div></div>
+        <div class="wf-row"><div class="wf-lb"><span>attacker's own collateral</span><span class="n" id="jwCol">$0.9M</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jwColBar" style="background:var(--tx3)"></div></div>
+          <div class="wf-hint">just 5% at 20×, nowhere near the loss</div></div>
+        <div class="vault-wrap">
+          <div class="vault-lb"><span>backstop vault pays</span><span class="n" id="jwPay" style="color:var(--red-text)">—</span></div>
+          <div class="vault"><div class="vaultfill" id="jwVault" style="width:100%;background:#22c55e"></div></div>
+        </div>
+        <div class="jverdict" id="jwVerdict">The vault tries to close its short. Run the attack.</div>
+      </div>
+
+      <div class="jcard good" id="cardG" role="img" aria-label="With Perpl's descent: the vault's close orders always fill, so it exits at will; and even a position held to liquidation is over-collateralised, so the vault is untouched.">
+        <div class="tag">With Perpl's descent</div>
+        <h4>Closes freely, no trap</h4>
+        <div class="orders">
+          <div class="ord-head"><span>Close Short</span><span>Size</span><span>Status</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">466,730</span><span class="ord-badge" id="jgS1">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">452,780</span><span class="ord-badge" id="jgS2">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">447,750</span><span class="ord-badge" id="jgS3">pending</span></div>
+          <div class="ord-row"><span>JELLY</span><span class="mono">184,610</span><span class="ord-badge" id="jgS4">pending</span></div>
+        </div>
+        <div class="ord-cap" id="jgOrdCap">The vault tries to close its short before the crash.</div>
+        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>loss if it were forced to liquidate</span><span class="n" id="jgLoss">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jgLossBar" style="background:var(--red)"></div></div></div>
+        <div class="wf-row"><div class="wf-lb"><span>collateral the descent forced</span><span class="n" id="jgCol">$18.0M</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jgColBar" style="background:var(--green)"></div></div>
+          <div class="wf-hint">≈ the whole position, covers the loss even if it couldn't exit</div></div>
+        <div class="vault-wrap">
+          <div class="vault-lb"><span>backstop vault pays</span><span class="n" id="jgPay" style="color:var(--green)">—</span></div>
+          <div class="vault"><div class="vaultfill" id="jgVault" style="width:100%;background:#22c55e"></div></div>
+        </div>
+        <div class="jverdict" id="jgVerdict">The vault tries to close its short. Run the attack.</div>
+      </div>
+    </div>
+    <p class="disc">Illustrative reference market. The JELLY figures are from public post-mortems and stand in for the class of risk the mechanism addresses.</p>
+  </div>
+
+  <!-- ── PANEL 3: comparison ──────────────────────── -->
+  <div class="panel" id="panel-compare">
+    <div class="cmp-grid">
+      <div class="cmp-card">
+        <div class="cmp-tag tag-cex">CEX</div>
+        <div class="cmp-name" style="color:var(--blue)">Binance / Bybit</div>
+        <div class="cmp-type">Centralised, off-chain</div>
+        <div class="cmp-row"><div class="cmp-k">How size is limited</div><div class="cmp-v neutral">Per-user leverage tiers; leverage drops as position size grows</div></div>
+        <div class="cmp-row"><div class="cmp-k">Keyed on</div><div class="cmp-v neutral">The account (KYC identity)</div></div>
+        <div class="cmp-row"><div class="cmp-k">Enforced</div><div class="cmp-v warn">Off-chain, trust the operator</div></div>
+      </div>
+      <div class="cmp-card">
+        <div class="cmp-tag tag-app">APPCHAIN</div>
+        <div class="cmp-name" style="color:var(--purple)">Hyperliquid</div>
+        <div class="cmp-type">Dedicated app-chain</div>
+        <div class="cmp-row"><div class="cmp-k">How size is limited</div><div class="cmp-v neutral">Size-based margin tiers + dynamic, market-cap-scaled OI caps (post-JELLY)</div></div>
+        <div class="cmp-row"><div class="cmp-k">Keyed on</div><div class="cmp-v neutral">Position size</div></div>
+        <div class="cmp-row"><div class="cmp-k">Enforced</div><div class="cmp-v warn">On its own chain, not composable EVM</div></div>
+      </div>
+      <div class="cmp-card">
+        <div class="cmp-tag tag-dex">DEX</div>
+        <div class="cmp-name" style="color:var(--blue)">dYdX</div>
+        <div class="cmp-type">Order-book DEX</div>
+        <div class="cmp-row"><div class="cmp-k">How size is limited</div><div class="cmp-v neutral">Open-interest-scaled initial margin; margin rises with market OI</div></div>
+        <div class="cmp-row"><div class="cmp-k">Keyed on</div><div class="cmp-v neutral">Market open interest</div></div>
+        <div class="cmp-row"><div class="cmp-k">Enforced</div><div class="cmp-v warn">App-chain / off-chain matching</div></div>
+      </div>
+      <div class="cmp-card highlight">
+        <div class="cmp-tag tag-good">PERPL</div>
+        <div class="cmp-name" style="color:var(--green)">Perpl</div>
+        <div class="cmp-type">Fully on-chain, Monad EVM</div>
+        <div class="cmp-row"><div class="cmp-k">How size is limited</div><div class="cmp-v good">Leverage descends toward 0.01× as forward OI approaches the cap</div></div>
+        <div class="cmp-row"><div class="cmp-k">Keyed on</div><div class="cmp-v good">Market open interest; identity-blind, can't be split across wallets</div></div>
+        <div class="cmp-row"><div class="cmp-k">Enforced</div><div class="cmp-v good">In the smart contract, every order</div></div>
+      </div>
+    </div>
+    <div class="cmp-note">
+      <strong>Same idea, different venue.</strong> Size-based margin tiers (Hyperliquid) and open-interest-scaled initial margin (dYdX) are the established answers to the same problem: an oversized position is a solvency risk, so make it post more margin. Perpl's leverage descent is that idea expressed on a permissionless EVM, <strong>keyed on aggregate market OI rather than per-account limits</strong>, so it can't be gamed by splitting a position across wallets, and enforced in the contract on every order rather than by a trusted operator.
+    </div>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+</main>
+
+<script>
+// ── SC-accurate leverage descent (getCurrentIMF, in leverage terms) ──
+var T1 = 0.90, T2 = 0.95, UNITY = 1.0, FLOOR = 0.01;
+function maxLev(fpct, S){
+  if (fpct < T1) return S;
+  if (fpct < T2) return S + (fpct - T1) / (T2 - T1) * (UNITY - S);
+  if (fpct < 1)  return UNITY + (fpct - T2) / (1 - T2) * (FLOOR - UNITY);
+  return FLOOR;
+}
+var MARKETS = {
+  major: { name:'Major', lev:15, cap:18000000 },
+  alt:   { name:'Alt',   lev:10, cap:12000000 },
+  tail:  { name:'Long-tail', lev:5, cap:4000000 }
+};
+var PRESETS = {
+  normal:   { mkt:'alt',   oi:30, ord:5 },
+  approach: { mkt:'alt',   oi:89, ord:4 },
+  atcap:    { mkt:'major', oi:96, ord:4 }
+};
+var state = { mkt:'alt', oi:30, ord:5, preset:null, crash:50, crashed:false };
+
+// canon token hex (dark-only theme) for SVG/JS drawing
+var C = { perpl:'#6F5CFF', indigo:'#A2A4FF', tx:'#e0e0f0', tx2:'#9898b0', tx3:'#8888a0',
+          bd:'#1e1e2e', green:'#22c55e', amber:'#eab308', red:'#ef4444', bg2:'#12121a' };
+
+function usd(n){
+  var a = Math.abs(n);
+  if (a >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+  if (a >= 1e6) return '$' + (n/1e6).toFixed(a/1e6>=100?0:2) + 'M';
+  if (a >= 1e3) return '$' + (n/1e3).toFixed(0) + 'k';
+  return '$' + Math.round(n);
+}
+function levStr(l){ return (l >= 1 ? l.toFixed(1) : l.toFixed(2)) + '×'; }
+
+// ── curve drawing ──
+var G = { w:680, h:300, l:52, r:20, t:22, b:44 };
+G.pw = G.w - G.l - G.r; G.ph = G.h - G.t - G.b;
+function X(pct){ return G.l + (pct/100) * G.pw; }
+function Y(lev, S){ return G.t + (1 - lev/S) * G.ph; }
+
+function drawCurve(S, mPct, mLev){
+  var pts = [ [0,S],[90,S],[95,UNITY],[100,FLOOR] ].map(function(p){ return X(p[0]).toFixed(1)+','+Y(p[1],S).toFixed(1); }).join(' ');
+  var s = '';
+  s += '<rect x="'+X(90)+'" y="'+G.t+'" width="'+(X(100)-X(90))+'" height="'+G.ph+'" fill="'+C.perpl+'" opacity="0.07"/>';
+  s += '<line x1="'+G.l+'" y1="'+(G.t+G.ph)+'" x2="'+(G.l+G.pw)+'" y2="'+(G.t+G.ph)+'" stroke="'+C.bd+'"/>';
+  s += '<line x1="'+G.l+'" y1="'+G.t+'" x2="'+G.l+'" y2="'+(G.t+G.ph)+'" stroke="'+C.bd+'"/>';
+  [ [0,'0'],[1,'1×'],[S,S+'×'] ].forEach(function(t){
+    var y = Y(t[0],S);
+    s += '<text x="'+(G.l-8)+'" y="'+(y+3.5)+'" text-anchor="end" font-size="10" fill="'+C.tx3+'">'+t[1]+'</text>';
+  });
+  s += '<line x1="'+G.l+'" y1="'+Y(1,S)+'" x2="'+(G.l+G.pw)+'" y2="'+Y(1,S)+'" stroke="'+C.tx3+'" stroke-dasharray="3 4" opacity="0.45"/>';
+  [90,95,100].forEach(function(p){
+    s += '<line x1="'+X(p)+'" y1="'+G.t+'" x2="'+X(p)+'" y2="'+(G.t+G.ph)+'" stroke="'+C.tx3+'" stroke-dasharray="3 3" opacity="0.55"/>';
+    s += '<text x="'+X(p)+'" y="'+(G.t+G.ph+16)+'" text-anchor="middle" font-size="10" fill="'+C.tx3+'">'+p+'%</text>';
+  });
+  s += '<text x="'+(G.l+G.pw)+'" y="'+(G.t+G.ph+32)+'" text-anchor="end" font-size="10" fill="'+C.tx3+'">forward-looking OI (% of cap)</text>';
+  s += '<text x="'+X(92.5)+'" y="'+(G.t+11)+'" text-anchor="middle" font-size="10" fill="'+C.indigo+'">→ 1×</text>';
+  s += '<text x="'+X(97.5)+'" y="'+(G.t+11)+'" text-anchor="middle" font-size="10" fill="'+C.amber+'">→ 0.01×</text>';
+  s += '<polyline points="'+pts+'" fill="none" stroke="'+C.perpl+'" stroke-width="2.5" stroke-linejoin="round"/>';
+  if (mPct != null){
+    var mx = X(Math.max(0,Math.min(100,mPct))), my = Y(mLev,S);
+    s += '<line x1="'+mx+'" y1="'+G.t+'" x2="'+mx+'" y2="'+(G.t+G.ph)+'" stroke="'+C.tx2+'" stroke-width="1" opacity="0.4"/>';
+    s += '<circle cx="'+mx+'" cy="'+my+'" r="6" fill="'+C.green+'" stroke="'+C.bg2+'" stroke-width="2"/>';
+    s += '<text x="'+mx+'" y="'+(my-11)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+C.tx+'">'+levStr(mLev)+'</text>';
+  }
+  document.getElementById('curve').innerHTML = s;
+}
+
+// ── sandbox render ──
+function render(){
+  var m = MARKETS[state.mkt], S = m.lev, cap = m.cap;
+  var curOI = state.oi/100 * cap, ordN = state.ord/100 * cap;
+  var fwd = curOI + ordN, fpct = fwd/cap;
+  var eff = maxLev(fpct, S);
+  var col = ordN>0 ? ordN/eff : 0;
+  var ratio = eff>0 ? S/eff : 0;
+
+  document.getElementById('oiLbl').textContent = state.oi;
+  document.getElementById('ordLbl').textContent = state.ord;
+  document.getElementById('gaugeCap').textContent = 'cap ' + usd(cap) + ' · ' + m.name + ' ' + S + '×';
+  document.getElementById('roFwd').textContent = (fpct*100).toFixed(1) + '%';
+  document.getElementById('roFwdSub').textContent = usd(fwd) + ' of ' + usd(cap);
+  document.getElementById('roLev').textContent = levStr(eff);
+  document.getElementById('roLevSub').textContent = 'static ' + S + '×';
+  document.getElementById('roCol').textContent = usd(col);
+  document.getElementById('roColSub').textContent = ordN>0 ? (ratio<1.05 ? 'the static minimum' : ratio.toFixed(1)+'× the minimum') : 'set an order size';
+  document.getElementById('gCur').style.width = Math.min(100,state.oi) + '%';
+  document.getElementById('gFwd').style.width = Math.min(100,fpct*100) + '%';
+
+  var v = document.getElementById('verdict'), cls, html;
+  if (fpct < T1){ cls='ok'; html='<strong>Business as usual.</strong> Forward OI is '+(fpct*100).toFixed(0)+'% of cap, below the 90% trigger, so you get the full '+S+'× and the descent is dormant. Markets sit here essentially all the time.'; }
+  else if (fpct < T2){ cls='warn'; html='<strong>The descent has engaged.</strong> Max leverage is '+levStr(eff)+' (down from '+S+'×), so your order needs <strong>'+ratio.toFixed(1)+'×</strong> the collateral it would below 90%. You can still open; it just costs more margin.'; }
+  else if (fpct < 1){ cls='warn'; html='<strong>Deep in the descent.</strong> Leverage is '+levStr(eff)+', opening this size takes <strong>'+usd(col)+'</strong> of collateral ('+ratio.toFixed(0)+'× the minimum). Closing is still free.'; }
+  else { cls='warn'; html='<strong>At / beyond the cap.</strong> New size is pinned to 0.01×, about 100× collateral, so growing OI is priced out. Existing positions are untouched and can still be closed freely.'; }
+  v.className = 'verdict ' + cls; v.innerHTML = html;
+
+  document.getElementById('curve').setAttribute('aria-label',
+    'Leverage descent for a '+S+'x market. Forward open interest '+(fpct*100).toFixed(0)+' percent of cap; maximum leverage '+levStr(eff)+'.');
+  drawCurve(S, fpct*100, eff);
+
+  Array.prototype.forEach.call(document.querySelectorAll('#presets .preset'), function(b){ b.setAttribute('aria-pressed', state.preset===b.dataset.p?'true':'false'); });
+  Array.prototype.forEach.call(document.querySelectorAll('#mktBtns .seg'), function(b){ b.setAttribute('aria-pressed', state.mkt===b.dataset.mkt?'true':'false'); });
+}
+
+// ── JELLY (dynamic) ──
+var JZ = { pos:18000000, book:500000, insurance:2500000, colW:0.05, colG:1.0 };
+function jset(id,t){ document.getElementById(id).textContent = t; }
+function jbar(id,pct){ document.getElementById(id).style.width = Math.max(0,Math.min(100,pct)) + '%'; }
+function renderJelly(){
+  var Z = JZ, crash = state.crash/100, on = state.crashed;
+  var loss = crash * Z.pos, colW = Z.pos*Z.colW, colG = Z.pos*Z.colG;
+  var drawW = Math.max(0, loss - colW), healthW = Z.insurance - drawW;
+  jset('jLbl', state.crash);
+
+  // close-order status — the trap (mimics the rejected close orders in the incident)
+  ['jwS1','jwS2','jwS3','jwS4'].forEach(function(id){ var e=document.getElementById(id); e.textContent = on?'Rejected':'pending'; e.className='ord-badge'+(on?' rejected':''); });
+  ['jgS1','jgS2','jgS3','jgS4'].forEach(function(id){ var e=document.getElementById(id); e.textContent = on?'Filled':'pending'; e.className='ord-badge'+(on?' filled':''); });
+  jset('jwOrdCap', on ? 'OI cap hit: every order rejected, closes included. The vault can’t de-risk.' : 'The vault tries to close its short before the crash.');
+  jset('jgOrdCap', on ? 'Closing is never gated by the descent; every close fills. The vault exits at will.' : 'The vault tries to close its short before the crash.');
+
+  // WITHOUT — loss vs 5% collateral, vault eats the gap
+  jset('jwCol', usd(colW)); jbar('jwColBar', Z.colW*100);
+  jset('jwLoss', on ? '−'+usd(loss) : '—'); jbar('jwLossBar', on ? crash*100 : 0);
+  var wv = document.getElementById('jwVault');
+  if (on){
+    if (healthW <= 0){ wv.style.width='100%'; wv.style.background=C.red;
+      jset('jwPay', usd(Z.insurance));
+      jset('jwVerdict', 'Closes rejected, trapped. The '+usd(loss)+' forced-liquidation loss wipes the '+usd(colW)+' of posted collateral, drains the '+usd(Z.insurance)+' vault in full, and still leaves '+usd(-healthW)+' of bad debt.'); }
+    else { wv.style.width=(healthW/Z.insurance*100)+'%'; wv.style.background=C.amber;
+      jset('jwPay', usd(drawW));
+      jset('jwVerdict', 'Closes rejected, trapped. The vault drains by '+usd(drawW)+' to cover the loss.'); }
+  } else {
+    jset('jwPay','—'); wv.style.width='100%'; wv.style.background=C.green;
+    jset('jwVerdict', 'The vault tries to close its short. Run the attack.');
+  }
+
+  // WITH — closes fill; even if held, the descent-forced collateral covers the loss
+  jset('jgCol', usd(colG)); jbar('jgColBar', 100);
+  jset('jgLoss', on ? '−'+usd(loss) : '—'); jbar('jgLossBar', on ? crash*100 : 0);
+  var gv = document.getElementById('jgVault'); gv.style.width='100%'; gv.style.background=C.green;
+  if (on){
+    jset('jgPay', '$0');
+    jset('jgVerdict', 'Every close fills; the vault simply exits. Even if it were held, the '+usd(colG)+' the descent forced covers the '+usd(loss)+' loss. Vault pays $0.');
+  } else {
+    jset('jgPay', '—');
+    jset('jgVerdict', 'The vault tries to close its short. Run the attack.');
+  }
+}
+function runAttack(){
+  if (state.crashed) return;
+  var pv = document.getElementById('priceVal'), tag = document.getElementById('priceTag'), btn = document.getElementById('runBtn');
+  var lo = 1 - state.crash/100, reduce = false;
+  try { reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+  if (reduce){ pv.textContent='$'+lo.toFixed(2); tag.classList.add('crashed'); state.crashed=true; renderJelly(); return; }
+  btn.disabled = true;
+  var start = null, dur = 850;
+  function step(ts){
+    if (start === null) start = ts;
+    var t = Math.min(1, (ts - start)/dur), p = 1 - (1 - lo)*t;
+    pv.textContent = '$' + p.toFixed(2);
+    if (t < 1){ requestAnimationFrame(step); }
+    else { tag.classList.add('crashed'); state.crashed = true; renderJelly(); btn.disabled = false; }
+  }
+  requestAnimationFrame(step);
+}
+function resetAttack(){
+  state.crashed = false;
+  document.getElementById('priceVal').textContent = '$1.00';
+  document.getElementById('priceTag').classList.remove('crashed');
+  renderJelly();
+}
+
+// ── tabs ──
+function setPanel(id){
+  ['descent','jelly','compare'].forEach(function(p){
+    document.getElementById('panel-'+p).classList.toggle('active', p===id);
+    document.getElementById('tab-'+p).classList.toggle('active', p===id);
+  });
+}
+
+// ── wire up ──
+function setPreset(p){
+  var c = PRESETS[p]; if(!c) return;
+  state.mkt=c.mkt; state.oi=c.oi; state.ord=c.ord; state.preset=p;
+  document.getElementById('oi').value=c.oi; document.getElementById('ord').value=c.ord;
+  render();
+}
+document.getElementById('oi').addEventListener('input', function(e){ state.oi=+e.target.value; state.preset=null; render(); });
+document.getElementById('ord').addEventListener('input', function(e){ state.ord=+e.target.value; state.preset=null; render(); });
+document.getElementById('jelly').addEventListener('input', function(e){ state.crash=+e.target.value; resetAttack(); });
+document.getElementById('runBtn').addEventListener('click', runAttack);
+document.getElementById('resetBtn').addEventListener('click', resetAttack);
+Array.prototype.forEach.call(document.querySelectorAll('#mktBtns .seg'), function(b){ b.addEventListener('click', function(){ state.mkt=b.dataset.mkt; state.preset=null; render(); }); });
+Array.prototype.forEach.call(document.querySelectorAll('#presets .preset'), function(b){ b.addEventListener('click', function(){ setPreset(b.dataset.p); }); });
+
+render();
+renderJelly();
+</script>
+</body>
+</html>
