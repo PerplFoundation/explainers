@@ -92,11 +92,6 @@
   .wf-track { height: 15px; background: var(--bg3); border: 1px solid var(--bd); border-radius: 5px; overflow: hidden; position: relative; }
   .wf-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 4px; transition: width 0.5s ease, background 0.4s; }
   .wf-hint { font-size: 12px; color: var(--tx3); margin-top: 3px; line-height: 1.4; }
-  .vault-wrap { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--bd); }
-  .vault-lb { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: var(--tx2); }
-  .vault-lb .n { font-family: 'SF Mono', monospace; font-weight: 600; }
-  .vault { height: 22px; border-radius: 6px; border: 1px solid var(--bd); overflow: hidden; position: relative; background: var(--bg3); }
-  .vaultfill { position: absolute; inset: 0 auto 0 0; transition: width 0.5s ease, background 0.4s; }
   .jverdict { margin-top: 14px; font-size: 12.5px; font-family: 'SF Mono', monospace; line-height: 1.55; }
   .jcard.bad .jverdict  { color: var(--red-text); }
   .jcard.good .jverdict { color: var(--green); }
@@ -222,7 +217,7 @@
     </div>
 
     <div class="jgrid">
-      <div class="jcard bad" id="cardW" role="img" aria-label="Without a cap and descent: the vault's close orders are rejected when the OI cap is hit, so it is trapped and the forced-liquidation loss lands on the backstop, which goes insolvent.">
+      <div class="jcard bad" id="cardW" role="img" aria-label="Without a cap and descent: the oversized short's close orders are rejected when the OI cap is hit, so it is trapped and force-liquidated. Its loss is funded by the trader's thin collateral, then the shared backstop vault in full, then bad debt the protocol and its liquidity providers absorb.">
         <div class="tag">Without · hard OI cap</div>
         <h4>Trapped, then liquidated</h4>
         <div class="orders">
@@ -232,20 +227,23 @@
           <div class="ord-row"><span>JELLY</span><span class="mono">447,750</span><span class="ord-badge" id="jwS3">pending</span></div>
           <div class="ord-row"><span>JELLY</span><span class="mono">184,610</span><span class="ord-badge" id="jwS4">pending</span></div>
         </div>
-        <div class="ord-cap" id="jwOrdCap">The vault tries to close its short before the crash.</div>
-        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>loss on forced liquidation</span><span class="n" id="jwLoss">—</span></div>
-          <div class="wf-track"><div class="wf-fill" id="jwLossBar" style="background:var(--red)"></div></div></div>
-        <div class="wf-row"><div class="wf-lb"><span>attacker's own collateral</span><span class="n" id="jwCol">$0.9M</span></div>
+        <div class="ord-cap" id="jwOrdCap">The oversized short tries to close before the crash.</div>
+        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>the short's loss on liquidation</span><span class="n" id="jwLoss">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jwLossBar" style="background:var(--red)"></div></div>
+          <div class="wf-hint">what the losing short owes the traders who won. Who funds it? ↓</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>1 · the trader's own collateral</span><span class="n" id="jwCol">$0.9M</span></div>
           <div class="wf-track"><div class="wf-fill" id="jwColBar" style="background:var(--tx3)"></div></div>
-          <div class="wf-hint">just 5% at 20×, nowhere near the loss</div></div>
-        <div class="vault-wrap">
-          <div class="vault-lb"><span>backstop vault pays</span><span class="n" id="jwPay" style="color:var(--red-text)">—</span></div>
-          <div class="vault"><div class="vaultfill" id="jwVault" style="width:100%;background:#22c55e"></div></div>
-        </div>
-        <div class="jverdict" id="jwVerdict">The vault tries to close its short. Run the attack.</div>
+          <div class="wf-hint">just 5% at 20×, the only loss the trader takes</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>2 · backstop vault pays</span><span class="n" id="jwPay" style="color:var(--red-text)">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jwVault" style="background:var(--amber)"></div></div>
+          <div class="wf-hint">the shared insurance fund, drained to cover the gap</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>3 · bad debt: protocol + LPs eat</span><span class="n" id="jwBad" style="color:var(--red-text)">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jwBadBar" style="background:var(--red)"></div></div>
+          <div class="wf-hint">unfunded loss left after the vault is empty, socialised onto everyone else</div></div>
+        <div class="jverdict" id="jwVerdict">The oversized short tries to close. Run the attack.</div>
       </div>
 
-      <div class="jcard good" id="cardG" role="img" aria-label="With Perpl's descent: the vault's close orders always fill, so it exits at will; and even a position held to liquidation is over-collateralised, so the vault is untouched.">
+      <div class="jcard good" id="cardG" role="img" aria-label="With Perpl's descent: the oversized short's close orders always fill, so it exits at will; and even a position held to liquidation is over-collateralised, so the trader covers their own loss in full and the backstop vault, the protocol, and other traders are untouched.">
         <div class="tag">With Perpl's descent</div>
         <h4>Closes freely, no trap</h4>
         <div class="orders">
@@ -255,17 +253,20 @@
           <div class="ord-row"><span>JELLY</span><span class="mono">447,750</span><span class="ord-badge" id="jgS3">pending</span></div>
           <div class="ord-row"><span>JELLY</span><span class="mono">184,610</span><span class="ord-badge" id="jgS4">pending</span></div>
         </div>
-        <div class="ord-cap" id="jgOrdCap">The vault tries to close its short before the crash.</div>
-        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>loss if it were forced to liquidate</span><span class="n" id="jgLoss">—</span></div>
-          <div class="wf-track"><div class="wf-fill" id="jgLossBar" style="background:var(--red)"></div></div></div>
-        <div class="wf-row"><div class="wf-lb"><span>collateral the descent forced</span><span class="n" id="jgCol">$18.0M</span></div>
+        <div class="ord-cap" id="jgOrdCap">The oversized short tries to close before the crash.</div>
+        <div class="wf-row" style="margin-top:16px"><div class="wf-lb"><span>the short's loss if forced to liquidate</span><span class="n" id="jgLoss">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jgLossBar" style="background:var(--red)"></div></div>
+          <div class="wf-hint">what the losing short owes the traders who won. Who funds it? ↓</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>1 · the trader's own collateral (descent-forced)</span><span class="n" id="jgCol">$18.0M</span></div>
           <div class="wf-track"><div class="wf-fill" id="jgColBar" style="background:var(--green)"></div></div>
-          <div class="wf-hint">≈ the whole position, covers the loss even if it couldn't exit</div></div>
-        <div class="vault-wrap">
-          <div class="vault-lb"><span>backstop vault pays</span><span class="n" id="jgPay" style="color:var(--green)">—</span></div>
-          <div class="vault"><div class="vaultfill" id="jgVault" style="width:100%;background:#22c55e"></div></div>
-        </div>
-        <div class="jverdict" id="jgVerdict">The vault tries to close its short. Run the attack.</div>
+          <div class="wf-hint">≈ the whole position, the trader covers their own loss in full</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>2 · backstop vault pays</span><span class="n" id="jgPay" style="color:var(--green)">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jgVault" style="background:var(--amber)"></div></div>
+          <div class="wf-hint">the shared insurance fund is never touched</div></div>
+        <div class="wf-row"><div class="wf-lb"><span>3 · bad debt: protocol + LPs eat</span><span class="n" id="jgBad" style="color:var(--green)">—</span></div>
+          <div class="wf-track"><div class="wf-fill" id="jgBadBar" style="background:var(--green)"></div></div>
+          <div class="wf-hint">none, no loss escapes the trader's own collateral</div></div>
+        <div class="jverdict" id="jgVerdict">The oversized short tries to close. Run the attack.</div>
       </div>
     </div>
     <p class="disc">Illustrative reference market. The JELLY figures are from public post-mortems and stand in for the class of risk the mechanism addresses.</p>
@@ -426,41 +427,43 @@ function jbar(id,pct){ document.getElementById(id).style.width = Math.max(0,Math
 function renderJelly(){
   var Z = JZ, crash = state.crash/100, on = state.crashed;
   var loss = crash * Z.pos, colW = Z.pos*Z.colW, colG = Z.pos*Z.colG;
-  var drawW = Math.max(0, loss - colW), healthW = Z.insurance - drawW;
+  var drawW = Math.max(0, loss - colW);
   jset('jLbl', state.crash);
 
   // close-order status — the trap (mimics the rejected close orders in the incident)
   ['jwS1','jwS2','jwS3','jwS4'].forEach(function(id){ var e=document.getElementById(id); e.textContent = on?'Rejected':'pending'; e.className='ord-badge'+(on?' rejected':''); });
   ['jgS1','jgS2','jgS3','jgS4'].forEach(function(id){ var e=document.getElementById(id); e.textContent = on?'Filled':'pending'; e.className='ord-badge'+(on?' filled':''); });
-  jset('jwOrdCap', on ? 'OI cap hit: every order rejected, closes included. The vault can’t de-risk.' : 'The vault tries to close its short before the crash.');
-  jset('jgOrdCap', on ? 'Closing is never gated by the descent; every close fills. The vault exits at will.' : 'The vault tries to close its short before the crash.');
+  jset('jwOrdCap', on ? 'OI cap hit: every order rejected, closes included. The short can’t de-risk.' : 'The oversized short tries to close before the crash.');
+  jset('jgOrdCap', on ? 'Closing is never gated by the descent; every close fills. The short exits at will.' : 'The oversized short tries to close before the crash.');
 
-  // WITHOUT — loss vs 5% collateral, vault eats the gap
+  // WITHOUT — the short's loss is funded by the trader's collateral, then the backstop vault, then bad debt
+  var vaultPayW = Math.min(drawW, Z.insurance), badDebtW = Math.max(0, drawW - Z.insurance);
   jset('jwCol', usd(colW)); jbar('jwColBar', Z.colW*100);
   jset('jwLoss', on ? '−'+usd(loss) : '—'); jbar('jwLossBar', on ? crash*100 : 0);
-  var wv = document.getElementById('jwVault');
   if (on){
-    if (healthW <= 0){ wv.style.width='100%'; wv.style.background=C.red;
-      jset('jwPay', usd(Z.insurance));
-      jset('jwVerdict', 'Closes rejected, trapped. The '+usd(loss)+' forced-liquidation loss wipes the '+usd(colW)+' of posted collateral, drains the '+usd(Z.insurance)+' vault in full, and still leaves '+usd(-healthW)+' of bad debt.'); }
-    else { wv.style.width=(healthW/Z.insurance*100)+'%'; wv.style.background=C.amber;
-      jset('jwPay', usd(drawW));
-      jset('jwVerdict', 'Closes rejected, trapped. The vault drains by '+usd(drawW)+' to cover the loss.'); }
+    jset('jwPay', usd(vaultPayW)); jbar('jwVault', vaultPayW/Z.pos*100);
+    jset('jwBad', badDebtW>0 ? usd(badDebtW) : '$0'); jbar('jwBadBar', badDebtW/Z.pos*100);
+    if (badDebtW > 0){
+      jset('jwVerdict', 'Closes rejected, trapped, force-liquidated. The short owes '+usd(loss)+'. The trader loses only their '+usd(colW)+'; the shared backstop vault is drained for '+usd(vaultPayW)+', and '+usd(badDebtW)+' is bad debt the protocol and its liquidity providers eat. The trader externalised '+usd(drawW)+' onto everyone else.');
+    } else {
+      jset('jwVerdict', 'Closes rejected, trapped, force-liquidated. The short owes '+usd(loss)+'. The trader loses their '+usd(colW)+' and the shared backstop vault covers the remaining '+usd(vaultPayW)+'. The trader risked only '+usd(colW)+' of their own.');
+    }
   } else {
-    jset('jwPay','—'); wv.style.width='100%'; wv.style.background=C.green;
-    jset('jwVerdict', 'The vault tries to close its short. Run the attack.');
+    jset('jwPay','—'); jbar('jwVault', 0); jset('jwBad','—'); jbar('jwBadBar', 0);
+    jset('jwVerdict', 'The oversized short tries to close. Run the attack.');
   }
 
-  // WITH — closes fill; even if held, the descent-forced collateral covers the loss
+  // WITH — closes fill; even if held, the descent-forced collateral covers the loss in full
   jset('jgCol', usd(colG)); jbar('jgColBar', 100);
   jset('jgLoss', on ? '−'+usd(loss) : '—'); jbar('jgLossBar', on ? crash*100 : 0);
-  var gv = document.getElementById('jgVault'); gv.style.width='100%'; gv.style.background=C.green;
   if (on){
-    jset('jgPay', '$0');
-    jset('jgVerdict', 'Every close fills; the vault simply exits. Even if it were held, the '+usd(colG)+' the descent forced covers the '+usd(loss)+' loss. Vault pays $0.');
+    jset('jgPay', '$0'); jbar('jgVault', 0);
+    jset('jgBad', '$0'); jbar('jgBadBar', 0);
+    jset('jgVerdict', 'Every close fills, so the short simply exits. Even if forced to liquidate, the '+usd(colG)+' the descent required covers the '+usd(loss)+' loss in full: the trader eats their own loss, the winning counterparties are paid from that collateral, and the backstop vault, the protocol, and other traders pay nothing.');
   } else {
-    jset('jgPay', '—');
-    jset('jgVerdict', 'The vault tries to close its short. Run the attack.');
+    jset('jgPay', '—'); jbar('jgVault', 0);
+    jset('jgBad', '—'); jbar('jgBadBar', 0);
+    jset('jgVerdict', 'The oversized short tries to close. Run the attack.');
   }
 }
 function runAttack(){
