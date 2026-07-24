@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="How Perpl bounds open interest and descends leverage as a market fills, so a position opened near the cap is over-collateralised enough to cover itself, and no position can become bad debt.">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<title>The Leverage Descent — Perpl</title>
+<style>
+  /* Page-specific styles only — chrome lives in /styles.css. */
+  main.prose-wide h2 { font-size: 19px; }
+  .callout { margin: 24px 0; padding: 16px 20px; background: #0d1a0d; border: 1px solid #1a3a1a; border-radius: 6px; font-size: 14px; color: #9ac0a8; line-height: 1.7; }
+  .callout strong { color: #b8e0c4; }
+  .callout.warn { background: #1a1608; border-color: #3a3110; color: #cbb980; }
+  .callout.warn strong { color: #e6d59a; }
+
+  .naive-grid { display: flex; flex-direction: column; gap: 12px; margin: 22px 0; }
+  .approach { display: grid; grid-template-columns: 210px 1fr; gap: 22px; align-items: start;
+    border: 1px solid var(--bd); border-radius: 10px; padding: 18px 22px; background: var(--bg2); }
+  .approach.bad { border-color: #ef444433; }
+  .approach.good { border-color: #22c55e40; }
+  .approach .head { border-left: 3px solid var(--bd2); padding-left: 14px; }
+  .approach.bad .head { border-left-color: var(--red); }
+  .approach.good .head { border-left-color: var(--green); }
+  .approach .atag { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 700; }
+  .approach.bad .atag { color: var(--red-text); }
+  .approach.good .atag { color: var(--green); }
+  .approach h3 { font-size: 15px; margin: 7px 0 0; color: var(--tx); line-height: 1.3; }
+  .approach p { font-size: 13.5px; color: var(--tx2); line-height: 1.65; margin: 0; }
+  .approach p strong { color: var(--tx); }
+  .approach em { color: var(--tx); font-style: italic; }
+  @media (max-width: 640px) { .approach { grid-template-columns: 1fr; gap: 10px; }
+    .approach .head { border-left: 0; padding-left: 0; } }
+
+  .figure { margin: 32px 0 40px; }
+  .fig-title { font-size: 13px; color: var(--tx3); margin-bottom: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .fig-title span { color: var(--indigo); }
+  .fig-svg { width: 100%; height: auto; background: #0d0d16; border: 1px solid var(--bd); border-radius: 8px; display: block; }
+  .note { font-size: 12px; color: var(--tx3); margin-top: 12px; padding: 10px 12px; background: var(--bg2); border-left: 3px solid var(--bd2); border-radius: 0 4px 4px 0; line-height: 1.6; }
+
+  .behaviours { list-style: none; margin: 20px 0; padding: 0; display: grid; gap: 10px; }
+  .behaviours li { background: var(--bg2); border: 1px solid var(--bd); border-radius: 8px; padding: 14px 16px; font-size: 14px; color: var(--tx2); line-height: 1.6; }
+  .behaviours li strong { color: var(--tx); display: block; margin-bottom: 2px; font-weight: 600; font-size: 13px; }
+
+  .lev-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .lev-table th, .lev-table td { text-align: right; padding: 9px 12px; border-bottom: 1px solid var(--bd); font-family: 'SF Mono', monospace; }
+  .lev-table th { color: var(--tx3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500; }
+  .lev-table th:first-child, .lev-table td:first-child { text-align: left; }
+  .lev-table td.floor { color: var(--amber); }
+  .lev-table tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a class="active" href="overview.html" aria-current="page">Overview</a>
+    <a href="index.html">Interactive</a>
+  </div>
+</nav>
+
+<main class="prose-wide" id="main">
+
+  <h1>The Leverage Descent</h1>
+  <p class="subtitle">How Perpl bounds open interest so a position opened near the cap is over-collateralised enough to cover itself, and no position can grow into bad debt.</p>
+
+  <p>Every perpetual exchange shares one failure mode: a position too large for the market to absorb, force-liquidated into a backstop that can't clear it. In March 2025 a trader opened an oversized short in a thin memecoin on another venue (roughly $4M, about 40% of the coin's entire market cap) at 20× leverage, then moved the price so the position liquidated into the protocol's market-maker vault. The book was far too thin to take it; the vault inherited a deeply underwater position and its unrealised loss peaked near $12-13M.</p>
+
+  <p>Perpl's answer is a single on-chain rule. Each market has an open-interest cap, and as the market's open interest approaches that cap, the maximum leverage allowed on new size <strong>descends</strong> toward zero. It never slams a door; it makes size opened near the cap require so much collateral that the position is over-collateralised enough to cover itself. It can't create bad debt, so it never needs the order book or the insurance fund.</p>
+
+  <hr>
+
+  <h2>Open interest, and why it has a cap</h2>
+
+  <p>Open interest (OI) is the total size of all open positions in a market. The cap keeps that total within a sane fraction of the underlying asset, sized against the coin's actual supply and what comparable venues carry, not against how deep the order book happens to be at any moment.</p>
+
+  <p>The important distinction: the cap and the descent bound <strong>solvency</strong>, not liquidity. A position opened near the cap is so heavily over-collateralised that a price move can't push it bankrupt; on liquidation it simply returns its own collateral. That's why it never needs the book to absorb it. This is the same idea as Hyperliquid's size-based margin tiers and dYdX's open-interest-scaled initial margin, expressed on a permissionless EVM.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary theme-green" href="index.html">&#9654; Open the interactive simulator</a>
+  </div>
+
+  <hr>
+
+  <h2>The descent, in one curve</h2>
+
+  <p>One contract function maps a market's <em>forward-looking</em> open interest (the OI the market would have if your order filled) to the maximum leverage you're allowed. Below 90% of the cap, nothing changes. From 90% to 95%, leverage falls linearly to 1×. From 95% to the cap, it falls to 0.01×. At or beyond the cap, it's pinned at 0.01×; you'd have to post about 100× the position's value.</p>
+
+  <div class="figure">
+    <div class="fig-title">Figure 1: <span>Max leverage vs. forward-looking open interest</span> (15× example)</div>
+    <svg class="fig-svg" viewBox="0 0 680 320" role="img" aria-labelledby="fig1-title">
+      <title id="fig1-title">Maximum leverage stays flat at 15× until open interest reaches 90% of the cap, then descends linearly to 1× at 95%, then to a 0.01× floor at 100% of the cap.</title>
+      <!-- descent zone -->
+      <rect x="356" y="24" width="304" height="250" fill="#6F5CFF" opacity="0.07"/>
+      <!-- axes -->
+      <line x1="52" y1="274" x2="660" y2="274" stroke="#2a2a3a"/>
+      <line x1="52" y1="24" x2="52" y2="274" stroke="#2a2a3a"/>
+      <!-- y ticks -->
+      <text x="44" y="27" text-anchor="end" font-size="11" fill="#8888a0">15×</text>
+      <text x="44" y="261" text-anchor="end" font-size="11" fill="#8888a0">1×</text>
+      <text x="44" y="277" text-anchor="end" font-size="11" fill="#8888a0">0</text>
+      <!-- unity dashed -->
+      <line x1="52" y1="257" x2="660" y2="257" stroke="#8888a0" stroke-dasharray="3 4" opacity="0.45"/>
+      <!-- thresholds -->
+      <line x1="356" y1="24" x2="356" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <line x1="508" y1="24" x2="508" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <line x1="660" y1="24" x2="660" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <text x="356" y="290" text-anchor="middle" font-size="11" fill="#8888a0">90%</text>
+      <text x="508" y="290" text-anchor="middle" font-size="11" fill="#8888a0">95%</text>
+      <text x="660" y="290" text-anchor="middle" font-size="11" fill="#8888a0">100%</text>
+      <text x="356" y="306" text-anchor="middle" font-size="10" fill="#8888a0">unity descent</text>
+      <text x="584" y="306" text-anchor="middle" font-size="10" fill="#8888a0">over-collateralise</text>
+      <text x="52" y="306" text-anchor="start" font-size="10" fill="#8888a0">forward-looking OI, 80% →</text>
+      <!-- curve: (80,15)=(52,24) (90,15)=(356,24) (95,1)=(508,257) (100,0.01)=(660,274) -->
+      <polyline points="52,24 356,24 508,257 660,274" fill="none" stroke="#6F5CFF" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- labels -->
+      <text x="200" y="18" text-anchor="middle" font-size="11" fill="#A2A4FF">full static leverage</text>
+      <text x="432" y="150" text-anchor="middle" font-size="10" fill="#A2A4FF">→ 1×</text>
+      <text x="590" y="220" text-anchor="middle" font-size="10" fill="#eab308">→ 0.01×</text>
+    </svg>
+    <div class="note">The curve is piecewise-linear in leverage. Required collateral is its inverse: it rises gently through the first band, reaches 1× the notional at 95%, then climbs toward ~100× the notional at the cap. Closing a position is never affected.</div>
+  </div>
+
+  <hr>
+
+  <h2>What the descent actually does</h2>
+
+  <ul class="behaviours">
+    <li><strong>It's forward-looking.</strong> The leverage cap is computed on the OI the market <em>would</em> have if your order filled; your own size counts. A large order near the cap prices itself out.</li>
+    <li><strong>It only touches opening and increasing.</strong> Closing or reducing a position is never penalised, at any OI. You are never trapped in a position because a market filled up.</li>
+    <li><strong>Your liquidation price doesn't move.</strong> The descent sets the leverage on <em>new</em> size. The maintenance margin on an existing position is fixed when you open it and does not change as the market fills.</li>
+    <li><strong>It's identity-blind: no sybil detection needed.</strong> It reads one number, the market's total open interest, never who is trading. Splitting a position across ten wallets doesn't help: the market's OI is unchanged, so the collateral demand is unchanged. Per-account limits, by contrast, have to detect and cluster sybil wallets just to hold.</li>
+    <li><strong>Near the cap, a position is self-insured.</strong> Because opening near the cap demands so much collateral, any position that exists up there is over-collateralised enough to return its own collateral on liquidation. No backstop draw, no bad debt.</li>
+  </ul>
+
+  <div class="callout">
+    <strong>The message to a trader is never "blocked."</strong> If a market is in the top 10% of its cap, opening or increasing simply costs more collateral for the same size, shown as a lower maximum leverage. Closing stays free, and existing positions are untouched.
+  </div>
+
+  <hr>
+
+  <h2>Effective maximum leverage as OI climbs</h2>
+
+  <p>The same piecewise rule applied to three static leverage settings. Below 90% the trader gets the market's full leverage; by 95% every market is at 1×; at the cap every market is at the 0.01× floor.</p>
+
+  <table class="lev-table">
+    <thead>
+      <tr><th>Market (static)</th><th>&lt; 90%</th><th>92%</th><th>95%</th><th>97%</th><th>100%</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Major (15×)</td><td>15×</td><td>9.4×</td><td>1×</td><td>0.6×</td><td class="floor">0.01×</td></tr>
+      <tr><td>Alt (10×)</td><td>10×</td><td>6.4×</td><td>1×</td><td>0.6×</td><td class="floor">0.01×</td></tr>
+      <tr><td>Long-tail (5×)</td><td>5×</td><td>3.4×</td><td>1×</td><td>0.6×</td><td class="floor">0.01×</td></tr>
+    </tbody>
+  </table>
+  <div class="note">Illustrative leverage settings. The thresholds (90 / 95 / 100%) and the 0.01× floor mirror the on-chain contract; the numbers per market are round examples, not any live market's real limit.</div>
+
+  <hr>
+
+  <h2>The naive ways to do this, and why they don't survive here</h2>
+
+  <p>There are two obvious ways to stop an oversized position. Both work off-chain; both break on a permissionless chain.</p>
+
+  <div class="naive-grid">
+    <div class="approach bad">
+      <div class="head"><div class="atag">Naive #1 · hard cap</div><h3>Slam the door</h3></div>
+      <p>Reject any order once the market hits the cap. Simple, but it's a cliff: fine until the wall, then legitimate traders are blocked outright, and it says nothing about the position sitting <em>just under</em> the cap that's still only 5% collateralised. It bounds the total, not the solvency of what's inside it.</p>
+    </div>
+    <div class="approach bad">
+      <div class="head"><div class="atag">Naive #2 · per-account tiers</div><h3>Lower leverage as you grow</h3></div>
+      <p>Drop a trader's max leverage as <em>their own</em> position grows, the way CEXs and app-chains do it. It works when you know who the account is. On a permissionless chain you don't: split the position across ten wallets and each stays in the cheap, high-leverage tier, rebuilding the same oversized position with none of the margin. Defending it means <strong>detecting and clustering sybil wallets</strong>: an arms race you don't win.</p>
+    </div>
+    <div class="approach good">
+      <div class="head"><div class="atag">Perpl · aggregate descent</div><h3>Key on the market, not the account</h3></div>
+      <p>Descend leverage on the market's <em>total</em> open interest. Splitting across wallets changes nothing: the market's OI is identical however many wallets you use, so the collateral demand is identical too. <strong>No sybil detection required; it's immune by construction.</strong> And because it descends rather than blocks, size near the cap is over-collateralised instead of turned away.</p>
+    </div>
+  </div>
+
+  <div class="figure">
+    <div class="fig-title">Figure 2: <span>The three approaches, on the same axes</span> (schematic, 15× market)</div>
+    <svg class="fig-svg" viewBox="0 0 680 340" role="img" aria-labelledby="fig2-title">
+      <title id="fig2-title">Three approaches on the max-leverage versus forward-looking open-interest axes. All give full leverage below 90 percent of the cap. Perpl's aggregate descent ramps leverage down smoothly from 90 percent to near zero at the cap. A hard cap keeps full leverage to the cap then drops straight to zero, a cliff. Per-account tiers lower leverage gradually as a position grows, but are defeated by splitting the position across wallets.</title>
+      <!-- descent zone -->
+      <rect x="356" y="24" width="304" height="250" fill="#6F5CFF" opacity="0.07"/>
+      <!-- axes -->
+      <line x1="52" y1="274" x2="660" y2="274" stroke="#2a2a3a"/>
+      <line x1="52" y1="24" x2="52" y2="274" stroke="#2a2a3a"/>
+      <!-- y ticks -->
+      <text x="44" y="27" text-anchor="end" font-size="11" fill="#8888a0">15×</text>
+      <text x="44" y="261" text-anchor="end" font-size="11" fill="#8888a0">1×</text>
+      <text x="44" y="277" text-anchor="end" font-size="11" fill="#8888a0">0</text>
+      <!-- unity dashed -->
+      <line x1="52" y1="257" x2="660" y2="257" stroke="#8888a0" stroke-dasharray="3 4" opacity="0.45"/>
+      <!-- thresholds -->
+      <line x1="356" y1="24" x2="356" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <line x1="508" y1="24" x2="508" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <line x1="660" y1="24" x2="660" y2="274" stroke="#8888a0" stroke-dasharray="3 3" opacity="0.55"/>
+      <text x="356" y="289" text-anchor="middle" font-size="11" fill="#8888a0">90%</text>
+      <text x="508" y="289" text-anchor="middle" font-size="11" fill="#8888a0">95%</text>
+      <text x="660" y="289" text-anchor="middle" font-size="11" fill="#8888a0">100%</text>
+      <text x="52" y="304" text-anchor="start" font-size="10" fill="#8888a0">forward-looking OI, 80% →</text>
+      <!-- shared segment: all approaches at full leverage below 90% -->
+      <polyline points="52,24 356,24" fill="none" stroke="#8888a0" stroke-width="2.5"/>
+      <text x="160" y="18" text-anchor="middle" font-size="10" fill="#8888a0">full leverage below 90%</text>
+      <!-- Perpl aggregate descent -->
+      <polyline points="356,24 508,257 660,274" fill="none" stroke="#6F5CFF" stroke-width="2.5" stroke-linejoin="round"/>
+      <!-- hard cap: flat then cliff at the cap -->
+      <polyline points="356,24 660,24 660,274" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="650" y="150" text-anchor="end" font-size="10" fill="#f9a8a4">blocked at the cap</text>
+      <!-- per-account tiers: lowers leverage as position grows -->
+      <polyline points="52,24 660,207" fill="none" stroke="#eab308" stroke-width="2.5"/>
+      <!-- legend -->
+      <line x1="418" y1="46" x2="440" y2="46" stroke="#6F5CFF" stroke-width="2.5"/>
+      <text x="446" y="50" font-size="10" fill="#c8c8d8">Perpl (aggregate descent)</text>
+      <line x1="418" y1="64" x2="440" y2="64" stroke="#ef4444" stroke-width="2.5"/>
+      <text x="446" y="68" font-size="10" fill="#c8c8d8">Hard cap (slam the door)</text>
+      <line x1="418" y1="82" x2="440" y2="82" stroke="#eab308" stroke-width="2.5"/>
+      <text x="446" y="86" font-size="10" fill="#c8c8d8">Per-account tiers</text>
+    </svg>
+    <div class="note">All three give full leverage until open interest (OI) reaches 90% of the cap. From there they diverge. The hard cap (red) holds full leverage to the wall, then rejects every order at once, a cliff that also turns away legitimate traders. Per-account tiers (amber) lower a trader's leverage as their position grows, but only while the position sits in one account: split it across ten wallets and each stays at full leverage, flattening the amber line back to the top. Perpl's descent (indigo) keys on the market's total OI, so it lowers leverage smoothly toward the cap and can't be gamed by splitting across wallets. Schematic, illustrative leverage values.</div>
+  </div>
+
+  <p>A centralised exchange enforces per-account tiers off-chain, trusting the operator. An app-chain like Hyperliquid runs its exchange as native chain logic, so it can add size-based tiers or adjust OI caps by upgrading the protocol itself. Perpl has neither option and needs neither: on a permissionless EVM the rule lives in the smart contract, enforced on every order. Bounding OI relative to supply and descending leverage before the cap gives the same protection, keyed on aggregate OI so it can't be split across wallets.</p>
+
+  <div class="callout warn">
+    <strong>The reference incident.</strong> The March 2025 memecoin blow-up (an oversized position in a thin, manipulable market absorbed by an under-funded backstop) is exactly the outcome an OI cap plus a leverage descent makes impossible. The dangerous action (a large one-sided position near the cap) is the one the mechanism taxes hardest.
+  </div>
+
+  <div class="cta-row">
+    <a class="cta cta-primary theme-green" href="index.html">&#9654; Try the interactive simulation</a>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</main>
+
+<script src="../lightbox.js" defer></script>
+</body>
+</html>
