@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<title>Page-ified Storage (MIP-8) — Perpl</title>
+<style>
+  /* page-specific only — chrome lives in /styles.css */
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px;
+    background: var(--bd); border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; margin: 24px 0; }
+  .facts > div { background: var(--bg2); padding: 14px 16px; }
+  .facts .k { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 5px; }
+  .facts .v { font-family: 'SF Mono', monospace; font-size: 17px; font-weight: 700; color: var(--tx); }
+  .facts .v.amber { color: var(--amber); } .facts .v.green { color: var(--green); }
+
+  .gastable-wrap { overflow-x: auto; margin: 18px 0; }
+  table.gas { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 13px; }
+  table.gas th, table.gas td { text-align: right; padding: 9px 10px; border-bottom: 1px solid var(--bd); }
+  table.gas th:first-child, table.gas td:first-child { text-align: left; }
+  table.gas thead th { font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 0.4px;
+    text-transform: uppercase; color: var(--tx3); font-weight: 600; border-bottom: 1px solid var(--bd2); }
+  table.gas tbody td { font-family: 'SF Mono', monospace; }
+  table.gas tbody td:first-child { font-family: inherit; color: var(--tx2); }
+  .save-pos { color: var(--green); font-weight: 700; } .save-zero { color: var(--tx3); }
+  table.gas tr.total td { border-top: 1px solid var(--bd2); border-bottom: none; font-weight: 700;
+    background: var(--bg2); color: var(--tx); }
+
+  .finding { border-left: 3px solid var(--perpl); background: #6f5cff0d;
+    padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 24px 0; }
+  .finding h3 { color: var(--indigo); font-size: 14px; margin: 0 0 8px; }
+  .finding p { font-size: 14px; color: var(--tx2); margin: 0; }
+
+  .verdict-line { display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px 18px; margin: 20px 0; }
+  .verdict-line .vp { font-family: 'SF Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.4px;
+    padding: 6px 12px; border-radius: 999px; background: #eab30818; color: var(--amber); border: 1px solid #eab30855; white-space: nowrap; }
+  .verdict-line .vm { flex: 1; min-width: 220px; font-size: 14px; color: var(--tx2); }
+  .verdict-line .vn { font-family: 'SF Mono', monospace; font-size: 26px; font-weight: 700; color: var(--amber); }
+
+  .src { font-size: 11px; color: var(--tx4); font-family: 'SF Mono', monospace; line-height: 1.8; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a class="active" href="overview.html" aria-current="page">Overview</a>
+    <a href="index.html">Interactive</a>
+  </div>
+</nav>
+
+<main class="prose" id="main">
+  <h1>Page-ified Storage (MIP-8)</h1>
+  <p class="subtitle">Monad's MIP-8 makes storage cheaper for contracts that keep hot data on the same
+    memory page. Does Perpl need it? A slot-by-slot look — and why the answer is <em>already handled</em>.</p>
+
+  <h2>What MIP-8 changes</h2>
+  <p>The EVM treats every 32-byte storage slot as independent, but the hardware underneath reads and writes
+    in <strong>4&nbsp;KB pages</strong> — so fetching one slot drags in a whole page, 128× more than asked for.
+    MIP-8 (a Monad Improvement Proposal, currently Draft) reprices storage to match: it groups
+    <strong>128 contiguous slots into one page</strong>, and charges the cold surcharge <strong>once per page</strong>
+    instead of once per slot.</p>
+
+  <div class="facts">
+    <div><div class="k">Page size</div><div class="v">128 slots</div></div>
+    <div><div class="k">Cold page · 1st slot</div><div class="v amber">8,100</div></div>
+    <div><div class="k">Warm slot · the rest</div><div class="v green">100</div></div>
+    <div><div class="k">Opcodes</div><div class="v" style="font-size:13px;line-height:1.5">SLOAD / SSTORE<br>unchanged</div></div>
+  </div>
+
+  <p>Only the commitment layer (a <code>BLAKE3</code> tree over each page, ~257-byte inclusion proofs) and the
+    gas accounting become page-aware; <code>SLOAD</code>/<code>SSTORE</code> keep working exactly as before, so
+    existing Solidity is untouched. The reward goes to layouts that keep <strong>co-accessed data contiguous</strong>:
+    the first slot in a page pays 8,100, and every other slot the same transaction touches on that page pays 100.</p>
+
+  <h2>What benefits in Perpl</h2>
+  <p>A struct stored in a Solidity <code>mapping</code> occupies <strong>contiguous</strong> slots from its hashed
+    base, so a whole instance lands inside a single 128-slot page. Perpl's two largest hot structs fit with room
+    to spare:</p>
+  <ul>
+    <li><code>Perpetual</code> — <strong>20 slots</strong> per market. ~40 header fields (mark, funding, open
+      interest, fees, margin, balances) are packed into slots 0–3, and the <code>OrderBook</code> and
+      <code>PositionMapList</code> are embedded inline. 13 slots hold data the contract reads/writes; 7 are
+      mapping bases whose entries live off-page.</li>
+    <li><code>Account</code> — <strong>9 slots</strong> per user. Balance, locked balance and flags pack into
+      slots 0–1; the 4-word position-membership bitmap is inline at +5. Balance and membership — touched together
+      on every settlement — share one page.</li>
+  </ul>
+  <p>By contrast, <code>Position</code>, <code>Order</code> and <code>OrderLock</code> are each fully bit-packed
+    into a <strong>single 32-byte slot</strong>, stored one-per-mapping-entry. Each hashes to its own scattered
+    page: one cold page per entry, with or without MIP-8. Deep-book matching walks many of these, and that cost
+    is the floor page-ification cannot lower.</p>
+
+  <div class="cta-row">
+    <a class="cta cta-primary" href="index.html">Open the slot inspector →</a>
+  </div>
+
+  <h2>What that means in gas</h2>
+  <p>Cold-access surcharge only — the unchanged 20,000 / 5,000 <code>SSTORE</code> base is never touched by the
+    page model. Slot counts are the fields a representative operation reads or writes on one struct.</p>
+  <div class="gastable-wrap">
+    <table class="gas">
+      <thead><tr><th>Operation (one struct)</th><th>Slots</th><th>Today · MonadNine</th><th>MIP-8</th><th>Saved</th></tr></thead>
+      <tbody>
+        <tr><td>Read a Perpetual's hot fields</td><td>8</td><td>64,800</td><td>8,800</td><td class="save-pos">−56,000</td></tr>
+        <tr><td>Touch a counterparty Account</td><td>5</td><td>40,500</td><td>8,500</td><td class="save-pos">−32,000</td></tr>
+        <tr><td>Update one Position</td><td>1</td><td>8,100</td><td>8,100</td><td class="save-zero">0</td></tr>
+        <tr><td>Cancel / replace one Order</td><td>1</td><td>8,100</td><td>8,100</td><td class="save-zero">0</td></tr>
+        <tr><td>Match a taker vs 10 resting orders</td><td>20 · 1/page</td><td>162,000</td><td>162,000</td><td class="save-zero">≈0</td></tr>
+        <tr class="total"><td>Realistic order/match suite — measured</td><td>—</td><td>16.82M</td><td>16.11M</td><td class="save-pos">−4.2%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:13px;color:var(--tx3)">The per-operation rows are structural estimates (cold surcharge =
+    distinct slots × 8,100). The final row is the empirical anchor: the full gas suite run under the
+    <code>MonadNext</code> (MIP-8) versus <code>MonadNine</code> (current mainnet) gas model.</p>
+
+  <div class="finding">
+    <h3>The core finding: bit-packing and page-ification are substitutes</h3>
+    <p>Perpl already packed ~40 Perpetual header fields into 4 slots and the whole Account balance/flags block into
+      2 — that <em>is</em> the co-location page-ification rewards, but done at the slot level. So there are few
+      warm-eligible neighbour slots left to discount. Page-ification pays off hugely for contracts that
+      <em>spread</em> data across many slots (a naive ERC-1155 balance table: 20 tokens = 1 cold + 19 warm ≈ 10k
+      gas vs 162k scattered — 16×). Perpl took the other, strictly-better road.</p>
+  </div>
+
+  <h2>The verdict</h2>
+  <div class="verdict-line">
+    <span class="vp">MARGINAL · NOT SUBSTANTIAL</span>
+    <span class="vm">The layout is already page-optimal, so little marginal gas is left to capture on the
+      realistic order/match path.</span>
+    <span class="vn">−4.2%</span>
+  </div>
+  <p>Page-ification is a modest win for Perpl as the contract is exercised today, not a structural upgrade. The one
+    place a larger number could still hide — and the single-account suite does not exercise it — is
+    <strong>batched, multi-perp / multi-account flow through the forwarder</strong>, where a single transaction
+    mutates many structs and the per-page amortization compounds. That regime is the next thing worth measuring.</p>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+</main>
+
+</body>
+</html>
