@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="stylesheet" href="../styles.css">
+<title>Page-ified Storage Slot Inspector — Perpl</title>
+<style>
+  /* Page-specific styles only — chrome lives in /styles.css */
+
+  .hero { margin-bottom: 20px; }
+  .hero h1 { font-size: 24px; font-weight: 600; margin-bottom: 6px; }
+  .hero-sub { font-size: 13px; color: var(--tx2); line-height: 1.7; max-width: 760px; }
+
+  /* struct selector */
+  .sel-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sel-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-right: 2px; }
+  .sel-btn { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px;
+    border: 2px solid var(--bd2); background: var(--bg2); color: var(--tx2);
+    font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; user-select: none; }
+  .sel-btn:hover { border-color: var(--bd); color: var(--tx); }
+  .sel-btn code { background: none; border: none; padding: 0; color: inherit; font-size: 12px; }
+  .sel-btn.on-good { border-color: var(--green); background: #22c55e10; color: var(--green); }
+  .sel-btn.on-none { border-color: var(--bd2); background: #a78bfa10; color: var(--purple); }
+  .sel-tag { font-size: 10px; color: var(--tx3); font-family: 'SF Mono', monospace; }
+
+  .insight-box { padding: 11px 15px; border-radius: 6px; font-size: 12.5px; line-height: 1.7;
+    margin-bottom: 18px; transition: all 0.25s; }
+  .insight-box.good { background: #22c55e0a; border: 1px solid #22c55e25; color: #86efac; }
+  .insight-box.none { background: #a78bfa0a; border: 1px solid #a78bfa25; color: #c9b8ff; }
+  .insight-box strong { font-weight: 600; }
+
+  .main-grid { display: grid; grid-template-columns: minmax(300px, 470px) 1fr; gap: 16px; align-items: start; }
+  .card { background: var(--bg2); border: 1px solid var(--bd); border-radius: 10px; padding: 16px 18px; }
+  .card-label { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; }
+  .card-note { font-size: 12px; color: var(--tx2); line-height: 1.6; margin-bottom: 14px; }
+
+  .pagewrap { overflow-x: auto; }
+  .grid { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; min-width: 272px; }
+  .cell { aspect-ratio: 1; border-radius: 3px; background: var(--bg3); display: flex; align-items: center;
+    justify-content: center; font-family: 'SF Mono', monospace; font-size: 8px; color: transparent;
+    appearance: none; -webkit-appearance: none; border: none; padding: 0;
+    transition: transform 0.07s ease, box-shadow 0.07s ease; }
+  button.cell { font-family: 'SF Mono', monospace; }
+  .cell.occ { cursor: pointer; }
+  .cell.anchor { background: var(--amber); color: #2a2200; font-weight: 700; }
+  .cell.warm { background: var(--green); color: #04230f; font-weight: 600; }
+  .cell.ptr { background: var(--purple); color: #fff;
+    background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(255,255,255,.22) 3px 6px); }
+  .cell.occ:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,.4); z-index: 2; }
+  .cell.sel { outline: 2.5px solid var(--perpl); outline-offset: 1px; z-index: 3; }
+  .cell.occ:focus-visible { outline: 2.5px solid var(--perpl); outline-offset: 1px; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 15px; font-size: 12px; color: var(--tx3); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .sw.a { background: var(--amber); } .sw.w { background: var(--green); }
+  .sw.p { background: var(--purple); background-image: repeating-linear-gradient(45deg, transparent 0 2px, rgba(255,255,255,.3) 2px 4px); }
+  .sw.e { background: var(--bg3); border: 1px solid var(--bd2); }
+
+  /* page cost summary */
+  .cost { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--bd);
+    border: 1px solid var(--bd); border-radius: 8px; overflow: hidden; margin-top: 14px; }
+  .cost > div { background: var(--bg3); padding: 11px 13px; }
+  .cost .ck { font-size: 10px; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px; }
+  .cost .cv { font-family: 'SF Mono', monospace; font-size: 16px; font-weight: 700; }
+  .cost .cv.today { color: var(--amber); } .cost .cv.mip8 { color: var(--green); } .cost .cv.save { color: var(--indigo); }
+  .cost-note { font-size: 11px; color: var(--tx4); margin-top: 8px; }
+
+  /* inspector */
+  .dhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 4px; }
+  .dslot { font-family: 'SF Mono', monospace; font-size: 15px; font-weight: 700; color: var(--tx); }
+  .drole { font-family: 'SF Mono', monospace; font-size: 10px; font-weight: 700; padding: 3px 9px;
+    border-radius: 999px; letter-spacing: 0.3px; }
+  .drole.anchor { background: #eab30818; color: var(--amber); border: 1px solid #eab30855; }
+  .drole.warm { background: #22c55e15; color: var(--green); border: 1px solid #22c55e55; }
+  .drole.ptr { background: #a78bfa18; color: var(--purple); border: 1px solid #a78bfa55; }
+  .dcost { margin-left: auto; font-family: 'SF Mono', monospace; font-size: 12px; color: var(--tx3); }
+  .dcost b { color: var(--tx); }
+  .dnote { font-size: 12.5px; color: var(--tx2); margin: 10px 0 0; line-height: 1.6; }
+
+  .ruler { margin: 14px 0 4px; }
+  .rlabels { display: flex; justify-content: space-between; font-family: 'SF Mono', monospace; font-size: 10px; color: var(--tx4); margin-bottom: 3px; }
+  .rbar { display: flex; height: 34px; width: 100%; border-radius: 6px; overflow: hidden; border: 1px solid var(--bd2);
+    font-family: 'SF Mono', monospace; font-size: 9.5px; }
+  .rseg { display: flex; align-items: center; justify-content: center; color: #05060f; overflow: hidden;
+    white-space: nowrap; border-right: 1px solid rgba(0,0,0,.28); font-weight: 600; }
+  .rseg:last-child { border-right: none; }
+  .rseg.free { background: var(--bg3) !important; color: var(--tx4); font-weight: 400; }
+
+  .ftable { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+  .ftable th, .ftable td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--bd); }
+  .ftable thead th { font-family: 'SF Mono', monospace; font-size: 10px; letter-spacing: 0.5px;
+    text-transform: uppercase; color: var(--tx3); font-weight: 600; }
+  .ftable td { font-family: 'SF Mono', monospace; }
+  .ftable td.fname { font-weight: 600; color: var(--tx); }
+  .ftable td.ftype, .ftable td.fbytes { color: var(--tx3); }
+  .fdot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; vertical-align: middle; }
+
+  @media (max-width: 860px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .cost { grid-template-columns: 1fr 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="site-nav">
+  <a href="../" class="site-logo"><img src="../Colour=Primary_White.svg" alt="Perpl"></a>
+  <div class="site-links">
+    <a href="../">← All Explainers</a>
+    <a href="overview.html">Overview</a>
+    <a class="active" href="index.html" aria-current="page">Interactive</a>
+  </div>
+</nav>
+
+<main class="app" id="main">
+
+  <div class="hero">
+    <h1>Storage Slot Inspector</h1>
+    <p class="hero-sub">Monad's MIP-8 groups 128 storage slots into one 4&nbsp;KB page: the first slot touched
+      pays the full 8,100-gas cold surcharge, every other slot in that page drops to 100. Pick one of Perpl's
+      on-chain structs, then click any lit slot to see exactly which fields are bit-packed into its 32 bytes —
+      and whether page-ification would make it cheaper.</p>
+  </div>
+
+  <div class="sel-row" id="selRow">
+    <span class="sel-label">Struct</span>
+  </div>
+
+  <div class="insight-box good" id="insight"></div>
+
+  <div class="main-grid">
+    <div class="card">
+      <div class="card-label">One 128-slot page</div>
+      <p class="card-note" id="pageNote"></p>
+      <div class="pagewrap"><div class="grid" id="grid" role="group" aria-label="The 128 storage slots of one page. Highlighted slots are occupied by the selected struct; click one to inspect its fields."></div></div>
+      <div class="legend">
+        <span><span class="sw a"></span>Cold anchor — 8,100 (1st slot)</span>
+        <span><span class="sw w"></span>Warm — 100 under MIP-8 (was 8,100)</span>
+        <span><span class="sw p"></span>Mapping base → data scattered off-page</span>
+        <span><span class="sw e"></span>Unused page headroom</span>
+      </div>
+      <div class="cost">
+        <div><div class="ck">Today · MonadNine</div><div class="cv today" id="cost-today">—</div></div>
+        <div><div class="ck">MIP-8 page-ified</div><div class="cv mip8" id="cost-mip8">—</div></div>
+        <div><div class="ck">Saved</div><div class="cv save" id="cost-save">—</div></div>
+      </div>
+      <p class="cost-note" id="costNote"></p>
+    </div>
+
+    <div class="card" id="inspector" aria-live="polite"></div>
+  </div>
+
+  <div class="footer">Perpl: Fully on-chain perpetual DEX on Monad</div>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const FCOL = ['#6F5CFF','#22c55e','#eab308','#60a5fa','#f87171','#a78bfa','#A2A4FF','#3fc6dc'];
+  const COLD = 8100, WARM = 100;
+
+  // field: [name, type, byteWidth]  ·  slot kinds: packed | word | string | map
+  const STRUCTS = {
+    Perpetual: { total:20, benefit:'good', tag:'640 B · 20 slots · one per market',
+      note:'Header (mark, funding, OI, fees, margin, balances) packed into slots 0–3; the OrderBook and PositionMapList are embedded inline at +9 and +17. 13 slots hold data the contract reads/writes; 7 (hatched) are mapping bases whose entries live on scattered pages.',
+      insight:'<strong>Benefits.</strong> A whole Perpetual instance fits in one page with room to spare. Touching many of its header fields today pays a full 8,100 cold surcharge per slot; under MIP-8 only the first does. Click slot 0 to see 12 fields packed into one 32-byte word — that packing is the co-location page-ification rewards, already done by hand.',
+      slots:[
+        {k:'packed',f:[['markPNS','uint32',4],['markTimestamp','uint32',4],['linkPricePNS','uint32',4],['linkTimestamp','uint32',4],['fundingRatePct100k','int16',2],['priceTolPer100K','uint16',2],['refPriceMaxAgeSec','uint16',2],['priceDecimals','uint8',1],['lotDecimals','uint8',1],['status','PerpStatusEnum',1],['fundingStartBlock','uint32',4],['insAmtPer100K','uint24',3]]},
+        {k:'packed',f:[['lastPNS','uint32',4],['lastTimestamp','uint32',4],['liqInsAmtPer100K','uint24',3],['liqUserAmtPer100K','uint24',3],['btlPriceThreshPer100K','uint24',3],['btlInsAmtPer100K','uint24',3],['btlUserAmtPer100K','uint24',3],['btlBuyerAmtPer100K','uint24',3],['btlRestrictBuyers','bool',1],['marginTol','uint32',4],['marginTolDecimals','uint8',1]]},
+        {k:'packed',f:[['longOpenInterestLNS','uint40',5],['shortOpenInterestLNS','uint40',5],['maxOpenInterestLNS','uint40',5],['takerFeePer100K','uint16',2],['makerFeePer100K','uint16',2],['absFundingClampPctPer100K','uint16',2],['id','uint16',2],['initMarginFracHdths','uint16',2],['maintMarginFracHdths','uint16',2],['unityDescentThreshHdths','uint8',1],['overColDescentThreshHdths','uint8',1],['dcpBorrowThreshHdths','uint8',1],['ignOracle','bool',1],['fundingSumScalingExp','uint8',1]]},
+        {k:'packed',f:[['positionBalanceCNS','uint80',10],['insuranceBalanceCNS','uint80',10]]},
+        {k:'word',f:[['unwindSumPositiveFmvCNS','uint256',32]]},
+        {k:'word',f:[['unwindInitPosBalCNS','uint256',32]]},
+        {k:'word',f:[['linkFeedId','bytes32',32]]},
+        {k:'string',f:[['name','string',32]]},
+        {k:'string',f:[['symbol','string',32]]},
+        {k:'packed',lbl:'OrderBook header',f:[['basePricePNS','uint32',4],['numOrders','uint16',2],['permCancelMinOrders','uint16',2],['permCancelSegment','uint8',1],['maxAskPriceONS','uint24',3],['minAskPriceONS','uint24',3],['maxBidPriceONS','uint24',3],['minBidPriceONS','uint24',3]]},
+        {k:'word',lbl:'orderIdIndex.root',f:[['orderIdIndex.root','uint256 (Index16Bit L0 bitmap)',32]]},
+        {k:'map',lbl:'orderIdIndex.leaves',f:[['orderIdIndex.leaves','mapping(uint256=>uint256)',32]]},
+        {k:'word',lbl:'priceIndex.root',f:[['priceIndex.root','uint256 (Index24Bit L0 bitmap)',32]]},
+        {k:'map',lbl:'priceIndex.middle',f:[['priceIndex.middle','mapping(uint256=>uint256)',32]]},
+        {k:'map',lbl:'priceIndex.leaves',f:[['priceIndex.leaves','mapping(uint256=>uint256)',32]]},
+        {k:'map',lbl:'priceLevelOrderIdsMap',f:[['priceLevelOrderIdsMap','mapping(uint256=>PriceLevelOrderIds)',32]]},
+        {k:'map',lbl:'idOrderMap',f:[['idOrderMap','mapping(uint256=>Order)',32]]},
+        {k:'packed',lbl:'PositionMapList header',f:[['positions.startNodeId','uint32',4],['positions.endNodeId','uint32',4]]},
+        {k:'map',lbl:'positions.idNodeMap',f:[['positions.idNodeMap','mapping(uint256=>Position)',32]]},
+        {k:'map',lbl:'blockFundingSumMap',f:[['blockFundingSumMap','mapping(uint256=>uint256)',32]]},
+      ]},
+    Account: { total:9, benefit:'good', tag:'288 B · 9 slots · one per user',
+      note:'Balances, locked balance and flags packed into slots 0–1; the 4-word PositionBitMap embedded inline at +5. Balance and position-membership — touched together on every settlement — share one page. Slots 2–4 (hatched) are mapping bases.',
+      insight:'<strong>Benefits.</strong> Balance (slot 0) and the position-membership bitmap (slots 5–8) are touched together on every settlement and sit on the same page — so a counterparty touch pays one cold access, not five. Slots 2–4 are mapping bases with entries scattered off-page.',
+      slots:[
+        {k:'packed',f:[['balanceCNS','uint80',10],['lockedBalanceCNS','uint80',10],['frozen','FreezeStatusEnum',1],['allowsForwarding','bool',1],['startOrderLockId','uint32',4],['endOrderLockId','uint32',4],['numOrders','uint16',2]]},
+        {k:'packed',f:[['accountId','uint32',4],['lastForwardedDescId','uint32',4],['lastTriggeredDescId','uint32',4],['accountAddr','address',20]]},
+        {k:'map',lbl:'idOrderLockMap',f:[['idOrderLockMap','mapping(uint256=>OrderLock)',32]]},
+        {k:'map',lbl:'idPerpGroupLockMap',f:[['idPerpGroupLockMap','mapping(uint256=>OrderLockGroup)',32]]},
+        {k:'map',lbl:'decCollateralRequestMap',f:[['decCollateralRequestMap','mapping(uint256=>DecreaseCollateralRequest)',32]]},
+        {k:'word',lbl:'PositionBitMap.bank1',f:[['positions.bank1','uint256 (perp-membership bits 0–255)',32]]},
+        {k:'word',lbl:'PositionBitMap.bank2',f:[['positions.bank2','uint256',32]]},
+        {k:'word',lbl:'PositionBitMap.bank3',f:[['positions.bank3','uint256',32]]},
+        {k:'word',lbl:'PositionBitMap.bank4',f:[['positions.bank4','uint256',32]]},
+      ]},
+    Position: { total:1, benefit:'none', tag:'32 B · 1 slot · one per open position',
+      note:'A whole position — its node links, type, deposit, entry price, lot size and entry block — is bit-packed into a single 32-byte slot, stored one-per-mapping-entry. Each entry hashes to its own scattered page.',
+      insight:'<strong>No benefit.</strong> One slot is one page. There are no neighbours to warm-discount, so page-ification changes nothing. Deep-book matching walks many of these scattered positions, and that cost is the floor MIP-8 cannot lower.',
+      slots:[{k:'packed',f:[['nextNodeId','uint32',4],['prevNodeId','uint32',4],['positionType','PositionEnum',1],['depositCNS','uint80',10],['pricePNS','uint32',4],['lotLNS','uint40',5],['entryBlock','uint32',4]]}]},
+    Order: { total:1, benefit:'none', tag:'32 B · 1 slot · one per resting order',
+      note:'A whole resting order — account, type, price, lot size, recycle fee, expiry, leverage and the doubly-linked-list pointers — is bit-packed into a single 32-byte slot, one-per-mapping-entry, each on its own scattered page.',
+      insight:'<strong>No benefit.</strong> One slot, one page. Placing, cancelling or replacing an order touches one scattered slot — page-ification gives no discount. The book is dense precisely because each order is a single slot.',
+      slots:[{k:'packed',f:[['accountId','uint32',4],['orderType','OrderEnum',1],['priceONS','uint24',3],['lotLNS','uint40',5],['recycleFeeRaw','uint16',2],['expiryBlock','uint32',4],['leverageHdths','uint16',2],['orderId','uint16',2],['prevOrderId','uint16',2],['nextOrderId','uint16',2],['maxSlippageBps','uint16',2]]}]},
+    OrderLock: { total:1, benefit:'none', tag:'32 B · 1 slot · one per account lock',
+      note:'An order lock — its id, list pointers, order type, lot size and locked amount — is bit-packed into a single 32-byte slot inside the account, one-per-mapping-entry.',
+      insight:'<strong>No benefit.</strong> A single-slot entry has no page neighbours. Like Position and Order, it pays one cold page per entry regardless of MIP-8.',
+      slots:[{k:'packed',f:[['orderLockId','uint32',4],['nextOrderLockId','uint32',4],['prevOrderLockId','uint32',4],['orderType','OrderEnum',1],['lotLNS','uint40',5],['amountCNS','uint80',10]]}]},
+  };
+
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString('en-US');
+  let current = 'Perpetual';
+
+  function roleOf(spec, i){
+    if (i >= spec.total) return 'empty';
+    if (i === 0) return 'anchor';
+    if (spec.slots[i].k === 'map') return 'ptr';
+    return 'warm';
+  }
+  function accessedCount(spec){ let n=0; for(let i=0;i<spec.total;i++) if(spec.slots[i].k!=='map') n++; return n; }
+
+  function buildByteBar(fields){
+    const used = fields.reduce((s,f)=>s+f[2],0);
+    let html = '<div class="ruler"><div class="rlabels"><span>byte 0</span><span>byte 31 · 256 bits</span></div><div class="rbar">';
+    fields.forEach((f,idx)=>{
+      const pct = (f[2]/32*100).toFixed(3);
+      const lab = f[2] >= 3 ? f[0].split('.').pop() : '';
+      html += `<div class="rseg" style="flex:0 0 ${pct}%;background:${FCOL[idx%8]}" title="${f[0]} · ${f[1]} · ${f[2]} byte(s)">${lab}</div>`;
+    });
+    if (used < 32){ const pct = ((32-used)/32*100).toFixed(3);
+      html += `<div class="rseg free" style="flex:0 0 ${pct}%" title="unused / free ${32-used} bytes">free</div>`; }
+    return html + '</div></div>';
+  }
+  function buildFieldTable(fields){
+    let off=0, rows='';
+    fields.forEach((f,idx)=>{
+      const range = f[2]===1 ? `B${off}` : `B${off}–${off+f[2]-1}`;
+      rows += `<tr><td class="fname"><span class="fdot" style="background:${FCOL[idx%8]}"></span>${f[0]}</td>`+
+              `<td class="ftype">${f[1]}</td><td class="fbytes">${range} · ${f[2]}B</td></tr>`;
+      off += f[2];
+    });
+    return `<table class="ftable"><thead><tr><th>Field</th><th>Type</th><th>Bytes</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  function renderDetail(spec, i){
+    const s = spec.slots[i], role = roleOf(spec,i);
+    const roleTxt = {anchor:'COLD ANCHOR', warm:'WARM NEIGHBOUR', ptr:'MAPPING BASE'}[role];
+    const costTxt = {anchor:'first slot touched → <b>8,100 gas</b>',
+      warm:'MIP-8: <b>100 gas</b> · today 8,100', ptr:'never read/written · entries scattered'}[role];
+    let html = `<div class="dhead"><span class="dslot">${current} · slot +${i}${s.lbl?' · '+s.lbl:''}</span>`+
+      `<span class="drole ${role}">${roleTxt}</span><span class="dcost">${costTxt}</span></div>`;
+    if (s.k === 'map'){
+      html += `<p class="dnote">This slot is a <strong>mapping base</strong> — Solidity never stores anything here; it's a compile-time position marker. Each entry lives at <code>keccak256(key, ${i})</code>, a pseudo-random slot on its own page. The struct carries these pointers for free, but the data they reference gets <strong>no</strong> page discount: one cold page per entry.</p>`;
+    } else if (s.k === 'string'){
+      html += `<p class="dnote">Solidity <code>string</code>: values ≤31 bytes store inline in this slot; longer strings keep only the length here and spill to <code>keccak256(${i})</code>. Market names/symbols are short, so this is effectively one inline slot.</p>`;
+      html += buildFieldTable(s.f);
+    } else {
+      html += buildByteBar(s.f) + buildFieldTable(s.f);
+      if (s.k === 'packed'){ const used = s.f.reduce((a,f)=>a+f[2],0);
+        html += `<p class="dnote">${s.f.length} field${s.f.length>1?'s':''} bit-packed into one 32-byte word${used<32?` (${32-used} bytes free)`:''}. Co-location done at the slot level — the packing already captures what page-ification would otherwise reward.</p>`; }
+    }
+    $('inspector').innerHTML = html;
+  }
+
+  function selectStruct(name){
+    current = name;
+    const spec = STRUCTS[name];
+    // selector button states
+    document.querySelectorAll('.sel-btn').forEach(b => b.className = 'sel-btn' + (b.dataset.s===name ? (spec.benefit==='good'?' on-good':' on-none') : ''));
+    // insight
+    $('insight').className = 'insight-box ' + spec.benefit;
+    $('insight').innerHTML = spec.insight;
+    // page note
+    $('pageNote').textContent = spec.note;
+    // grid
+    const g = $('grid'); g.innerHTML = ''; const cells = [];
+    for (let i=0;i<128;i++){
+      const role = roleOf(spec,i);
+      let c;
+      if (role !== 'empty'){
+        c = document.createElement('button'); c.type = 'button'; c.className = 'cell occ ' + (role==='ptr'?'ptr':role);
+        if (role==='anchor') c.textContent='0';
+        const lbl = spec.slots[i].lbl ? ' · ' + spec.slots[i].lbl : '';
+        const roleTxt = role==='anchor' ? 'cold anchor' : (role==='ptr' ? 'mapping base' : 'warm slot');
+        c.title = `slot +${i}${lbl} — click to inspect`;
+        c.setAttribute('aria-label', `${current} slot +${i}${lbl}, ${roleTxt} — inspect`);
+        c.addEventListener('click', () => { cells.forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); renderDetail(spec,i); });
+      } else {
+        c = document.createElement('div'); c.className = 'cell'; c.setAttribute('aria-hidden','true');
+        c.title = `slot +${i} · unused page headroom`;
+      }
+      cells.push(c); g.appendChild(c);
+    }
+    // cost summary (whole-struct upper bound)
+    const acc = accessedCount(spec);
+    const today = acc * COLD, mip8 = COLD + (acc-1)*WARM, save = today - mip8;
+    $('cost-today').textContent = fmt(today);
+    $('cost-mip8').textContent = fmt(mip8);
+    $('cost-save').textContent = save>0 ? '−'+fmt(save) : '0';
+    $('costNote').innerHTML = acc>1
+      ? `Upper bound: a transaction touching all <b>${acc}</b> accessed slots of one ${name}. Most operations touch a subset; the mapping-base slots aren't counted (never accessed). Cold-access surcharge only — the unchanged 20,000 / 5,000 <code>SSTORE</code> base is excluded.`
+      : `A single-slot struct is one cold page whether or not MIP-8 ships — nothing to discount.`;
+    // default-select slot 0
+    cells[0].classList.add('sel'); renderDetail(spec,0);
+  }
+
+  // build selector buttons
+  const row = $('selRow');
+  Object.keys(STRUCTS).forEach(name => {
+    const b = document.createElement('button'); b.type='button'; b.className='sel-btn'; b.dataset.s=name;
+    b.innerHTML = `<code>${name}</code><span class="sel-tag">${STRUCTS[name].total} slot${STRUCTS[name].total>1?'s':''}</span>`;
+    b.addEventListener('click', () => selectStruct(name));
+    row.appendChild(b);
+  });
+  selectStruct('Perpetual');
+})();
+</script>
+
+</body>
+</html>
