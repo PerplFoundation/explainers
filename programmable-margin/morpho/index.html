@@ -1,0 +1,1971 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Programmable margin explainer</title>
+<style>
+body{margin:0;background:#e9ebf2;font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;color:#1a1a1a}
+#wrap{max-width:1600px;margin:0 auto;padding:12px 16px}
+#stage{width:100%;aspect-ratio:16/9;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.08);border-radius:8px;overflow:hidden}
+#stage svg{width:100%;height:100%;display:block}
+.bar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-top:12px;font-size:14px}
+.bar b{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:#5B5BF6}
+button,select{font:inherit;padding:5px 10px;border:1px solid #c9ccd6;border-radius:5px;background:#fff;cursor:pointer}
+button.on{background:#5B5BF6;color:#fff;border-color:#5B5BF6}
+#scrub{flex:1;min-width:220px}
+#explore{background:#fff;border-radius:8px;padding:10px 14px}
+#explore label{display:flex;gap:8px;align-items:center}
+.hint{color:#6b7280;font-size:12px}
+#stagewrap{position:relative}
+#ovbar{position:absolute;right:14px;top:calc(94% - 24px);display:flex;gap:10px}
+.ov{border:none;border-radius:28px;background:rgba(255,255,255,.14);color:#fff;font-size:20px;
+ font-weight:700;padding:12px 18px;cursor:pointer;transition:background .2s}
+.ov:hover{background:rgba(255,255,255,.3)}
+#ovNext.pulse{background:#5B5BF6;color:#fff;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(91,91,246,.5)}50%{box-shadow:0 0 0 12px rgba(91,91,246,0)}}
+body.record #ovbar{display:none}
+body.record #wrap{padding:0;max-width:none}
+body.record .bar{display:none}
+body.record #stage{width:1600px;height:900px;border-radius:0;box-shadow:none}
+</style></head>
+<body>
+<div id="wrap">
+ <div id="stagewrap"><div id="stage"></div>
+  <div id="ovbar"><button id="ovPrev" class="ov" title="Back (←)">‹</button>
+  <button id="ovNext" class="ov" title="Next (→)">Next ›</button></div></div>
+ <div class="bar">
+  <label style="display:none">Story <select id="cut">
+   <option value="lending">For a lending protocol</option>
+   </select></label>
+  <button id="back">‹ Back</button><button id="play">Pause</button><button id="next">Next ›</button>
+  <label><input type="checkbox" id="auto"> Autoplay</label>
+  <span id="scenes"></span>
+  <input id="scrub" type="range" min="0" max="1000" value="0" title="Scrub within this scene">
+ </div>
+ <div class="bar" id="explore">
+  <b>Try it</b>
+  <label>MON price <input id="xp" type="range" min="-40" max="45" value="0"><span id="xpv">0%</span></label>
+  <label>Funding to shorts <input id="xf" type="range" min="-10" max="20" step="0.5"><span id="xfv"></span></label>
+  <label>Margin from <select id="xm"><option value="cf">Credit facility (in design)</option>
+   <option value="own">Own capital (live)</option></select></label>
+  <span class="hint">Moving a control pauses the story and shows the vault at those settings.</span>
+ </div>
+</div>
+<script>
+const F = {"source": "today's reads, block 121,879,867; illustrative", "read_block": 121879867, "read_utc": "2026-11-13 11:56", "read_date": "2026-11-13", "deposit_usd": 50000, "loop_leverage": 5, "ltv": 0.8, "lltv": 0.915, "short_leverage": 1.5, "short_label": "1.5x", "short_per_equity": 1.0, "margin_per_equity": 0.6666666666666666, "stake_pct": 11.713464747405299, "borrow_pct": 7.436315666221753, "funding90_pct": 10.970277777777776, "funding30_pct": 17.118499999999997, "credit_facility_pct": 8.0, "mmf": 0.05, "borrow_source": "Euler eWMON-6", "swap_pct_per_unit": 0.2524833839840368, "taker_pct": 0.0345, "legs_pct": {"stake": 11.713464747405299, "loop": 17.108596324734183, "funding": 10.970277777777776, "costs": -1.0789335359361472, "credit_facility": -5.333333333333333}, "net_credit_facility_pct": 33.38007198064778, "net_own_margin_pct": 23.22804318838867, "net_zero_funding_pct": 22.409794202870003, "loop_max_without_cf": 1.330376940133038, "rally_to_liquidation": 0.5873015873015872, "rally_to_topup": 0.4492753623188406, "gap_topup_to_liq": 0.09523809523809512, "liq_after_one_topup": 1.3004370830457788, "worst72_rise_pct": 38.358570275786775, "worst1h_pct": 6.239946380697048, "years_to_lltv": {"5": 2.686246752151881, "10": 1.3431233760759405, "20": 0.6715616880379702}, "es_bands": {"open": 2.0, "restricted": 1.25}, "ausd_supply_morpho_pct": 5.270069420398848, "ausd_supply_morpho_usd": 21536266.491456013, "spec": {"source": "credit facility spec, rates read 2026-10-14; illustrative", "read_block": 113308949, "deposit_usd": 50000, "loop_leverage": 3, "ltv": 0.6666666666666666, "lltv": 0.915, "short_leverage": 2.0, "short_per_equity": 1.0, "margin_per_equity": 0.5, "stake_pct": 12.023729180150362, "borrow_pct": 8.335040892019657, "funding90_pct": 8.224666666666666, "funding30_pct": 8.772166666666665, "credit_facility_pct": 8.0, "mmf": 0.05, "legs_pct": {"stake": 12.023729180150362, "loop": 7.377376576261408, "funding": 8.224666666666666, "costs": -0.5739667679680736, "credit_facility": -4.0}, "net_credit_facility_pct": 23.051805655110364, "net_own_margin_pct": 18.034537103406908, "net_zero_funding_pct": 14.827138988443695, "loop_max_without_cf": 1.7094017094017095, "rally_to_liquidation": 0.42857142857142855, "rally_to_topup": 0.30434782608695654, "gap_topup_to_liq": 0.09523809523809534, "liq_after_one_topup": 0.8633540372670807, "worst72_rise_pct": 38.358570275786775, "worst72_start": "2026-08-18 22:00:00", "years_to_lltv": {"5": 6.3326778880309735, "10": 3.1663389440154868, "20": 1.5831694720077434}, "es_bands": {"open": 2.0, "restricted": 1.25}, "ausd_supply_morpho_pct": 6.418277056344544, "ausd_supply_morpho_usd": 18739898.371432}};
+const D = F.deposit_usd;
+const C = {ink:'#1a1a1a', mute:'#6b7280', line:'#c9ccd6', indigo:'#5B5BF6', indigoT:'#EEEEFE', indigoD:'#3434C8',
+  green:'#2E7D32', greenT:'#EAF4EA', lime:'#4d7c0f', limeT:'#F0F6E4', amber:'#B07800', amberT:'#FBF3DF',
+  red:'#B94A3E', redT:'#F9EAE8', teal:'#0E7490', tealT:'#E3F2F5', grey:'#9aa0a6'};
+
+// ------------------------------------------------------------------ helpers
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = x => { x = clamp(x); return x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; };
+const win = (u, a, len) => ease((u - a) / len);
+const lerp = (a, b, f) => a + (b - a) * f;
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const usd = v => (v < -0.5 ? '−' : '') + '$' + Math.round(Math.abs(v)).toLocaleString('en-US');
+const sgnusd = v => (v > 0.5 ? '+' : '') + usd(v);
+const pct = (v, d = 1) => (v < -0.00001 ? '−' : '') + Math.abs(v).toFixed(d) + '%';
+const spct = (v, d = 1) => (v > 0.00001 ? '+' : '') + pct(v, d);
+
+function T(x, y, s, o = {}) {
+  return `<text x="${x}" y="${y}" font-size="${o.size || 20}" font-weight="${o.w || 400}" fill="${o.col || C.ink}" ` +
+    `text-anchor="${o.anchor || 'start'}" opacity="${o.op ?? 1}"${o.mono ? ' font-family="Menlo,monospace"' : ''}>${esc(s)}</text>`;
+}
+function R(x, y, w, h, o = {}) {
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${o.rx ?? 8}" fill="${o.fill || '#fff'}" ` +
+    `stroke="${o.stroke || 'none'}" stroke-width="${o.sw || 2}"${o.dash ? ' stroke-dasharray="9,6"' : ''} opacity="${o.op ?? 1}"/>`;
+}
+function arrow(pts, o = {}) {
+  const col = o.col || C.ink, op = o.op ?? 1, w = o.w || 2.4;
+  const [x1, y1] = pts[pts.length - 2], [x2, y2] = pts[pts.length - 1];
+  const L = Math.hypot(x2 - x1, y2 - y1) || 1, ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+  const bx = x2 - ux * 13, by = y2 - uy * 13, px = -uy * 6, py = ux * 6;
+  const line = pts.slice(0, -1).concat([[bx, by]]).map(p => p.join(',')).join(' ');
+  return `<polyline points="${line}" fill="none" stroke="${col}" stroke-width="${w}"${o.dash ? ' stroke-dasharray="8,6"' : ''} opacity="${op}"/>` +
+    `<polygon points="${x2},${y2} ${bx + px},${by + py} ${bx - px},${by - py}" fill="${col}" opacity="${op}"/>`;
+}
+function along(pts, f) {
+  const seg = []; let tot = 0;
+  for (let k = 1; k < pts.length; k++) { const l = Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1]); seg.push(l); tot += l; }
+  let d = clamp(f) * tot;
+  for (let k = 0; k < seg.length; k++) {
+    if (d <= seg[k] || k === seg.length - 1) { const g = seg[k] ? d / seg[k] : 0;
+      return [lerp(pts[k][0], pts[k + 1][0], g), lerp(pts[k][1], pts[k + 1][1], g)]; }
+    d -= seg[k];
+  }
+}
+function token(pts, f, col, op = 1) {
+  if (f <= 0 || f >= 1) return '';
+  const [x, y] = along(pts, f);
+  return `<circle cx="${x}" cy="${y}" r="16" fill="${col}" opacity="${0.18 * op}"/><circle cx="${x}" cy="${y}" r="9" fill="${col}" opacity="${op}"/>`;
+}
+function badge(x, y, s, kind, anchor = 'start') {
+  const K = {live: [C.green, C.greenT, false], design: [C.indigo, C.indigoT, true], road: [C.mute, '#f1f2f5', true],
+    ink: [C.mute, '#f1f2f5', false], note: [C.amber, C.amberT, false]}[kind];
+  const w = s.length * 9.4 + 26, xx = anchor === 'end' ? x - w : x;
+  return R(xx, y, w, 30, {fill: K[1], stroke: K[0], sw: 1.6, dash: K[2], rx: 15}) +
+    T(xx + w / 2, y + 21, s, {size: 16, w: 600, col: K[0], anchor: 'middle'});
+}
+function badges(list, x, y) {     // right-aligned row of badges ending at x
+  let out = '', cx = x;
+  for (const [s, k] of list.slice().reverse()) { out += badge(cx, y, s, k, 'end'); cx -= s.length * 9.4 + 26 + 10; }
+  return out;
+}
+function lines(x, y, arr, o = {}) { return arr.map((s, k) => T(x, y + k * (o.lh || 28), s, o)).join(''); }
+function wrap(s, n) {
+  const out = []; let cur = '';
+  for (const w of s.split(' ')) { if ((cur + ' ' + w).trim().length > n) { out.push(cur.trim()); cur = w; } else cur += ' ' + w; }
+  if (cur.trim()) out.push(cur.trim()); return out;
+}
+
+// ------------------------------------------------------------------ the vault model (credit facility spec, MON loop)
+function model(p = 0, top = 0, src = 'cf', f = F.funding90_pct) {
+  const L = F.loop_leverage, m = F.margin_per_equity;
+  const E = src === 'cf' ? D : D / (1 + m);                 // equity in the loop; own margin keeps a third aside
+  const coll = L * E * (1 + p), debt = (L - 1) * E * (1 + p), notional = E * (1 + p), pnl = -E * p;
+  const margin = m * E + top * E, loan = (src === 'cf' ? m * E : 0) + top * E;
+  const acct = margin + pnl, ratio = acct / notional, equity = coll - debt + acct - loan;
+  const lg = F.legs_pct, k = src === 'cf' ? 1 : 1 / (1 + m);
+  const rows = [['Staking', lg.stake * k], ['Loop, less the WMON borrow', lg.loop * k],
+    ['Funding paid to the short', f * k], ['Swaps and Perpl taker fees', lg.costs * k]];
+  if (src === 'cf') rows.push(['Credit facility interest', lg.credit_facility]);
+  const net = rows.reduce((a, r) => a + r[1], 0);
+  return {E, coll, debt, notional, pnl, margin, loan, acct, ratio, equity, rows, net, src, p};
+}
+
+// ------------------------------------------------------------------ the shared diagram
+const G = {
+  dep: [50, 380, 190, 96], vault: [320, 360, 240, 136], fl: [320, 140, 240, 100],
+  mor: [660, 116, 410, 240], per: [660, 492, 410, 262], cf: [50, 600, 300, 140],
+  c_dep: [[240, 428], [320, 428]], c_stake: [[440, 360], [440, 240]], c_post: [[560, 190], [660, 190]],
+  c_borrow: [[660, 318], [610, 318], [610, 420], [560, 420]], c_margin: [[350, 690], [660, 690]],
+  c_short: [[500, 496], [500, 600], [660, 600]], c_repay: [[360, 496], [360, 560], [200, 560], [200, 600]],
+};
+function box(r, title, ls, col, tint, o = {}) {
+  const [x, y, w, h] = r;
+  return `<g opacity="${o.op ?? 1}">` + R(x, y, w, h, {fill: tint, stroke: col, sw: o.emph ? 4 : 2, dash: o.dash}) +
+    T(x + 18, y + 34, title, {size: 21, w: 700, col}) + lines(x + 18, y + 66, ls, {size: 18, lh: 26, col: C.ink}) + '</g>';
+}
+const SL = F.short_label || (F.short_leverage + 'x');           // the short's leverage, as shown
+const GMAX = Math.max(0.6, 1.2 * F.margin_per_equity);           // the margin gauge's full scale
+function gauge(x, y, w, ratio) {
+  const s = v => x + clamp(v / GMAX) * w;
+  const fillCol = ratio <= F.mmf ? C.red : ratio <= 3 * F.mmf + 0.004 ? C.amber : C.indigo;
+  return R(x, y, w, 22, {fill: '#f1f2f5', stroke: C.line, sw: 1, rx: 4}) +
+    R(x, y, Math.max(0, s(ratio) - x), 22, {fill: fillCol, rx: 4}) +
+    `<line x1="${s(F.mmf)}" y1="${y - 6}" x2="${s(F.mmf)}" y2="${y + 28}" stroke="${C.red}" stroke-width="2.5"/>` +
+    `<line x1="${s(3 * F.mmf)}" y1="${y - 6}" x2="${s(3 * F.mmf)}" y2="${y + 28}" stroke="${C.amber}" stroke-width="2.5"/>` +
+    `<line x1="${s(F.margin_per_equity)}" y1="${y - 6}" x2="${s(F.margin_per_equity)}" y2="${y + 28}" stroke="${C.mute}" stroke-width="1.5" stroke-dasharray="4,3"/>` +
+    T(s(F.mmf), y + 48, 'liquidation', {size: 14, col: C.red, anchor: 'middle'}) +
+    T(s(3 * F.mmf) + 6, y + 48, 'top-up', {size: 14, col: C.amber}) + T(s(F.margin_per_equity), y + 48, SL, {size: 14, col: C.mute, anchor: 'middle'});
+}
+function diagram(o) {
+  const v = Object.assign({dep: 1, vault: 1, fl: 1, mor: 1, per: 1, cf: 1, coll: 1, debt: 1, short: 1, frame: 1}, o.vis || {});
+  const M = o.M, e = o.emph || {};
+  let s = '';
+  if (v.frame) s += `<g opacity="${v.frame}">` + R(22, 96, 1070, 680, {fill: 'none', stroke: C.grey, sw: 2, dash: true, rx: 12}) +
+    T(40, 124, 'all on Monad: one chain, one shared state', {size: 17, col: C.mute}) + '</g>';
+  const cv = M.coll * v.coll, dv = M.debt * v.debt;
+  // connectors with labels
+  const con = (pts, lab, lx, ly, vis, col, anchor = 'start', dash = false) => vis > 0 ?
+    `<g opacity="${vis}">${arrow(pts, {col, dash})}${T(lx, ly, lab, {size: 16, col, anchor})}</g>` : '';
+  s += con(G.c_dep, 'deposit', 280, 416, v.vault * v.dep, C.ink, 'middle');
+  s += con(G.c_stake, 'stake', 452, 306, v.fl, C.lime);
+  s += con(G.c_post, 'post shMON', 610, 178, v.mor, C.green, 'middle');
+  s += con(G.c_borrow, 'borrow', 620, 372, v.debt > 0 ? v.mor : 0, C.green);
+  s += con(G.c_margin, 'AUSD margin', 505, 678, v.cf * (M.src === 'cf' ? 1 : 0), C.teal, 'middle', true);
+  s += con(G.c_short, 'open short', 512, 560, v.per, C.indigo);
+  s += box(G.dep, 'Depositor', [usd(D)], C.ink, '#fff', {op: v.dep});
+  s += box(G.vault, 'Vault contract', [M.hand || 'owns both legs', 'equity ' + usd(M.equity)], C.ink, '#fff', {op: v.vault, emph: e.vault});
+  s += box(G.fl, 'FastLane', ['stakes MON as shMON', pct(F.stake_pct) + ' a year'], C.lime, C.limeT, {op: v.fl});
+  if (M.src === 'cf') s += box(G.cf, 'Perpl credit facility', ['in design', 'lends ' + usd(M.loan) + ' AUSD', 'at ' + pct(F.credit_facility_pct, 0) + ' a year'],
+    C.teal, C.tealT, {op: v.cf, dash: true});
+  else s += box(G.cf, 'Margin', ['from the depositor’s', 'own capital: ' + usd(M.margin)], C.mute, '#fafafa', {op: v.cf});
+  // Morpho frame
+  const [mx, my, mw, mh] = G.mor;
+  s += `<g opacity="${v.mor}">` + R(mx, my, mw, mh, {fill: C.greenT, stroke: C.green, sw: e.mor ? 4.5 : 2}) +
+    T(mx + 18, my + 34, 'Morpho · shMON / WMON market', {size: 21, w: 700, col: C.green}) +
+    T(mx + 18, my + 74, 'shMON collateral', {size: 18}) + T(mx + mw - 18, my + 74, usd(cv), {size: 20, w: 700, anchor: 'end'}) +
+    R(mx + 18, my + 86, (mw - 36) * clamp(cv / (3.9 * D)), 14, {fill: C.green, rx: 3}) +
+    T(mx + 18, my + 132, 'WMON borrowed', {size: 18}) + T(mx + mw - 18, my + 132, usd(dv), {size: 20, w: 700, anchor: 'end'}) +
+    R(mx + 18, my + 144, (mw - 36) * clamp(dv / (3.9 * D)), 14, {fill: C.amber, rx: 3}) +
+    T(mx + 18, my + 196, `LTV ${pct(cv > 0 ? 100 * dv / cv : 0)} · liquidates at ${pct(100 * F.lltv)}`, {size: 18, col: C.green, w: e.mor ? 700 : 400}) +
+    T(mx + 18, my + 222, 'oracle: shMON’s exchange rate', {size: 15, col: C.mute}) + '</g>';
+  // Perpl frame
+  const [px, py, pw, ph] = G.per;
+  s += `<g opacity="${v.per}">` + R(px, py, pw, ph, {fill: C.indigoT, stroke: C.indigo, sw: e.per ? 4.5 : 2}) +
+    T(px + 18, py + 34, 'Perpl · short MON at ' + SL, {size: 21, w: 700, col: C.indigoD}) +
+    T(px + 18, py + 74, 'notional', {size: 18}) + T(px + pw - 18, py + 74, usd(M.notional * v.short), {size: 20, w: 700, anchor: 'end'}) +
+    T(px + 18, py + 106, 'profit and loss', {size: 18}) + T(px + pw - 18, py + 106, sgnusd(M.pnl * v.short), {size: 20, w: 700, anchor: 'end', col: M.pnl < -1 ? C.red : M.pnl > 1 ? C.green : C.ink}) +
+    T(px + 18, py + 138, 'margin (AUSD)', {size: 18}) + T(px + pw - 18, py + 138, usd(M.margin * v.short), {size: 20, w: 700, anchor: 'end'}) +
+    T(px + 18, py + 172, 'margin as a share of notional', {size: 15, col: C.mute}) +
+    gauge(px + 18, py + 184, pw - 40, v.short > 0.5 ? M.ratio : F.margin_per_equity) + '</g>';
+  return s;
+}
+function balance(x, y, M, title, show = 1) {
+  const vn = typeof VEN !== 'undefined' ? VEN.name : 'Morpho';
+  const rows = [['shMON on ' + vn, M.coll, C.green], ['WMON owed to ' + vn, -M.debt, C.amber],
+    ['Margin on Perpl', M.margin, C.indigo], ['Short profit and loss', M.pnl, C.indigo]];
+  if (M.loan > 0.5) rows.push(['Owed on the credit line', -M.loan, C.teal]);
+  if (M.showCash) rows.push(['Held by the vault, in transit', Math.abs(M.cash) < 1 ? 0 : M.cash, C.ink]);
+  let s = T(x, y, title, {size: 22, w: 700});
+  rows.forEach((r, k) => {
+    const op = clamp(show * rows.length - k);
+    s += `<g opacity="${op}">` + T(x, y + 46 + k * 40, r[0], {size: 18, col: r[2]}) +
+      T(x + 450, y + 46 + k * 40, sgnusd(r[1]), {size: 20, w: 600, anchor: 'end'}) + '</g>';
+  });
+  const yy = y + 46 + rows.length * 40;
+  s += `<g opacity="${clamp(show * rows.length - rows.length + 1)}">` +
+    `<line x1="${x}" y1="${yy - 22}" x2="${x + 450}" y2="${yy - 22}" stroke="${C.ink}" stroke-width="1.5"/>` +
+    T(x, yy + 8, 'Equity', {size: 22, w: 700}) + T(x + 450, yy + 8, usd(M.equity), {size: 24, w: 700, anchor: 'end'}) + '</g>';
+  return s;
+}
+
+// ------------------------------------------------------------------ scenes
+const P0 = (u, cut) => model(0);
+
+function sGap(u) {
+  let s = T(60, 170, 'Onchain yield today', {size: 28, w: 700});
+  [['Staking', 0.3], ['Lending', 1.0], ['Looping', 1.7]].forEach(([n, a], k) => {
+    const op = win(u, a, 0.6);
+    s += `<g opacity="${op}">` + R(60, 200 + k * 92, 400, 72, {fill: C.greenT, stroke: C.green}) +
+      T(84, 245 + k * 92, n, {size: 26, w: 600, col: C.green}) + '</g>';
+  });
+  const g = win(u, 2.6, 0.6);
+  s += `<g opacity="${g}">` + R(60, 476, 400, 72, {fill: C.indigoT, stroke: C.indigo, dash: true}) +
+    T(84, 512, '+ Funding?', {size: 26, w: 600, col: C.indigo}) + T(84, 538, 'needs a hedge', {size: 17, col: C.indigo}) + '</g>';
+  const h = win(u, 3.0, 0.6);
+  s += `<g opacity="${h}">` + T(640, 170, 'To hedge it, a vault leaves the chain', {size: 28, w: 700}) +
+    box([640, 220, 250, 110], 'Vault on Monad', ['the yield leg'], C.ink, '#fff') +
+    box([1230, 220, 300, 110], 'Hedge elsewhere', ['another chain'], C.mute, '#f6f6f8') + '</g>';
+  const b = win(u, 3.6, 0.8);
+  s += `<g opacity="${b}">` + arrow([[890, 275], [1230, 275]], {col: C.red, dash: true}) +
+    T(1060, 262, 'bridge · minutes', {size: 18, col: C.red, anchor: 'middle'}) +
+    R(1230, 360, 300, 46, {fill: C.amberT, stroke: C.amber, sw: 1.5}) + T(1246, 390, 'idle margin parked there', {size: 18, col: C.amber}) + '</g>';
+  const r = win(u, 4.6, 0.7);
+  s += `<g opacity="${r}">` + lines(640, 470, ['✕  two transactions, minutes apart: half-hedged in between',
+    '✕  cannot top up inside the liquidation window', '✕  extra capital sits idle as a buffer'], {size: 21, col: C.red, lh: 40}) + '</g>';
+  return s;
+}
+
+function sOpen(u, cut) {
+  const vis = {dep: win(u, 0, .5), vault: win(u, 0, .5), fl: win(u, 1.5, .5), mor: win(u, 3.3, .5),
+    coll: win(u, 3.5, 2), debt: win(u, 5.5, 1.5), cf: win(u, 7, .6), per: win(u, 8.5, .6), short: win(u, 8.5, 1.5)};
+  const M = model(0);
+  let s = diagram({M, vis, emph: {mor: cut === 'lending' && u > 3.5}});
+  s += token(G.c_dep, (u - 0.4) / 1.1, C.ink);
+  s += token(G.c_stake, (u - 1.6) / 1.6, C.lime);
+  s += token(G.c_post, (u - 3.5) / 1.6, C.green);
+  s += token(G.c_borrow, (u - 5.5) / 1.4, C.amber);
+  s += token(G.c_margin, (u - 7.1) / 1.3, C.teal);
+  s += token(G.c_short, (u - 8.6) / 1.3, C.indigo);
+  const seal = win(u, 10.1, .5);
+  if (seal > 0) s += `<g opacity="${seal}" transform="rotate(-4 172 230) scale(${0.9 + 0.1 * seal})" transform-origin="172 230">` +
+    R(40, 170, 264, 116, {fill: '#fff', stroke: C.indigo, sw: 4}) +
+    T(172, 218, 'ONE CHAIN', {size: 27, w: 800, col: C.indigo, anchor: 'middle'}) +
+    T(172, 256, 'no bridge, no second venue', {size: 18, w: 600, col: C.indigo, anchor: 'middle'}) + '</g>';
+  const show = (u - 3.5) / 7;
+  s += balance(1130, 150, M, 'The vault, every leg on Monad', clamp(show));
+  const n = win(u, 10.5, .6);
+  s += `<g opacity="${n}">` + lines(1130, 520, ['Net MON exposure: none.', 'shMON ' + usd(M.coll) + ' − WMON ' + usd(M.debt),
+    '− short ' + usd(M.notional) + ' = 0'], {size: 19, lh: 30, col: C.ink}) +
+    lines(1130, 608, ['Every leg is a contract on one chain, so a vault', 'can also run them in one transaction; the flash', 'loan that builds the loop needs exactly that.'],
+      {size: 15, lh: 21, col: C.indigo}) + '</g>';
+  if (cut === 'lending') {
+    const c = win(u, 6.5, .6);
+    s += `<g opacity="${c}">` + R(1130, 682, 450, 100, {fill: C.greenT, stroke: C.green}) +
+      lines(1150, 714, ['A new Morpho borrower:', usd(M.debt) + ' WMON against ' + usd(M.coll), 'of shMON, at 66.7% LTV'], {size: 19, lh: 28, col: C.green}) + '</g>';
+  }
+  return s;
+}
+
+function sEarn(u, cut) {
+  const M = model(0);
+  const x0 = 110, base = 690, sc = 15, bw = 130, gap = 38;
+  let s = T(60, 150, 'What a ' + usd(D) + ' deposit earns in a year', {size: 28, w: 700});
+  let run = 0;
+  const cols = [C.lime, C.green, C.indigo, C.grey, C.teal];
+  const items = M.rows.map((r, k) => [r[0], r[1], cols[k]]);
+  items.forEach(([name, v, col], k) => {
+    const a = win(u, 0.4 + k * 0.9, .7), x = x0 + k * (bw + gap);
+    const y0 = base - run * sc, y1 = base - (run + v * a) * sc;
+    s += `<g opacity="${a > 0 ? 1 : 0}">` + R(x, Math.min(y0, y1), bw, Math.abs(y1 - y0), {fill: col, rx: 3}) +
+      T(x + bw / 2, Math.min(y0, y1) - 12, spct(v * a, 2), {size: 21, w: 700, anchor: 'middle'}) +
+      lines(x + bw / 2, base + 34, wrap(name, 16), {size: 16, lh: 21, anchor: 'middle', col: C.mute}) + '</g>';
+    if (k < items.length - 1 && a >= 1) s += `<line x1="${x + bw}" y1="${base - (run + v) * sc}" x2="${x + bw + gap}" y2="${base - (run + v) * sc}" stroke="${C.mute}" stroke-dasharray="4,3"/>`;
+    run += v;
+  });
+  const k = items.length, a = win(u, 0.4 + k * 0.9, .8), x = x0 + k * (bw + gap);
+  s += `<g opacity="${a}">` + R(x, base - M.net * sc * a, bw, M.net * sc * a, {fill: C.indigoD, rx: 3}) +
+    T(x + bw / 2, base - M.net * sc * a - 12, pct(M.net * a, 2), {size: 24, w: 800, anchor: 'middle', col: C.indigoD}) +
+    T(x + bw / 2, base + 34, 'Net a year', {size: 17, w: 700, anchor: 'middle'}) + '</g>';
+  s += `<line x1="${x0 - 10}" y1="${base}" x2="${x + bw + 10}" y2="${base}" stroke="${C.ink}" stroke-width="1.5"/>`;
+  const p = win(u, 5.6, .7), own = model(0, 0, 'own'), zero = model(0, 0, 'cf', 0);
+  s += `<g opacity="${p}">` + R(1190, 200, 380, 330, {fill: '#fafafc', stroke: C.line, sw: 1.5}) +
+    T(1212, 244, 'On ' + usd(D), {size: 20, w: 700}) + T(1212, 290, usd(D * M.net / 100) + ' a year', {size: 34, w: 800, col: C.indigoD}) +
+    lines(1212, 350, ['Own margin, no credit facility:', '  ' + pct(own.net, 2), 'If funding fell to zero:', '  ' + pct(zero.net, 2)], {size: 19, lh: 30}) +
+    T(1212, 506, 'Funding: Perpl’s 90-day MON average', {size: 15, col: C.mute}) + '</g>';
+  return s;
+}
+
+function shockPath(u) {
+  if (u < 1) return 0; if (u < 3) return lerp(0, -0.2, ease((u - 1) / 2)); if (u < 4) return -0.2;
+  if (u < 7) return lerp(-0.2, F.rally_to_topup, ease((u - 4) / 3)); return F.rally_to_topup;
+}
+const rev = pts => pts.slice().reverse();
+function tokenL(pts, f, col, label) {               // a moving token, its route as an arrow, its amount beside it
+  const route = clamp((f + 0.25) / 0.25) * clamp((1.35 - f) / 0.35);
+  if (route <= 0) return '';
+  let out = arrow(pts, {col, w: 4, op: route});
+  if (f <= 0 || f >= 1) return out;
+  const [x, y] = along(pts, f);
+  const w = label.length * 9.2 + 18;
+  return out + token(pts, f, col) + R(x + 14, y - 34, w, 26, {fill: '#fff', stroke: col, sw: 1.5, rx: 13}) +
+    T(x + 14 + w / 2, y - 16, label, {size: 15, w: 700, col, anchor: 'middle'});
+}
+// The rebalance after the rally to the top-up point, every leg as an actual transfer. With p the rise, E the equity
+// and m the short's margin per unit of notional: the credit facility tops up T = (1 + m)pE; then, in one transaction,
+// a flash loan repays 2pE of WMON, 3pE of shMON is withdrawn and sold (repaying the flash loan, leaving pE), pE of the
+// short is closed (releasing m·pE of AUSD), and the top-up is repaid. The vault ends in its opening shape at the new
+// price: 3x loop, the same short leverage, equity E.
+const SHOCK = {top: 7.2, r1: 9.0, r2: 11.0, r3: 13.0, r4: 15.0, r5: 17.0, done: 18.8};
+function sShock(u, cut) {
+  const mm = F.margin_per_equity, p = shockPath(u), E = D, pE = F.rally_to_topup * E, T_ = (1 + mm) * pE;
+  const topF = win(u, SHOCK.top, 1.6);
+  const pre = model(p, (1 + mm) * F.rally_to_topup * topF);
+  const r = k => win(u, SHOCK['r' + k] + (k === 3 || k === 4 ? 1.0 : 0), 1.4);   // the step's amounts land with its last transfer
+  const M = Object.assign({}, pre);
+  if (u >= SHOCK.r1) {
+    M.debt = lerp(pre.debt, 2 * E, r(1));
+    M.coll = lerp(pre.coll, 3 * E, r(2));
+    const keep = E / pre.notional;                  // share of the short kept; margin and loss are released pro rata
+    M.notional = lerp(pre.notional, E, r(4)); M.pnl = lerp(pre.pnl, pre.pnl * keep, r(4)); M.margin = lerp(pre.margin, pre.margin * keep, r(4));
+    M.loan = lerp(pre.loan, mm * E, r(5));
+    M.acct = M.margin + M.pnl; M.ratio = M.acct / M.notional; M.equity = E;
+  }
+  M.showCash = true; M.cash = E - (M.coll - M.debt + M.margin + M.pnl - M.loan);   // held mid-transaction, net of the flash loan
+  const hand = u >= SHOCK.r5 + 1.4 ? null : u >= SHOCK.r4 + 2.4 ? 'holds ' + usd(T_) + ' AUSD' :
+    u >= SHOCK.r3 + 2.4 ? 'holds ' + usd(pE) + ' AUSD' : u >= SHOCK.r2 + 1.4 ? 'holds ' + usd(3 * pE) + ' shMON' :
+    u >= SHOCK.r1 + 1.4 ? 'owes a flash loan' : null;
+  M.hand = hand;
+  const side = Math.max(win(u, SHOCK.r1 - 0.3, .3), 0);
+  let s = diagram({M, vis: {dep: 1 - side}, emph: {per: cut !== 'lending', mor: cut === 'lending'}});
+  // the transfers
+  s += tokenL(G.c_margin, (u - SHOCK.top) / 1.6, C.teal, 'top-up ' + usd(T_) + ' AUSD');
+  s += tokenL(rev(G.c_borrow), (u - SHOCK.r1) / 1.4, C.amber, 'repay ' + usd(2 * pE) + ' WMON');
+  s += tokenL(G.c_borrow, (u - SHOCK.r2) / 1.4, C.green, usd(3 * pE) + ' shMON');
+  s += tokenL(G.c_stake, (u - SHOCK.r3) / 0.95, C.green, 'sell ' + usd(3 * pE) + ' shMON');
+  s += tokenL(rev(G.c_stake), (u - SHOCK.r3 - 1.0) / 0.95, C.lime, 'keep ' + usd(pE) + ' after the flash loan');
+  s += tokenL(G.c_short, (u - SHOCK.r4) / 0.95, C.indigo, 'close ' + usd(pE) + ' of the short');
+  s += tokenL(rev(G.c_short), (u - SHOCK.r4 - 1.0) / 0.95, C.indigo, usd(mm * pE) + ' AUSD released');
+  s += tokenL(G.c_repay, (u - SHOCK.r5) / 1.4, C.teal, 'repay ' + usd(T_) + ' AUSD');
+  // right panel
+  s += T(1130, 150, 'MON price', {size: 20, col: C.mute}) +
+    T(1130, 204, spct(100 * p, 0), {size: 52, w: 800, col: p > 0.001 ? C.green : p < -0.001 ? C.red : C.ink});
+  s += balance(1130, 260, M, 'The vault', 1);
+  const cx = 1130, cy = 640, cw = 440, ch = 110, dur = SCN.shock.dur;
+  s += R(cx, cy - 8, cw, ch + 40, {fill: '#fafafc', stroke: C.line, sw: 1});
+  const N = 80, pts1 = [], pts2 = [];
+  for (let k = 0; k <= N; k++) { const uu = dur * k / N; if (uu > u) break;
+    const pp = shockPath(uu), X = cx + 10 + (cw - 20) * k / N;
+    pts1.push([X, cy + ch / 2 - pp * Math.min(160, 0.5 * ch / Math.max(0.2, F.rally_to_topup))]); pts2.push([X, cy + ch / 2]); }
+  if (pts1.length > 1) s += `<polyline points="${pts1.map(q => q.join(',')).join(' ')}" fill="none" stroke="${C.mute}" stroke-width="2.5"/>` +
+    `<polyline points="${pts2.map(q => q.join(',')).join(' ')}" fill="none" stroke="${C.indigoD}" stroke-width="3.5"/>`;
+  s += T(cx + 12, cy + ch + 24, '— holding MON', {size: 15, col: C.mute}) + T(cx + 170, cy + ch + 24, '— vault equity', {size: 15, col: C.indigoD});
+  // what is happening, top left
+  const tr = win(u, 6.4, .4) * (1 - win(u, SHOCK.r1 - 0.3, .3));
+  if (tr > 0) s += `<g opacity="${tr}">` + R(40, 150, 264, 150, {fill: C.amberT, stroke: C.amber, sw: 2}) +
+    T(60, 188, 'MON +' + Math.round(100 * F.rally_to_topup) + '%', {size: 22, w: 800, col: C.amber}) +
+    lines(60, 222, ['the short’s margin is at', '3x maintenance: the credit', 'facility tops it up'], {size: 17, lh: 25, col: C.amber}) + '</g>';
+  const ck = win(u, SHOCK.r1 - 0.3, .3) * (1 - win(u, SHOCK.done, .4));
+  if (ck > 0) {
+    const steps = [['repay ' + usd(2 * pE) + ' WMON', 'with a flash loan', SHOCK.r1, 1.4], ['withdraw ' + usd(3 * pE), 'of shMON', SHOCK.r2, 1.4],
+      ['sell it, repay the flash', 'loan, keep ' + usd(pE), SHOCK.r3, 2.0], ['close ' + usd(pE) + ' of the', 'short: ' + usd(mm * pE) + ' back', SHOCK.r4, 2.0],
+      ['repay the ' + usd(T_), 'top-up', SHOCK.r5, 1.4]];
+    s += `<g opacity="${ck}">` + R(30, 132, 282, 352, {fill: '#fff', stroke: C.indigo, sw: 2.5}) +
+      T(46, 162, 'REBALANCE', {size: 19, w: 800, col: C.indigo}) + T(46, 184, 'one transaction: the flash loan is repaid in it', {size: 13, col: C.indigo});
+    steps.forEach(([a, b, at, len], k) => {
+      const y = 214 + k * 54, st = u >= at + len ? 2 : u >= at ? 1 : 0;
+      const col = st === 2 ? C.green : st === 1 ? C.indigo : C.grey;
+      s += `<circle cx="58" cy="${y + 6}" r="11" fill="${st ? col : '#fff'}" stroke="${col}" stroke-width="2"/>` +
+        T(58, y + 11, st === 2 ? '✓' : String(k + 1), {size: 13, w: 800, col: st ? '#fff' : col, anchor: 'middle'}) +
+        T(78, y + 4, a, {size: 15, w: st === 1 ? 700 : 400, col: st ? C.ink : C.mute}) + T(78, y + 24, b, {size: 15, w: st === 1 ? 700 : 400, col: st ? C.ink : C.mute});
+    });
+    s += '</g>';
+  }
+  const dn = win(u, SHOCK.done, .5);
+  if (dn > 0) s += `<g opacity="${dn}">` + R(30, 132, 282, 352, {fill: C.greenT, stroke: C.green, sw: 2.5}) +
+    T(46, 166, 'Back to the opening shape', {size: 18, w: 800, col: C.green}) +
+    lines(46, 198, ['at the new price: a 3x loop,', 'a ' + SL + ' short, the top-up repaid,', 'equity ' + usd(E) + '.'], {size: 16, lh: 24, col: C.ink}) +
+    `<line x1="46" y1="290" x2="296" y2="290" stroke="${C.line}"/>` +
+    T(46, 318, 'In design: hooks', {size: 16, w: 800, col: C.indigo}) +
+    lines(46, 344, ['Perpl warns the vault before', 'the top-up line, so it acts', 'first, with no race.'], {size: 16, lh: 24, col: C.indigo}) + '</g>';
+  if (cut === 'lending') {
+    const c = win(u, 2, .6);
+    s += `<g opacity="${c}">` + R(1130, 574, 450, 48, {fill: C.greenT, stroke: C.green, sw: 1.5}) +
+      T(1146, 604, 'Collateral and debt move 3:2 together: LTV stays 66.7%', {size: 16, col: C.green, w: 600}) + '</g>';
+  }
+  return s;
+}
+
+function sPays(u, cut) {
+  const M = model(0), E = M.E, y = F.stake_pct / 100, b = F.borrow_pct / 100;
+  const flows = {stake: F.loop_leverage * y * E, fund: F.funding90_pct / 100 * E, borrow: (F.loop_leverage - 1) * b * E,
+    cf: F.margin_per_equity * F.credit_facility_pct / 100 * E, cost: -F.legs_pct.costs / 100 * E};
+  const keep = flows.stake + flows.fund - flows.borrow - flows.cf - flows.cost;
+  const sc = 120 / flows.stake;
+  let s = T(60, 150, 'Who pays whom, a year, on ' + usd(D), {size: 28, w: 700});
+  const vx = 690, vy = 300, vw = 230, vh = 260;
+  s += box([vx, vy, vw, vh], 'Vault', ['', 'in: staking,', 'funding', '', 'out: interest,', 'fees'], C.ink, '#fff');
+  const src = [['Staking rewards', 'paid through FastLane', flows.stake, C.lime, 230], ['Long traders', 'pay funding to shorts', flows.fund, C.indigo, 470]];
+  const snk = [['Morpho WMON lenders', 'interest on ' + usd(M.debt), flows.borrow, C.green, 230], ['Credit facility lenders', pct(F.credit_facility_pct, 0) + ' on ' + usd(M.loan), flows.cf, C.teal, 400],
+    ['Swaps and Perpl fees', 'entry and exit', flows.cost, C.grey, 540]];
+  const ribbon = (x1, y1, x2, y2, w, col, f, emph) => {
+    const d = `M${x1},${y1} C${(x1 + x2) / 2},${y1} ${(x1 + x2) / 2},${y2} ${x2},${y2}`;
+    return `<path d="${d}" fill="none" stroke="${col}" stroke-width="${Math.max(3, w)}" stroke-opacity="${emph ? .75 : .45}" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1 - f}"/>`;
+  };
+  src.forEach(([n, sub, v, col, yy], k) => {
+    const a = win(u, 0.4 + k * 1.0, .9);
+    s += `<g opacity="${clamp(a * 3)}">` + R(60, yy - 50, 330, 100, {fill: '#fff', stroke: col}) + T(80, yy - 12, n, {size: 21, w: 700, col}) +
+      T(80, yy + 16, sub, {size: 16, col: C.mute}) + T(370, yy - 12, '+' + usd(v), {size: 21, w: 700, anchor: 'end'}) + '</g>' +
+      ribbon(390, yy, vx, vy + 70 + k * 110, v * sc, col, a);
+  });
+  snk.forEach(([n, sub, v, col, yy], k) => {
+    const a = win(u, 2.6 + k * 1.0, .9), emph = cut === 'lending' && k === 0;
+    s += ribbon(vx + vw, vy + 60 + k * 80, 1170, yy, v * sc, col, a, emph) +
+      `<g opacity="${clamp(a * 3)}">` + R(1170, yy - 50, 380, 100, {fill: emph ? C.greenT : '#fff', stroke: col, sw: emph ? 4 : 2}) +
+      T(1190, yy - 12, n, {size: 21, w: 700, col}) + T(1190, yy + 16, sub, {size: 16, col: C.mute}) +
+      T(1530, yy - 12, '−' + usd(v), {size: 21, w: 700, anchor: 'end'}) + '</g>';
+  });
+  const kk = win(u, 6.0, .8);
+  s += `<g opacity="${kk}">` + arrow([[805, 560], [805, 640]], {col: C.indigoD}) + R(600, 640, 410, 86, {fill: C.indigoT, stroke: C.indigoD}) +
+    T(805, 676, 'The depositor keeps ' + usd(keep), {size: 22, w: 700, anchor: 'middle', col: C.indigoD}) +
+    T(805, 706, pct(100 * keep / D, 2) + ' a year · illustrative', {size: 17, anchor: 'middle', col: C.indigoD}) + '</g>';
+  const nt = win(u, 7.0, .7);
+  s += `<g opacity="${nt}">` + T(60, 650, 'If funding turns negative, the short pays it.', {size: 17, col: C.red}) +
+    T(60, 676, 'Each rebalance costs swap fees.', {size: 17, col: C.red}) + '</g>';
+  return s;
+}
+
+function sNext(u) {
+  const cards = [['live', 'Live today', 'Same-chain hedge', ['Open, resize and top up', 'a hedge from any contract', 'on Monad, next to the', 'loan. No bridge.']],
+    ['design', 'In design', 'Hooks', ['Perpl calls the curator’s', 'contract before it would', 'liquidate, so it can cure', 'the position.']],
+    ['design', 'In design', 'Credit facility', ['Margin lent against both', 'legs together, valued', 'at one block.']],
+    ['road', 'Roadmap', 'Spot order book', ['Buy or sell the spot', 'asset on the same', 'account as the perp.']],
+    ['road', 'Roadmap', 'Portfolio margin', ['A hedged position needs', 'less margin, because', 'the hedge counts.']]];
+  let s = T(60, 160, 'What a contract can do with its margin, stage by stage', {size: 28, w: 700});
+  cards.forEach(([k, b, t, ls], i) => {
+    const a = win(u, 0.4 + i * 1.3, .7), x = 60 + i * 300, y = 230;
+    const col = k === 'live' ? C.green : k === 'design' ? C.indigo : C.mute;
+    s += `<g opacity="${a}" transform="translate(0 ${(1 - a) * 24})">` +
+      R(x, y, 280, 300, {fill: k === 'live' ? C.greenT : k === 'design' ? C.indigoT : '#f6f6f8', stroke: col, dash: k !== 'live'}) +
+      badge(x + 18, y + 20, b, k) + T(x + 18, y + 100, t, {size: 22, w: 700, col}) +
+      lines(x + 18, y + 146, ls, {size: 19, lh: 30}) + '</g>';
+    if (i < cards.length - 1 && a >= 1) s += arrow([[x + 282, y + 180], [x + 298, y + 180]], {col: C.mute});
+  });
+  return s;
+}
+
+// The loop, lap by lap: post shMON on Morpho, borrow 2/3 of it in WMON, stake it, post again. Converges to 3x.
+const LAPS = [1.5, 1.2, 1.0, 0.8, 0.6, 0.45, 0.35, 0.3, 0.25, 0.25];      // seconds per lap; the rest fills at the end
+function sLoop(u) {
+  const E = D, q = 2 / 3;
+  let s = '';
+  const MB = [60, 170, 300, 120], FB = [470, 170, 300, 120], VB = [265, 470, 300, 120];
+  s += box(MB, 'Morpho', ['holds shMON as collateral', 'lends WMON at 2/3 of it'], C.green, C.greenT);
+  s += box(FB, 'FastLane', ['stakes WMON', 'returns shMON'], C.lime, C.limeT);
+  s += box(VB, 'Vault', ['starts with ' + usd(E), 'of shMON'], C.ink, '#fff');
+  const path = [[265, 530], [210, 530], [210, 290]], path2 = [[360, 230], [470, 230]], path3 = [[620, 290], [620, 530], [565, 530]];
+  s += arrow(path, {col: C.green}) + T(198, 420, 'post shMON', {size: 17, col: C.green, anchor: 'end'});
+  s += arrow(path2, {col: C.amber}) + T(415, 158, 'borrow WMON', {size: 17, col: C.amber, anchor: 'middle'}) + T(415, 256, '2/3', {size: 17, w: 700, col: C.amber, anchor: 'middle'});
+  s += arrow(path3, {col: C.lime}) + T(632, 420, 'stake', {size: 17, col: C.lime});
+  // lap timing
+  const t0 = 0.6; let acc = t0, lap = -1, f = 0;
+  for (let k = 0; k < LAPS.length; k++) { if (u < acc + LAPS[k]) { lap = k; f = (u - acc) / LAPS[k]; break; } acc += LAPS[k]; }
+  const done = lap < 0 && u >= acc;                                    // every listed lap has run
+  const fill = done ? win(u, acc, 1.2) : 0;                            // the remaining laps, collapsed
+  const lapsDone = done ? LAPS.length : Math.max(0, lap);
+  const post = k => E * Math.pow(q, k), borrow = k => E * Math.pow(q, k + 1);
+  let coll = 0, debt = 0;
+  for (let k = 0; k < lapsDone; k++) { coll += post(k); debt += borrow(k); }
+  if (lap >= 0) { coll += post(lap) * clamp(f / 0.35); debt += borrow(lap) * clamp((f - 0.35) / 0.3); }
+  coll = lerp(coll, 3 * E, fill); debt = lerp(debt, 2 * E, fill);
+  if (lap >= 0) {                                                       // one token per lap, shrinking with the amount
+    const r = 8 + 10 * Math.sqrt(Math.pow(q, lap)), seg = f < 0.35 ? along(path, f / 0.35) : f < 0.65 ? along(path2, (f - 0.35) / 0.3) : along(path3, (f - 0.65) / 0.35);
+    const col = f < 0.35 ? C.green : f < 0.65 ? C.amber : C.lime;
+    s += `<circle cx="${seg[0]}" cy="${seg[1]}" r="${r + 7}" fill="${col}" opacity=".18"/><circle cx="${seg[0]}" cy="${seg[1]}" r="${r}" fill="${col}"/>`;
+    s += T(60, 680, `Lap ${lap + 1}: post ${usd(post(lap))} of shMON, borrow ${usd(borrow(lap))} of WMON`, {size: 22, w: 700});
+  } else if (u > t0) {
+    s += T(60, 680, 'Each lap is 2/3 of the last: 1 + 2/3 + 4/9 + … = 3', {size: 22, w: 700});
+  }
+  // stacked columns
+  const base = 690, sc = 470 / (3 * E), cx1 = 860, cx2 = 1100, cw = 170;
+  const stack = (x, total, unit, col, tint) => {
+    let out = '', y = base, k = 0, left = total;
+    while (left > 1 && k < 40) { const seg = Math.min(left, unit(k)), h = seg * sc;
+      out += R(x, y - h, cw, h, {fill: k % 2 ? tint : col, stroke: '#fff', sw: 1, rx: 2});
+      if (h > 26) out += T(x + cw / 2, y - h / 2 + 7, usd(seg), {size: 16, w: 600, col: k % 2 ? col : '#fff', anchor: 'middle'});
+      y -= h; left -= seg; k++; }
+    return out;
+  };
+  s += stack(cx1, coll, post, C.green, C.greenT) + stack(cx2, debt, borrow, C.amber, C.amberT);
+  s += `<line x1="${cx1 - 20}" y1="${base}" x2="${cx2 + cw + 20}" y2="${base}" stroke="${C.ink}" stroke-width="1.5"/>`;
+  s += T(cx1 + cw / 2, base + 30, 'shMON posted', {size: 18, w: 600, col: C.green, anchor: 'middle'}) +
+    T(cx2 + cw / 2, base + 30, 'WMON borrowed', {size: 18, w: 600, col: C.amber, anchor: 'middle'});
+  s += T(cx1 + cw / 2, base - coll * sc - 14, usd(coll), {size: 22, w: 800, anchor: 'middle'}) +
+    T(cx2 + cw / 2, base - debt * sc - 14, usd(debt), {size: 22, w: 800, anchor: 'middle'});
+  s += `<line x1="${cx1 - 20}" y1="${base - 3 * E * sc}" x2="${cx2 + cw + 20}" y2="${base - 3 * E * sc}" stroke="${C.grey}" stroke-dasharray="5,4"/>` +
+    T(cx2 + cw + 24, base - 3 * E * sc + 5, '3x', {size: 18, w: 700, col: C.mute});
+  s += T(1330, 300, 'Loan-to-value', {size: 18, col: C.mute}) +
+    T(1330, 340, pct(coll > 0 ? 100 * debt / coll : 0), {size: 34, w: 800, col: C.green}) +
+    T(1330, 372, 'the same on every lap', {size: 16, col: C.mute});
+  const fl = win(u, acc + 1.6, .6);
+  if (fl > 0) s += `<g opacity="${fl}">` + R(1300, 430, 270, 230, {fill: C.indigoT, stroke: C.indigo, sw: 2.5}) +
+    T(1318, 466, 'In one transaction', {size: 20, w: 800, col: C.indigo}) +
+    lines(1318, 500, ['a free flash loan does', 'every lap at once: borrow', usd(2 * E) + ' WMON, stake it,', 'post ' + usd(3 * E) + ' shMON,', 'borrow ' + usd(2 * E) + ' to repay'], {size: 17, lh: 28, col: C.indigo}) + '</g>';
+  return s;
+}
+
+// What it takes to liquidate each leg
+function sLiq(u, cut) {
+  let s = '';
+  // left: the Morpho leg
+  const a = win(u, 0.3, .6);
+  s += `<g opacity="${a}">` + R(40, 110, 720, 470, {fill: C.greenT, stroke: C.green}) +
+    T(64, 150, 'Morpho loan: no MON price liquidates it', {size: 23, w: 800, col: C.green}) +
+    lines(64, 186, ['Collateral (shMON) and debt (WMON) are both MON, and the market', 'prices shMON by its exchange rate. Only interest moves the LTV.'], {size: 17, lh: 25}) + '</g>';
+  // LTV over years for three borrow-over-staking gaps
+  const gx = 100, gy = 250, gw = 600, gh = 260, yrs = 5, lo = 0.55, hi = 0.95;
+  const X = t => gx + t / yrs * gw, Y = v => gy + (hi - v) / (hi - lo) * gh;
+  if (a > 0) {
+    s += `<g opacity="${a}">` + `<line x1="${gx}" y1="${gy + gh}" x2="${gx + gw}" y2="${gy + gh}" stroke="${C.ink}"/>` +
+      `<line x1="${gx}" y1="${Y(F.lltv)}" x2="${gx + gw}" y2="${Y(F.lltv)}" stroke="${C.red}" stroke-width="2.5"/>` +
+      T(gx + gw, Y(F.lltv) - 8, 'liquidates at 91.5%', {size: 15, col: C.red, anchor: 'end'}) +
+      [0, 1, 2, 3, 4, 5].map(t => T(X(t), gy + gh + 22, t + 'y', {size: 14, col: C.mute, anchor: 'middle'})).join('') +
+      T(gx - 10, Y(F.ltv) + 5, '66.7%', {size: 14, col: C.mute, anchor: 'end'}) + '</g>';
+    const cases = [[(F.stake_pct - F.borrow_pct), 'staking above borrow, as today: LTV falls', C.green, 0.9], [-10, '', C.amber, 2.0], [-20, '', C.red, 3.1]];
+    s += `<g opacity="${win(u, 2.0, .6)}">` + T(gx, 238, 'If borrow runs above staking by', {size: 15, col: C.mute}) +
+      T(gx + 226, 238, '10 pts', {size: 15, w: 700, col: C.amber}) + T(gx + 284, 238, 'or', {size: 15, col: C.mute}) +
+      T(gx + 306, 238, '20 pts', {size: 15, w: 700, col: C.red}) + T(gx + 362, 238, 'a year:', {size: 15, col: C.mute}) + '</g>';
+    cases.forEach(([g, lab, col, at]) => {
+      const p = win(u, at, 1.4), tCross = g < 0 ? Math.log(F.lltv / F.ltv) / (-g / 100) : Infinity;
+      const tEnd = Math.min(yrs * p, tCross), pts = [];
+      for (let k = 0; k <= 50; k++) { const t = tEnd * k / 50; pts.push([X(t), Y(F.ltv * Math.exp(-g / 100 * t))]); }
+      if (p <= 0) return;
+      s += `<polyline points="${pts.map(q => q.join(',')).join(' ')}" fill="none" stroke="${col}" stroke-width="3"/>`;
+      const [lx, ly] = pts[pts.length - 1];
+      if (tEnd >= tCross - 1e-9) s += `<circle cx="${lx}" cy="${ly}" r="6" fill="${col}"/>` +
+        T(lx, ly - 12, tCross.toFixed(1) + ' years', {size: 15, w: 700, col, anchor: 'middle'});
+      else if (g > 0 && p >= 1) s += T(X(2.5), Y(F.ltv * Math.exp(-g / 100 * 2.5)) - 14, lab, {size: 15, w: 600, col, anchor: 'middle'});
+    });
+  }
+  const yb = win(u, 3.4, .6);
+  s += `<g opacity="${yb}">` + T(64, 562, `At a 10-point gap it takes ${F.years_to_lltv['10'].toFixed(1)} years to reach 91.5%; a rebalance resets it.`, {size: 17, w: 600, col: C.green}) + '</g>';
+  // right: the Perpl leg
+  const b = win(u, 4.4, .6);
+  s += `<g opacity="${b}">` + R(800, 110, 760, 470, {fill: C.indigoT, stroke: C.indigo}) +
+    T(824, 150, 'Perpl short: a rally has to outrun the top-ups', {size: 23, w: 800, col: C.indigoD}) +
+    lines(824, 186, ['A rise that costs the short a dollar adds a dollar to the loop, so the', 'value to top up always exists; it only has to be moved in time.'], {size: 17, lh: 25}) + '</g>';
+  const rx = 850, rw = 660, ry = 330, maxR = Math.max(0.95, 1.08 * F.liq_after_one_topup), RX = r => rx + r / maxR * rw;
+  const ticks = []; for (let r = 0; r < maxR - 0.05; r += 0.25) ticks.push(r);
+  if (b > 0) {
+    s += `<g opacity="${b}">` + R(rx, ry, rw, 18, {fill: '#fff', stroke: C.line, sw: 1, rx: 9}) +
+      ticks.map(r => T(RX(r), ry + 44, '+' + Math.round(r * 100) + '%', {size: 14, col: C.mute, anchor: 'middle'})).join('') +
+      T(rx, ry - 52, 'MON rise from the open', {size: 15, col: C.mute}) + '</g>';
+    const mk = (r, lab, col, at, up) => { const p = win(u, at, .6); return p > 0 ? `<g opacity="${p}"><line x1="${RX(r)}" y1="${ry - 14}" x2="${RX(r)}" y2="${ry + 32}" stroke="${col}" stroke-width="3.5"/>` +
+      T(RX(r), up ? ry - 22 : ry + 72, lab, {size: 15, w: 700, col, anchor: 'middle'}) + '</g>' : ''; };
+    s += mk(F.rally_to_topup, 'top-up +' + (100 * F.rally_to_topup).toFixed(1) + '%', C.amber, 5.0, true);
+    s += mk(F.worst72_rise_pct / 100, 'worst 72 h, 90 days: +' + F.worst72_rise_pct.toFixed(1) + '%', C.mute, 5.8, false);
+    const moved = win(u, 8.2, 1.2);                                      // after a top-up, liquidation moves out
+    const liq = lerp(F.rally_to_liquidation, F.liq_after_one_topup, moved);
+    if (moved > 0) s += `<g opacity="${0.45 * moved}"><line x1="${RX(F.rally_to_liquidation)}" y1="${ry - 14}" x2="${RX(F.rally_to_liquidation)}" y2="${ry + 32}" stroke="${C.red}" stroke-width="3" stroke-dasharray="4,3"/>` +
+      T(RX(F.rally_to_liquidation), ry - 44, 'no top-up: +' + (100 * F.rally_to_liquidation).toFixed(1) + '%', {size: 14, col: C.red, anchor: 'middle'}) + '</g>';
+    s += mk(liq, (moved > 0.5 ? 'after one top-up: +' : 'liquidation, no top-up: +') + (100 * liq).toFixed(1) + '%', C.red, 6.6, true);
+  }
+  const t1 = win(u, 7.2, .6);
+  s += `<g opacity="${t1}">` + lines(824, 470, [`From the top-up line, MON must rise another ${(100 * F.gap_topup_to_liq).toFixed(1)}% before the next`,
+    `top-up lands. Its worst 1-hour rise in 90 days was ${F.worst1h_pct.toFixed(1)}%; a Monad block is 0.3 s.`], {size: 17, lh: 25, col: C.indigoD}) + '</g>';
+  const t2 = win(u, 9.6, .6);
+  s += `<g opacity="${t2}">` + R(824, 524, 712, 40, {fill: '#fff', stroke: C.indigo, sw: 1.5, dash: true}) +
+    T(840, 550, 'In design: hooks. Perpl calls the vault before it liquidates, so there is no race.', {size: 16, w: 600, col: C.indigo}) + '</g>';
+  // bottom: conditions
+  const c = win(u, 11.0, .7);
+  s += `<g opacity="${c}">` + T(40, 626, 'Holds while', {size: 19, w: 800, col: C.green}) +
+    lines(40, 656, ['Perpl and the keeper (or hook) are live', 'equity covers the cost of moving value (E/S ≥ 1.25)', 'staking stays above the borrow rate over time'], {size: 16, lh: 24}) +
+    T(800, 626, 'What can still end it: losses, not price', {size: 19, w: 800, col: C.red}) +
+    lines(800, 656, ['long negative funding, or borrow above staking for years', 'a shMON discount on a forced sale', 'a Perpl halt during a rally, or a contract or oracle fault'], {size: 16, lh: 24}) + '</g>';
+  return s;
+}
+
+// Closing scene for a lending protocol: why this grows Morpho rather than competing with it.
+function sGrow(u) {
+  const E = D, L = F.loop_leverage, m = F.margin_per_equity;
+  const coll = L * E, debt = (L - 1) * E, margin = m * E, interest = (L - 1) * F.borrow_pct / 100 * E;
+  const ownE = E / (1 + m);                                  // own margin: a third of the deposit sits on Perpl
+  let s = '';
+  const cards = [[40, 'More TVL', 'a new yield source', 0.4], [560, 'Complementary, not competing', 'the margin is lent, not taken out', 2.6],
+    [1080, 'Borrowers can take more risk', 'because they can hedge it', 5.2]];
+  cards.forEach(([x, t, sub, at]) => {
+    const a = win(u, at, .6);
+    s += `<g opacity="${a}" transform="translate(0 ${(1 - a) * 20})">` + R(x, 116, 480, 470, {fill: '#fff', stroke: C.green, sw: 2}) +
+      T(x + 22, 156, t, {size: 23, w: 800, col: C.green}) + T(x + 22, 184, sub, {size: 17, col: C.mute}) + '</g>';
+  });
+  // 1. more TVL
+  const a1 = win(u, 0.9, 1.2), bx = 62, bw = 300, mx = 25;
+  [['AUSD supplied on Morpho', F.ausd_supply_morpho_pct, C.grey], ['shMON staked alone', F.stake_pct, C.lime],
+    ['the hedged loop on Morpho', F.net_credit_facility_pct, C.indigoD]].forEach(([lab, v, col], k) => {
+    const y = 232 + k * 64;
+    s += `<g opacity="${clamp(a1 * 3 - k)}">` + T(bx, y, lab, {size: 16}) + R(bx, y + 10, bw * clamp(v / mx) * a1, 24, {fill: col, rx: 4}) +
+      T(bx + bw * clamp(v / mx) * a1 + 10, y + 29, pct(v * a1, 1), {size: 18, w: 700, col}) + '</g>';
+  });
+  s += `<g opacity="${win(u, 2.0, .6)}">` + lines(62, 470, ['Funding adds to staking, lending and looping.', 'Vaults built on Morpho earn more, so they', 'attract deposits that land on Morpho.'], {size: 16, lh: 24}) + '</g>';
+  // 2. complementary: the whole deposit stays in the loop on Morpho
+  const a2 = win(u, 3.1, 1.2), sc = 300 / coll;
+  const bar = (y, lab, v, ghost, col) => T(582, y, lab, {size: 15, col}) + T(1018, y, 'own margin: ' + usd(ghost), {size: 13, col: C.mute, anchor: 'end'}) +
+    R(582, y + 8, Math.max(4, v * sc * a2), 22, {fill: col, rx: 4}) +
+    T(582 + v * sc * a2 + 8, y + 25, usd(v), {size: 15, w: 700, col});
+  s += `<g opacity="${a2}">` + T(582, 224, 'One ' + usd(E) + ' vault: credit facility vs own margin', {size: 15, w: 700}) +
+    bar(252, 'shMON collateral on Morpho', coll, L * ownE, C.green) + bar(304, 'WMON borrowed on Morpho', debt, (L - 1) * ownE, C.amber) +
+    T(582, 356, 'Hedge margin on Perpl', {size: 15, col: C.indigo}) + R(582, 364, Math.max(4, margin * sc * a2), 22, {fill: C.indigo, rx: 4}) +
+    T(582 + margin * sc * a2 + 8, 381, usd(margin) + ' lent by the credit facility', {size: 14, w: 700, col: C.indigo}) +
+    T(582, 412, 'own margin: ' + usd(m * ownE) + ' of the deposit sits on Perpl instead', {size: 14, col: C.mute}) + '</g>';
+  s += `<g opacity="${win(u, 4.4, .6)}">` + lines(582, 470, ['The credit facility lends the margin, so no Morpho', 'position is cut to fund the hedge: the whole deposit',
+    'stays in the loop, ' + Math.round(100 * m) + '% more collateral and borrowing.'], {size: 16, lh: 24}) + '</g>';
+  // 3. borrowers take more risk
+  const a3 = win(u, 5.7, .8);
+  [['WMON borrowed per ' + usd(E) + ' vault', usd(debt)], ['Interest to Morpho’s WMON lenders', usd(interest) + ' a year'],
+    ['Loop leverage, hedged', L + 'x'], ['Liquidated by MON’s price', 'no: loan and collateral are both MON']].forEach(([k, v], i) => {
+    s += `<g opacity="${clamp(a3 * 4 - i)}">` + T(1102, 232 + i * 54, k, {size: 16, col: C.mute}) + T(1102, 256 + i * 54, v, {size: 19, w: 700}) + '</g>';
+  });
+  s += `<g opacity="${win(u, 7.0, .6)}">` + lines(1102, 470, ['A looper who won’t carry MON’s price risk', 'can hedge it on Perpl, so leverage that', 'was too risky becomes Morpho borrowing.'], {size: 16, lh: 24}) + '</g>';
+  // the flywheel
+  const fw = win(u, 8.4, .5);
+  if (fw > 0) {
+    s += `<g opacity="${fw}">` + R(40, 600, 1520, 112, {fill: C.greenT, stroke: C.green, sw: 2}) + '</g>';
+    const pills = ['Higher vault yield', 'More deposits', 'More collateral and borrowing', 'WMON lenders earn more', 'More WMON, cheaper loops'];
+    const pw = 262, gap = 40, x0 = 60;
+    pills.forEach((lab, k) => {
+      const a = win(u, 8.7 + k * 0.55, .4), x = x0 + k * (pw + gap);
+      s += `<g opacity="${a}">` + R(x, 616, pw, 40, {fill: '#fff', stroke: C.green, sw: 2, rx: 20}) +
+        T(x + pw / 2, 642, lab, {size: 15, w: 700, col: C.green, anchor: 'middle'}) + '</g>';
+      if (k < pills.length - 1 && a >= 1) s += arrow([[x + pw + 2, 636], [x + pw + gap - 2, 636]], {col: C.green});
+    });
+    const ret = win(u, 8.7 + pills.length * 0.55, .6);
+    const xl = x0 + 4 * (pw + gap) + pw / 2, xf = x0 + pw / 2;
+    if (ret > 0) s += `<g opacity="${ret}">` + arrow([[xl, 656], [xl, 676], [xf, 676], [xf, 658]], {col: C.green}) +
+      T(800, 700, 'One brake: the more vaults short MON, the lower funding can go. The dashboard tracks it.', {size: 14, col: C.mute, anchor: 'middle'}) + '</g>';
+  }
+  const c = win(u, 12.0, .7);
+  s += `<g opacity="${c}">` + T(40, 748, 'Every curator who runs this brings collateral, borrowing and interest to Morpho.', {size: 21, w: 800, col: C.green}) +
+    T(40, 776, 'To build together: Perpl’s Euler facility for vault claims, the shMON / WMON market, and the hook interface.', {size: 16}) + '</g>';
+  return s;
+}
+
+// Closing scene for a curator: what running the hedged vault brings them. One small visual per point, one short line.
+function chip(x, y, s, col, fill = '#fff', size = 15) {
+  const w = s.length * size * 0.56 + 24;
+  return R(x, y, w, 30, {fill, stroke: col, sw: 1.6, rx: 15}) + T(x + w / 2, y + 20, s, {size, w: 700, col, anchor: 'middle'});
+}
+function tick(x, y, ok = true) {
+  return `<circle cx="${x}" cy="${y}" r="12" fill="${ok ? C.green : C.red}"/>` + T(x, y + 5, ok ? '✓' : '✕', {size: 14, w: 800, col: '#fff', anchor: 'middle'});
+}
+function sCurate(u) {
+  const own = F.net_own_margin_pct, cf = F.net_credit_facility_pct;
+  const tiles = [
+    [40, 116, 365, 'No bridge, non-custodial', 'Funds never leave your contracts', (x, y) =>
+      R(x + 22, y + 76, 150, 120, {fill: C.indigoT, stroke: C.indigo, dash: true, sw: 1.6}) + T(x + 34, y + 96, 'Monad', {size: 13, col: C.indigo}) +
+      R(x + 38, y + 112, 118, 60, {fill: '#fff', stroke: C.ink, sw: 2}) + T(x + 97, y + 148, 'your vault', {size: 16, w: 700, anchor: 'middle'}) +
+      tick(x + 196, y + 104, false) + T(x + 216, y + 109, 'bridge', {size: 16, w: 600}) +
+      tick(x + 196, y + 146, false) + T(x + 216, y + 151, 'custodian', {size: 16, w: 600}) +
+      tick(x + 196, y + 188, true) + T(x + 216, y + 193, 'any app lists it', {size: 15, w: 600})],
+    [425, 116, 365, 'Every DeFi lego on one L1', 'Called directly, in the same block', (x, y) => {
+      let s = R(x + 22, y + 70, 321, 136, {fill: C.indigoT, stroke: C.indigo, dash: true, sw: 1.6}) + T(x + 34, y + 90, 'Monad', {size: 13, col: C.indigo});
+      const cx = x + 182, cy = y + 148;
+      [['FastLane', C.lime, -1, -1], ['Morpho', C.green, 1, -1], ['Perpl', C.indigo, -1, 1], ['Swaps', C.mute, 1, 1]].forEach(([n, col, dx, dy]) => {
+        const bx = cx + dx * 92 - 46, by = cy + dy * 34 - 15;
+        s += `<line x1="${cx}" y1="${cy}" x2="${bx + 46}" y2="${by + 15}" stroke="${col}" stroke-width="2"/>` + chip(bx, by, n, col, '#fff', 14);
+      });
+      return s + R(cx - 34, cy - 16, 68, 32, {fill: C.ink, rx: 6}) + T(cx, cy + 6, 'vault', {size: 15, w: 700, col: '#fff', anchor: 'middle'});
+    }],
+    [810, 116, 365, 'Transparent', 'Every number checkable, block by block', (x, y) =>
+      ['position', 'margin', 'funding', 'liquidations'].map((n, k) => tick(x + 40, y + 92 + k * 34) + T(x + 62, y + 98 + k * 34, n, {size: 17, w: 600}) +
+        T(x + 340, y + 98 + k * 34, 'on-chain', {size: 15, col: C.mute, anchor: 'end'})).join('')],
+    [1195, 116, 365, 'Higher yields', 'Funding: a new yield source', (x, y) =>
+      T(x + 22, y + 94, 'staking alone', {size: 15, col: C.mute}) + R(x + 22, y + 102, 300 * F.stake_pct / 25, 26, {fill: C.lime, rx: 4}) +
+      T(x + 30 + 300 * F.stake_pct / 25, y + 122, pct(F.stake_pct, 1), {size: 18, w: 800, col: C.lime}) +
+      T(x + 22, y + 160, 'the hedged loop', {size: 15, col: C.mute}) + R(x + 22, y + 168, 300 * cf / 25, 26, {fill: C.indigoD, rx: 4}) +
+      T(x + 22 + 300 * cf / 25 - 8, y + 188, pct(cf, 1), {size: 18, w: 800, col: '#fff', anchor: 'end'})],
+    [40, 414, 493, 'Capital efficiency', 'Margin lent, lending position untouched', (x, y) =>
+      T(x + 22, y + 96, 'own margin', {size: 15, col: C.mute}) + R(x + 22, y + 104, 340 * F.loop_max_without_cf / 3, 28, {fill: C.grey, rx: 4}) +
+      T(x + 30 + 340 * F.loop_max_without_cf / 3, y + 125, F.loop_max_without_cf.toFixed(1) + 'x · ' + pct(own, 1), {size: 18, w: 800, col: C.mute}) +
+      T(x + 22, y + 164, 'credit facility', {size: 15, col: C.mute}) + R(x + 22, y + 172, 340, 28, {fill: C.teal, rx: 4}) +
+      T(x + 370, y + 193, F.loop_leverage + 'x · ' + pct(cf, 1), {size: 18, w: 800, col: C.teal})],
+    [553, 414, 493, 'Minimal management', 'Until hooks ship: one keeper call', (x, y) => {
+      const st = [['MON moves', C.amber], ['hook calls vault', C.indigo], ['vault tops up', C.green]];
+      let s = badge(x + 22, y + 66, 'Hooks: in design', 'design'), cx = x + 22;
+      st.forEach(([n, col], k) => { const w = n.length * 15 * 0.56 + 24;
+        s += chip(cx, y + 136, n, col, '#fff', 15); if (k < st.length - 1) s += arrow([[cx + w + 4, y + 151], [cx + w + 26, y + 151]], {col: C.mute}); cx += w + 30; });
+      return s;
+    }],
+    [1066, 414, 494, 'Known DeFi primitives', 'No new custody stack: a smaller lift', (x, y) =>
+      chip(x + 22, y + 82, 'Vaults', C.indigo, C.indigoT, 16) + chip(x + 128, y + 82, 'EOAs', C.indigo, C.indigoT, 16) +
+      chip(x + 224, y + 82, 'Delegated accounts', C.indigo, C.indigoT, 16) +
+      chip(x + 22, y + 134, 'Audited contracts', C.green, C.greenT, 16) + chip(x + 216, y + 134, '2 Cantina audits', C.green, C.greenT, 16)],
+  ];
+  let s = '';
+  tiles.forEach(([x, y, w, title, line, draw], k) => {
+    const a = win(u, 0.3 + k * 1.1, .6);
+    if (a <= 0) return;
+    s += `<g opacity="${a}" transform="translate(0 ${(1 - a) * 18})">` + R(x, y, w, 280, {fill: '#fff', stroke: C.indigo, sw: 2}) +
+      `<circle cx="${x + 30}" cy="${y + 34}" r="15" fill="${C.indigo}"/>` + T(x + 30, y + 40, String(k + 1), {size: 16, w: 800, col: '#fff', anchor: 'middle'}) +
+      T(x + 56, y + 41, title, {size: 21, w: 800, col: C.indigoD}) + draw(x, y) +
+      T(x + 22, y + 256, line, {size: 17, w: 700, col: C.ink}) + '</g>';
+  });
+  const c = win(u, 0.3 + tiles.length * 1.1 + 0.4, .7);
+  s += `<g opacity="${c}">` + T(40, 744, 'Built from contracts you already know, on one chain.', {size: 22, w: 800, col: C.indigoD}) +
+    T(40, 774, 'To build together: your vault template · a credit line from Perpl’s Euler facility · the hook interface', {size: 16, col: C.mute}) + '</g>';
+  return s;
+}
+
+// ================================================================== the whiteboard
+// One canvas. The vault is the root of a tree of mechanism cards; a balance board sits to the right, the payout board
+// to the left, the closing board below. A camera pans and zooms between them without leaving the big picture.
+// Mechanisms are added one at a time (not yet introduced: a faint outline; introduced but not in focus: dimmed), then
+// shown working together. A repeated motion starts slow and speeds up. The loop's lending venue (Euler, Morpho or Aave
+// V4) is a toggle, and so is the credit line: Perpl's credit facility on Euler (decided 2026-11-08; the Euler build's
+// default), a Morpho Midnight market (?credit=morpho; the Morpho build's default, so that page is all Morpho) or Perpl's
+// own Spoke on an Aave V4 Hub (?credit=aave; the Aave build's default, so that page is all Aave).
+const ICON = {"euler": "data:image/webp;base64,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", "morpho": "data:image/webp;base64,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", "aave": "data:image/webp;base64,UklGRpAFAABXRUJQVlA4TIQFAAAvX8AXAA/nIJIkSSl+8IAN/DvbDG4HNDhoI8mRfDlQOBzPH9lPGUjbJjvcv+TOv8K2bZt0b6lnqAUUkLTMaWH9EVBAkQhxPLDrAkAUX4gNVYAYo9/aIAQkJ6woMlAo/3k2ZgsGZQ0io6yhACGGgyKg2KM1rGEoZEiREclqigSKiXyQjJs2lchURGZ7ZkQyYQ786VxhlAIypDiBIcXgheKEhZ8RFAkzRpA51PZ3JOeVEz6/dz3y/s7zOueV85YTXu+5bmkB9Pf/TyMpIRQ4d3d3d5xzd3d3d3d3d3f3mw3fpUduS/c6273t0h4zOBz/yky+38rub1hE/x1Ikho3oDsSWa0Rsr+g/72okNZCak8IkKZlO45j55iGnoJRmETEwHQ86/nNM7s3rF677ciVx9LzbD0Wg0IyX9oJ4/LSER1qleRM0SKVm/eatv9Z0jWhEDSEdPS9Y5oVYYrytDJVK/daeMexCroBRuLBrCYfpddqGmdYOUJRdsgx+01BJtDfPptYMYU/NTeQphn84JMD+a8LrBGzMqdWTq9nQVWFpPU454AooNHDTfxGAk8v9rO0oCBsGmM5U55HFI3WFx0ReXbudaZGSSuqJX8zZZZ5UZ8G53g1Rre4/xJN8xsca0ebE3tLkVmBwKt2HD5r5fbduzfMndD7t6LKbHpwUK6MzgR4O0qSNniq13L8weeW6zq2beflu3mvrs3vWTZtlNx632wZlWT+uPkdzgr2EoOPWglbopitWDJd9/7s+qlBMvU3omrnXShDZsa6n7ct8I3TIMBwMmZXYnRztAfR/OvDBnT+dXsycHAD+cPjoRrjVJrjiiiS+QXj1LRh0g0TOoWR2FmVaQQHRY7aEL52p5BA383J10XYA3SrKfuQwNlQyNDZOlwU15xV2PU2PA/Cgm6ME0NDwldWJ6bhXHJfJM8RpNGVgvre7pAJvl9E+smmhIgoQurtKKrbh/wr+aIOBXG2F4ssBN/5g0K7LAmh1kylKB7iQoRR8mhRYkn9UEvk85qMI3w1nxlYRFrxJoNhEYmJFB+LQ1TgzqX4XZsU+IJzvJT6+AsYXlpNjEWKxgQhbbLCWO6ERGNd8e7B/nr1yK49xu2zTEEATN6dM/DLftMvJ3VAQLZR/rgzsBGIXyxKxKOTFkLs7qinQv74ahJBkfGfyqkvYMO+RYNgfUpQMjwRVERiMnp6nKjBmcGYllbO/tyHwLzuxzjC0vKJCWq1i+jWDj7ZbElg26gKOGsYJ1yh8m3jZRrLKOJFSWMd8R6yWxFDu3ODVWBeKYp3UBdtXcYa03F5aB7oED9RhL4M5qkMCHcq0R3rBhR3CYFslCtUttf53J9lbpgA7jCmkVi6mIiVy+gy5KxtdlAZRvyyR2UW3OGkpCCsSmbqehOfvZa9gyKR0Q5L2btGQKsEsKpP1T7kdqNFYzNcYTyqTGNh2uk44mAUweehHAgWNKqqorHPbHycevjJbFdkPavqI0XOW2jxeuyVAe9PMC+lHpyfY4A7zq+zNQm60cqnU+WxQbglxj0qEUjsfcTM+Vhy9zI6V3+UpeyVflvpagPmvQaWPm8giCTXErxuJ0Kj2YXahMYmOKCDeaM8UfH32TYiChktsN90sYLJXKZxRYucigP2tbOlsTNrrM03r5SzvoA46xobngcE8Z+zIjylGmv5XTBbMzAdf12MU2C3lFE/kzhrdAPFIHsSw1gGSEkAz/2KaWrxuwxma9/wMaMUHXvfIOm83q84S2nlcTHM9ktnxy/Kq3D9+TkSKMdcrgIfM3K6DBj2PAcpDUsY1tUV02duvO/oQHFgnJ47dc5+4XcDWBi4HfReiGH1g5NhOJ7nyAygb83X+Z6X4/s9JjDu6D9yQAh/qKBc1YVd/x9fdQ==", "fastlane": "data:image/webp;base64,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", "monad": "data:image/webp;base64,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", "perpl": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTkuNzEzNzMgMEg0VjMxSDkuNzEzNzNWMFoiIGZpbGw9ImJsYWNrIi8+CjxwYXRoIGQ9Ik0yMS41MDYyIDE1LjQzOTJIMTUuNzkyNVYzMUgyMS41MDYyVjE1LjQzOTJaIiBmaWxsPSJibGFjayIvPgo8cGF0aCBkPSJNMjcuMjE5NiAwSDIxLjUwNTlWMTUuNDM5MkgyNy4yMTk2VjBaIiBmaWxsPSJibGFjayIvPgo8L3N2Zz4K"};
+const BRAND = {fastlane: '#8B3EB0', morpho: '#2470FF', aave: '#9391F7', aaveText: '#6563D9', perpl: '#6F5CFF', monad: '#6E54FF', euler: '#1DB993', eulerText: '#0B7F64'};
+// the credit line. euler: an AUSD vault Perpl governs on Euler, lending against each vault's claim token (valued by
+// Perpl's valuer, held in an Euler escrow vault) at a variable rate; liquidated at 77% LTV, by Perpl's unwinder only.
+// aave: Perpl's own Spoke on an Aave V4 Hub, drawing the Hub's AUSD and lending it against each vault's claim token
+// (priced by Perpl's valuer as the Spoke's feed) at the Hub's variable rate; liquidated below health factor 1 at a 77%
+// collateral factor, which V4 uses in place of an LTV limit. morpho: a Morpho Midnight market per vault, lending AUSD
+// against the vault's claim token (priced by Perpl's valuer) for a 30-day term at a rate lenders quote; its debt is the
+// face value, interest included, from the first second; liquidated at a 77% LLTV, by Perpl's unwinder only
+const CREDITS = {
+  euler: {name: 'Euler', col: BRAND.euler, text: BRAND.eulerText, icon: 'euler', credit: 'Perpl’s Euler facility',
+    creditShort: 'Euler facility', rate: 'variable rate', line: 0.77, face: false},
+  morpho: {name: 'Morpho', col: BRAND.morpho, text: BRAND.morpho, icon: 'morpho', credit: 'Morpho Midnight',
+    creditShort: 'Midnight', rate: 'fixed rate', line: 0.77, face: true},
+  aave: {name: 'Aave V4', col: BRAND.aave, text: BRAND.aaveText, icon: 'aave', credit: 'Perpl’s Aave V4 Spoke',
+    creditShort: 'Perpl Spoke', rate: 'variable rate', line: 0.77, face: false},
+};
+const CREDIT = CREDITS[new URLSearchParams(location.search).get('credit')] || CREDITS.morpho;
+// where the loop runs (shMON collateral, WMON debt); on Aave V4, a staked-MON e-Spoke on the same Hub
+const VENUES = {
+  euler: {key: 'euler', name: 'Euler', col: BRAND.euler, text: BRAND.eulerText, icon: 'euler', loopLine: 0.94,
+    loopBadge: 'shMON / WMON pool: Perpl-governed'},
+  morpho: {key: 'morpho', name: 'Morpho', col: BRAND.morpho, text: BRAND.morpho, icon: 'morpho', loopLine: F.lltv},
+  aave: {key: 'aave', name: 'Aave V4', col: BRAND.aave, text: BRAND.aaveText, icon: 'aave', loopLine: 0.955,
+    loopBadge: 'shMON / WMON e-Spoke'},
+};
+let VEN = VENUES[new URLSearchParams(location.search).get('venue')] || VENUES.morpho;
+// the page header's venue line: one name when the loop and the credit line share a venue
+const lendingOn = () => 'lending on ' + VEN.name + (VEN.name === CREDIT.name ? '' : ' · credit line on ' + CREDIT.name);
+// who runs the loop: the vault itself, lap by lap (null), or Accountable's looping vault, whose Looping Executor builds
+// the whole position in one flash-loan transaction (?loop=accountable, or a build's default). In design for shMON / WMON.
+const LOOPS = {self: null, accountable: {name: 'Accountable', what: 'looping vault', col: '#2b2d42'}};
+let ACC = LOOPS[new URLSearchParams(location.search).get('loop')] || LOOPS.self;
+// the debt the credit line counts (a fixed-term line would count its face value, interest included, from the start)
+const owed = loan => CREDIT.face ? loan * (1 + F.credit_facility_pct / 100 * 30 / 365) : loan;
+window.__chk = {};
+const BG = '#f6f6f3';
+// two columns of two cards flank the vault: staking over the loop on the left, the credit line over the short on the
+// right. A top card joins the vault straight across; a bottom card through a short spine beside the vault. Each route's
+// label sits at a fixed spot by its card (above a top card, below a bottom one), never squeezed between the boxes.
+const CW = 300, CHH = 190, CTOP = 140;
+const CX = {fl: 560, mor: 560, cf: 1840, per: 1840}, CY = {fl: 140, mor: 450, cf: 140, per: 450};
+const VX0 = 992, VX1 = 1408, VH = 370;   // the vault box: 282 from each column, centred between the rows
+let VBOT = 320, HEALTH = 0;   // HEALTH: the meters show this frame (bottom labels drop below them)   // the vault box's bottom edge, set each time it is drawn (it grows with its rows)
+const LEFT = k => k === 'fl' || k === 'mor', TOPK = k => k === 'fl' || k === 'cf';
+function bus(k) {
+  const L = LEFT(k), ex = L ? VX0 : VX1, ed = L ? CX[k] + CW / 2 : CX[k] - CW / 2, y = CY[k] + CHH / 2;
+  const pts = [[ex, y], [ed, y]];   // the vault spans both rows: every card joins it straight across
+  pts.lab = [CX[k] - 60, TOPK(k) ? CY[k] - 28 : CY[k] + CHH + (HEALTH ? 136 : 48)];   // above a top card; under a bottom one (below its meter)
+  return pts;
+}
+const rvs = pts => Object.assign(pts.slice().reverse(), {lab: pts.lab});   // reversed, keeping the label's spot
+const PATH = {post: [[560, 330], [560, 450]], borrow: [[410, 545], [350, 545], [350, 235], [410, 235]]};
+const VAL = [1040, 594];   // the Perpl valuer's box, centred under the vault between the bottom cards; it reads both
+const READ = {mor: [[VAL[0], VAL[1] + 36], [CX.mor + CW / 2, VAL[1] + 36]], per: [[VAL[0] + 320, VAL[1] + 36], [CX.per - CW / 2, VAL[1] + 36]]};   // straight across into each bottom card
+const FEED = [[VAL[0] + 320, VAL[1] + 36], [CX.cf, VAL[1] + 36], [CX.cf, CY.cf + CHH]];   // from the valuer's right into the middle of box 3's bottom (slide 3 only: box 4 is hidden)
+const OPS = {on: 1, dim: 0.42, ghost: 0.16, off: 0};
+const opv = st => typeof st === 'number' ? st : OPS[st];   // a card's state, or an opacity while it fades in
+const MM = F.margin_per_equity, RATE_DATE = F.read_date || '2026-10-14';
+// One rhythm for every slide change: the camera glides for TR seconds and the slide's first motion starts as it lands;
+// once its last element has finished appearing the slide holds still for HOLD seconds, and the next slide begins. So
+// every slide change is HOLD + TR of quiet (tools/explainer_timing_probe.py measures it). A marker's zoom glides for TR
+// too. The tree slides' own timings were written for a 1.6 s glide, so they run SH seconds ahead.
+const TR = 1.0, HOLD = 2.5, SH = 1.6 - TR, CHIP_IN = 0.5;   // CHIP_IN: a note's fade-in
+const PAY0 = TR - 0.3, CLOSE0 = TR - 0.2;   // the payout board's first row fades in 0.3 s into its clock; a closing board's title 0.2 s
+const PERPL = BRAND.perpl, FAST = BRAND.fastlane;
+
+function img(name, x, y, s) { return ICON[name] ? `<image href="${ICON[name]}" x="${x}" y="${y}" width="${s}" height="${s}"/>` : ''; }
+function chipC(cx, cy, s, col, side) {
+  const w = s.length * 13 + 56;
+  if (side === 'right') cx += 16 + w / 2; else if (side === 'left') cx -= 16 + w / 2;
+  return R(cx - w / 2, cy - 22, w, 44, {fill: '#fff', stroke: col, sw: 2, rx: 22}) + T(cx, cy + 8, s, {size: 22, w: 700, col, anchor: 'middle'});
+}
+const SPEED = 320;   // canvas units a second: every ball moves at this one speed
+const plen = pts => pts.slice(1).reduce((a, q, i) => a + Math.hypot(q[0] - pts[i][0], q[1] - pts[i][1]), 0);
+const pdur = pts => plen(pts) / SPEED;
+function tokenC(pts, f, col) {
+  if (f <= 0 || f >= 1) return '';
+  const [x, y] = along(pts, f);
+  return `<circle cx="${x}" cy="${y}" r="18" fill="${col}" opacity=".18"/><circle cx="${x}" cy="${y}" r="10" fill="${col}"/>`;
+}
+function routeLabel(pts, s, col, op) {           // still, centred on the route's midpoint, just off the arrow
+  if (!s || op <= 0) return '';
+  const w = s.length * 12.6 + 44, h = 38;
+  if (pts.lab) { const [lx, ly] = pts.lab;
+    return `<g opacity="${op}">` + R(lx - w / 2, ly - h / 2, w, h, {fill: '#fff', stroke: col, sw: 2, rx: h / 2}) + T(lx, ly + 8, s, {size: 23, w: 700, col, anchor: 'middle'}) + '</g>'; }
+  const [x, y] = along(pts, 0.5);
+  let lx = x, up = true;   // above the arrow, never over the vault box: slide sideways off it, else go below
+  if (y - 31 - h / 2 < VBOT + 6 && lx + w / 2 > 978 && lx - w / 2 < 1422) {
+    const nx = x > 1200 ? 1422 + w / 2 : 978 - w / 2;
+    if (Math.abs(nx - x) < w / 2) lx = nx; else up = false;
+  }
+  const cy = up ? y - 31 : y + 31;
+  return `<g opacity="${op}">` + R(lx - w / 2, cy - h / 2, w, h, {fill: '#fff', stroke: col, sw: 2, rx: h / 2}) +
+    T(lx, cy + 8, s, {size: 23, w: 700, col, anchor: 'middle'}) + '</g>';
+}
+function flow(pts, t, col, label) {              // t: seconds since the money set off; the route shows while it moves
+  const d = pdur(pts), on = clamp((t + 0.3) / 0.3);
+  const route = on * clamp((d + 0.8 - t) / 0.4), lab = on * clamp((d + 0.5 - t) / 0.3);
+  return (route > 0 ? arrow(pts, {col, w: 4, op: route}) : '') + routeLabel(pts, label, col, lab) + tokenC(pts, t / d, col);
+}
+function passes(u, t0, d0, r, n) {               // k-th pass of a repeated motion: first pass d0 s, each next r times as long
+  let t = t0, d = d0;
+  for (let k = 0; k < n; k++) { if (u < t + d) return u < t ? {k: -1, f: 0} : {k, f: (u - t) / d}; t += d; d *= r; }
+  return {k: n, f: 1};
+}
+function toast(cx, y, s, op, kind = 'ok', still = false) {   // still: fade where it is, no drift
+  if (op <= 0) return '';
+  const w = s.length * 9.6 + 74, x = cx - w / 2;
+  const icon = kind === 'ok' ? [C.green, '✓'] : kind === 'warn' ? [C.amber, '!'] : kind === 'loop' ? [VEN.col, '↻'] : [PERPL, '?'];
+  return `<g opacity="${op}" transform="translate(0 ${still ? 0 : (1 - op) * 10})">` + R(x + 2, y + 4, w, 56, {fill: '#000', op: 0.05, rx: 14}) +
+    R(x, y, w, 56, {fill: '#fff', stroke: '#e3e5ea', sw: 1.5, rx: 14}) +
+    `<circle cx="${x + 30}" cy="${y + 28}" r="13" fill="${icon[0]}"/>` + T(x + 30, y + 34, icon[1], {size: 16, w: 800, col: '#fff', anchor: 'middle'}) +
+    T(x + 54, y + 35, s, {size: 19, w: 600}) + '</g>';
+}
+const fade = (u, a, b) => win(u, a, 0.5) * (1 - win(u, b, 0.5));
+// a notification chip: on the slide from `a` to `b` (b = Infinity: to the end of the slide), then it fades out where it
+// is. Every call is recorded for the section takeaways.
+function chip(cx, y, s, u, a, b, kind = 'ok') {
+  if (window.__collect) window.__collect.push({s, kind, a, b});
+  if (u < a) return '';
+  if (u < b) return toast(cx, y, s, win(u, a, .5), kind);
+  const k = clamp((u - b) / 0.45);
+  return k >= 1 ? '' : toast(cx, y, s, 1 - k, kind, true);
+}
+
+function wcard(cx, o) {
+  const x = cx - CW / 2, y = o.y ?? CTOP, op = opv(o.st ?? 'on');
+  if (!op) return '';
+  let s = `<g opacity="${op}">` + R(x + 3, y + 5, CW, CHH, {fill: '#000', op: 0.05, rx: 14}) +
+    R(x, y, CW, CHH, {fill: '#fff', stroke: o.focus ? o.col : '#d9dbe3', sw: o.focus ? 2.6 : 1.5, rx: 14, dash: o.dash}) +
+    img(o.icon, x + 18, y + 16, 24) + T(x + 50, y + 34, o.label, {size: 16, w: 700, col: C.mute});
+  if (o.tag) s += badge(x + CW - 14, y + 54, o.tag, 'design', 'end');
+  s += T(x + 22, y + 76, o.title, {size: 24, w: 800});
+  (o.mono || []).forEach((m, k) => { s += T(x + 22, y + 106 + k * 24, m, {size: 16, mono: true, col: k ? C.mute : C.ink}); });
+  s += `<line x1="${x + 22}" y1="${y + 148}" x2="${x + CW - 22}" y2="${y + 148}" stroke="#eceef2" stroke-width="1.5"/>` +
+    T(x + 22, y + 174, o.role, {size: 17, w: 700, col: o.text || o.col});
+  return s + '</g>';
+}
+// each bar: 100% = as opened (the tick), up to 150%; past the tick is capital free to move, in its own colour
+const FREE = '#0E9F9A';
+const HL = '#97FCE4', HL_DARK = '#072723';   // Hyperliquid's brand: its mint, and the deep green it sits on
+// moving margin between Monad and Hyperliquid by Circle's CCTP, the cheapest and fastest route (read 2026-10-23): no CCTP
+// fee from either chain, ~5 s for Circle to sign the burn (one block), ~$0.20 forwarding into HyperCore per transfer (the contract's
+// default), a one-time 1 USDC HyperCore activation fee. Transfers a year: the opening deposit, the top-up and the margin
+// released after a rise, the profit withdrawn after a fall.
+const BRIDGE = {fee: 0.2, activation: 1, transfers: 4, sign_s: 5};
+function meter(x, title, frac, note, o = {}) {
+  const w = 240, y = o.y ?? 870, top = 1.5, f = clamp(frac / top), t1 = 1 / top;
+  const col = o.col || (frac > 0.5 ? C.green : frac > 0.2 ? C.amber : C.red);
+  let s = T(x, y - 10, title, {size: 17, w: 700}) + T(x + w, y - 10, Math.round(100 * frac) + '%', {size: 17, w: 800, col: frac > 1.005 ? FREE : o.text || col, anchor: 'end'}) +
+    R(x, y, w, 18, {fill: '#eceef2', rx: 9}) + R(x, y, Math.max(8, w * Math.min(f, t1)), 18, {fill: col, rx: 9});
+  if (f > t1) s += R(x + w * t1 - 9, y, w * (f - t1) + 9, 18, {fill: FREE, rx: 9});
+  s += `<line x1="${x + w * t1}" y1="${y - 4}" x2="${x + w * t1}" y2="${y + 22}" stroke="${C.ink}" stroke-width="2"/>`;
+  if (o.mark) s += `<line x1="${x + w * o.mark / top}" y1="${y - 5}" x2="${x + w * o.mark / top}" y2="${y + 23}" stroke="${C.amber}" stroke-width="3"/>`;
+  return s + T(x, y + 42, note, {size: 15, col: C.mute}) + (o.extra ? T(x, y + 66, o.extra, {size: 15, w: 700, col: FREE}) : '');
+}
+function meters(v, op) {
+  if (!(op > 0)) return '';
+  const ltv = v.coll > 0 ? v.debt / v.coll : 0;
+  const acct = (v.margin || 0) + (v.pnl || 0), free = v.free || 0, r = v.n > 0 ? acct / v.n : MM, fP = (r - F.mmf) / (MM - F.mmf), topAt = (3 * F.mmf - F.mmf) / (MM - F.mmf);
+  const Vc = (v.coll - v.debt) + acct + free + (v.cash || 0) - (v.flash || 0), lc = Vc > 0 ? owed(v.loan) / Vc : 0, lc0 = owed(MM * D) / (D + MM * D);
+  const fC = (CREDIT.line - lc) / (CREDIT.line - lc0);
+  const eqM = v.coll - v.debt - (v.flash || 0), fE = eqM / D,   // a flash loan is borrowed against the loop
+  surplus = eqM - D, freeP = v.n > 0 ? acct + free - MM * v.n : free;
+  window.__chk.meters = {ltv, r, fP, topAt, lc, fC, eqM, fE, surplus, freeP};
+  return `<g opacity="${op}">` +
+    meter(410, VEN.name + ' equity', fE, 'LTV ' + pct(100 * ltv, 1) + ' at any price: both sides are MON',
+      {y: 682, col: VEN.col, text: VEN.text, extra: surplus > 500 ? usd(surplus) + ' free to move' : ''}) +
+    meter(1690, 'Perpl margin', fP, 'top-up at ' + Math.round(100 * topAt) + '% · 0% = liquidation',
+      {y: 682, mark: topAt, extra: freeP > 500 ? usd(freeP) + ' free to withdraw' : ''}) +
+    meter(1690, CREDIT.creditShort + ' buffer', fC, '0% = the line’s ' + Math.round(100 * CREDIT.line) + '% LTV', {y: 372}) + '</g>';
+}
+function vaultBox(v) {
+  const k = x => Math.round(x / 1000) + 'k', kd = x => Math.abs(x) < 500 ? '$0' : (x < 0 ? '−$' : '$') + Math.round(Math.abs(x) / 1000) + 'k';
+  const acct = (v.margin || 0) + (v.pnl || 0) + (v.free || 0), cash = Math.abs(v.cash || 0) > 1 ? v.cash : 0;
+  const long = v.coll > 0 ? v.coll : (v.sh || 0) + (v.dep ?? (v.sh > 0 ? 0 : D)), debt = v.coll > 0 ? v.debt : 0, short = v.n || 0;
+  const rows = [];
+  if (v.coll > 0) { rows.push(['shMON on ' + VEN.name, usd(v.coll)]); rows.push(['WMON owed', '−' + usd(v.debt)]); }
+  else rows.push([(v.sh || 0) > (v.dep || 0) ? 'shMON staked' : 'deposit (MON)', usd(long)]);
+  if (v.margin > 0 || (v.free || 0) > 1) rows.push(['Perpl account', usd(acct)]);
+  if (cash) rows.push(cash > 0 ? [v.cashLabel || 'AUSD held', usd(cash)] : ['flash loan owed', '−' + usd(-cash)]);
+  if (v.flash > 1) rows.push(['flash loan owed', '−' + usd(v.flash)]);
+  if (v.loan > 0) rows.push(['owed on the line', '−' + usd(v.loan)]);
+  const equity = long - debt + acct + cash - (v.flash || 0) - (v.loan || 0), expo = long - debt - short;
+  window.__chk.vault = {long, debt, short, acct, cash, flash: v.flash || 0, loan: v.loan || 0, equity, expo, n: v.n || 0, margin: v.margin || 0, pnl: v.pnl || 0, coll: v.coll || 0};
+  const sum = debt || short ? (debt ? k(long) + ' − ' + k(debt) : k(long)) + (short ? ' − ' + k(short) : '') + ' = ' + kd(expo) : kd(long);
+  // as tall as both rows of cards; the text is centred in it
+  const x = VX0, w = VX1 - VX0, h = VH, y = (CTOP + CY.mor + CHH - VH) / 2, lh = 32, two = sum.length > 14, H = 64 + rows.length * lh + (two ? 112 : 82), y0 = y + (h - H) / 2;   // a long sum takes its own line
+  VBOT = y + h;
+  let s = R(x, y, w, h, {fill: '#16172a', rx: 20}) + T(1200, y0 + 36, 'Hedged MON Vault', {size: 32, w: 800, col: '#fff', anchor: 'middle'});
+  rows.forEach(([a_, b_], i) => { s += T(x + 32, y0 + 84 + i * lh, a_, {size: 19, mono: true, col: '#b9bbd0'}) + T(x + w - 32, y0 + 84 + i * lh, b_, {size: 19, mono: true, col: '#fff', anchor: 'end'}); });
+  const ye = y0 + 84 + rows.length * lh;
+  return s + `<line x1="${x + 32}" y1="${ye - 14}" x2="${x + w - 32}" y2="${ye - 14}" stroke="#3a3c55" stroke-width="1.5"/>` +
+    T(x + 32, ye + 16, 'equity', {size: 21, mono: true, w: 700, col: '#fff'}) + T(x + w - 32, ye + 16, usd(equity), {size: 21, mono: true, w: 700, col: '#fff', anchor: 'end'}) +
+    T(x + 32, ye + 50, 'MON exposure', {size: 19, mono: true, col: '#b9bbd0'}) +
+    T(x + w - 32, ye + (two ? 80 : 50), sum, {size: 19, mono: true, w: 700, col: Math.abs(expo) < 1 ? '#7ee0a0' : '#f5c26b', anchor: 'end'});
+}
+function drawTree(st) {
+  HEALTH = st.health || 0;
+  const v = st.v, vis = st.vis, L = st.links || {}, VB = vaultBox(v);   // measured first: the lines meet its bottom edge
+  let s = '';
+  if (st.monad > 0) s += `<g opacity="${st.monad}">` + R(200, 70, 1950, st.health ? 800 : 660, {fill: 'none', stroke: BRAND.monad, sw: 2, dash: true, rx: 24}) +
+    img('monad', 252, 34, 28) + T(288, 56, 'Monad · one chain, one shared state', {size: 22, w: 700, col: BRAND.monad}) + '</g>';
+  // the looping vault, when Accountable runs the loop: a dashed frame round staking and the loop (its path and label
+  // included, and the loop's meter when the meters show), shown with the loop card; its name inside the top-left corner
+  const accOp = ACC ? Math.pow(opv(vis.mor), 1.6) * (st.accIn ?? 1) : 0;   // its dark line fades further than a dimmed card
+  if (accOp > 0) s += `<g opacity="${accOp}">` + R(212, 118, 518, HEALTH ? 644 : 544, {fill: 'none', stroke: ACC.col, sw: 2, dash: true, rx: 20}) +
+    T(232, 152, ACC.name, {size: 19, w: 800, col: ACC.col}) + T(232, 174, ACC.what, {size: 16, col: C.mute}) +
+    T(232, 194, 'in design', {size: 14, col: C.mute}) + '</g>';
+  for (const k of ['fl', 'mor', 'per', 'cf']) if (opv(vis[k])) s += `<polyline points="${bus(k).map(q => q.join(',')).join(' ')}" fill="none" stroke="#c9ccd6" stroke-width="2" opacity="${Math.max(opv(vis[k]), .16)}"/>`;
+  if (L.post) s += `<g opacity="${L.post}">${arrow(PATH.post, {col: VEN.col, w: 2.4})}</g>`;
+  if (L.borrow) s += `<g opacity="${L.borrow}">${arrow(PATH.borrow, {col: C.amber, w: 2.4})}${T(338, 382, 'borrow WMON,', {size: 16, col: C.amber, anchor: 'end'})}${T(338, 402, 'stake it', {size: 16, col: C.amber, anchor: 'end'})}</g>`;
+  s += VB;
+  if (st.glow && st.glow[1] > 0) { const gc = {fl: FAST, mor: VEN.col, per: PERPL, cf: CREDIT.col}[st.glow[0]];
+    s += R(CX[st.glow[0]] - CW / 2 - 14, CY[st.glow[0]] - 14, CW + 28, CHH + 28, {fill: gc, op: 0.16 * st.glow[1], rx: 22}); }
+  const lev = v.coll > 0 ? (v.lev || v.coll / D).toFixed(1) + 'x' : '';
+  s += wcard(CX.fl, {y: CY.fl, st: vis.fl, focus: st.focus === 'fl', col: FAST, icon: 'fastlane', label: 'FastLane', title: 'Staking',
+    mono: [v.sh > 0 ? usd(v.sh) + ' shMON' : '—', pct(F.stake_pct, 1) + ' a year'], role: 'earns staking yield'});
+  s += wcard(CX.mor, {y: CY.mor, st: vis.mor, focus: st.focus === 'mor', col: VEN.col, text: VEN.text, icon: VEN.icon, label: VEN.name, title: 'Loop ' + lev,
+    mono: ['collateral ' + (v.coll > 0 ? usd(v.coll) : '—'), 'debt ' + (v.debt > 0 ? usd(v.debt) + ' · ' + pct(100 * v.debt / v.coll, 1) : '—')], role: 'borrows to re-stake'});
+  s += wcard(CX.per, {y: CY.per, st: vis.per, focus: st.focus === 'per', col: PERPL, icon: 'perpl', label: 'Perpl', title: 'Short · ' + SL,
+    mono: ['notional ' + (v.n > 0 ? usd(v.n) : '—'), v.margin > 1 || !((v.free || 0) > 1) ? 'margin ' + (v.margin > 0 ? usd(v.margin) : '—') + (Math.abs(v.pnl || 0) > 1 ? ' · ' + sgnusd(v.pnl) : '') : 'free ' + usd(v.free)], role: 'cancels price risk'});
+  const Vc = (v.coll - v.debt) + (v.margin || 0) + (v.pnl || 0) + (v.free || 0) + (v.cash || 0) - (v.flash || 0);
+  s += wcard(CX.cf, {y: CY.cf, st: vis.cf, focus: st.focus === 'cf', col: CREDIT.col, text: CREDIT.text, icon: CREDIT.icon, label: CREDIT.credit, dash: true, title: 'Credit line',
+    mono: v.loan > 0 ? ['lends ' + usd(v.loan) + ' AUSD · ' + pct(F.credit_facility_pct, 0), 'LTV ' + pct(100 * owed(v.loan) / Vc, 1) + ' · line ' + Math.round(100 * CREDIT.line) + '%']
+      : ['AUSD, ' + CREDIT.rate, 'against the vault’s position'], role: 'lends the hedge’s margin'});
+  if (st.agent > 0) {                    // the hook is Perpl's: a tag in the Perpl card's top-right corner
+    const hx = CX.per + CW / 2 - 34, hy = CY.per + 14;   // clear of marker 4 on the corner
+    s += `<g opacity="${st.agent}">` + R(hx - 150, hy, 150, 30, {fill: '#f1efff', stroke: PERPL, sw: 1.5, rx: 15}) +
+      `<circle cx="${hx - 135}" cy="${hy + 15}" r="10" fill="${PERPL}"/>` + T(hx - 135, hy + 20, '↻', {size: 13, w: 800, col: '#fff', anchor: 'middle'}) +
+      T(hx - 119, hy + 20, 'hook · in design', {size: 13, w: 700, col: PERPL}) + '</g>';
+  }
+  const [vx, vy] = VAL;
+  if (st.valuer > 0) s += `<g opacity="${st.valuer}">` + R(vx, vy, 320, 72, {fill: '#fff', stroke: PERPL, sw: 2, rx: 14}) +
+    img('perpl', vx + 18, vy + 16, 22) + T(vx + 48, vy + 34, 'Perpl valuer', {size: 19, w: 800, col: PERPL}) + T(vx + 20, vy + 58, 'values the vault’s position', {size: 15, col: C.mute}) +
+    (st.feed ? arrow(FEED, {col: PERPL, w: 2}) + T(CX.cf + 12, 480, 'price feed', {size: 14, col: PERPL}) : '') + '</g>';   // the feed only where the line uses it
+  const rd = (pts, op) => op > 0 ? `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${PERPL}" stroke-width="2.2" stroke-dasharray="6,5" opacity="${op}"/>` : '';
+  s += rd(READ.mor, st.readMor || 0) + rd(READ.per, st.readPer || 0);
+  // the read labels: the same pills as the route labels, each just under its read line
+  const pill = (cx, cy, txt) => { const w = txt.length * 12.6 + 44;
+    return R(cx - w / 2, cy - 19, w, 38, {fill: '#fff', stroke: PERPL, sw: 2, rx: 19}) + T(cx, cy + 8, txt, {size: 23, w: 700, col: PERPL, anchor: 'middle'}); };
+  if ((st.readMor || 0) > 0) s += `<g opacity="${st.readMor}">` + pill(870, VAL[1] + 70, 'reads the ' + VEN.name + ' position') + '</g>';
+  if ((st.readPer || 0) > 0) s += `<g opacity="${st.readPer}">` + pill(1525, VAL[1] + 70, 'reads the short') + '</g>';
+  return s + meters(v, st.health);
+}
+function wboard(M, p, op) {
+  if (op <= 0) return '';
+  // the balance sheet drawn 1.25x, its card fitted to its rows
+  const n = 4 + (M.loan > 0.5 ? 1 : 0) + (M.showCash ? 1 : 0), bh = 1.25 * (46 + n * 40 + 30) + 70;
+  return `<g opacity="${op}">` + R(2200, 140, 600, 170, {fill: '#fff', stroke: '#d9dbe3', sw: 1.5, rx: 14}) +
+    T(2230, 188, 'MON price', {size: 22, col: C.mute}) +
+    T(2230, 280, spct(100 * p, 0), {size: 80, w: 800, col: p > 0.001 ? C.green : p < -0.001 ? C.red : C.ink}) +
+    R(2200, 340, 600, bh, {fill: '#fff', stroke: '#d9dbe3', sw: 1.5, rx: 14}) +
+    `<g transform="translate(2226 396) scale(1.25) translate(-2226 -396)">` + balance(2226, 396, M, 'Vault balance sheet', 1) + '</g></g>';
+}
+function valCard(cx, y, title, rows, op) {   // centred on cx, as wide as its longest line
+  if (op <= 0) return '';
+  const w = Math.max(title.length * 10.5, ...rows.map(r => r.length * 9.8)) + 48, x = cx - w / 2;
+  return `<g opacity="${op}">` + R(x, y, w, 52 + rows.length * 30, {fill: '#fff', stroke: PERPL, sw: 2, rx: 14}) +
+    T(x + 24, y + 34, title, {size: 18, w: 800, col: PERPL}) +
+    rows.map((r, k) => T(x + 24, y + 66 + k * 30, r, {size: 16, mono: true, w: k === rows.length - 1 ? 700 : 400})).join('') + '</g>';
+}
+// the loop: collateral LV x the equity, debt (LV - 1) x; each lap borrows LQ (the LTV) of the shMON just posted
+const LV = F.loop_leverage, LQ = (LV - 1) / LV;
+const FULL = {sh: LV * D, coll: LV * D, debt: (LV - 1) * D, n: D, margin: MM * D, pnl: 0, loan: MM * D, cash: 0};
+const expoSub = e => 'net MON exposure ' + usd(e);
+const LINE = () => {
+  const B = MM * D, face = owed(B), V0 = D + B;
+  return {B, ltv: face / V0, loss: (V0 - face / CREDIT.line) / D};
+};
+
+// ------------------------------------------------------------------ chapters
+function cIntro(u) {
+  return drawTree({vis: {fl: 'ghost', mor: 'ghost', per: 'ghost', cf: 'ghost'}, v: FULL, sub: 'equity ' + usd(D), links: {post: .16, borrow: .16}}) +
+    chip(1200, 900, 'Four mechanisms, one chain. We add them one at a time.', u, 1.6, Infinity);
+}
+function cStake(u) {
+  // the deposit first, its note above the vault; the staking card appears once the note has gone, then the money moves
+  const landed = win(u, 2.0, 1.0), card = win(u, 4.8, .5), arrive = win(u, 5.4 + pdur(bus('fl')), .4);
+  return drawTree({vis: {fl: card, mor: 'off', per: 'off', cf: 'off'}, focus: 'fl', v: {sh: D * arrive, dep: D * landed * (1 - arrive), coll: 0, debt: 0, n: 0, margin: 0, pnl: 0, loan: 0},
+    sub: arrive > 0.5 ? expoSub(D) : 'equity ' + usd(D)}) +
+    chip(1200, 110, usd(D) + ' of MON deposited into the vault', u, 1.6, 4.6) + flow(bus('fl'), u - 5.4, FAST, 'stake ' + usd(D)) +
+    chip(560, 362, 'Staked as shMON · earning ' + pct(F.stake_pct, 1) + ' a year', u, 7.6, Infinity);
+}
+// the loop, lap by lap at the one speed: post shMON, borrow WMON (LQ of it), stake it, post again. Three laps are
+// shown; the rest (each LQ of the last) fill in to LV x.
+const LAP_SHOW = 3;
+function laps(u, t0, base) {
+  const q = LQ, dP = pdur(PATH.post), dB = pdur(PATH.borrow), per = dP + dB + 0.25;
+  const k = Math.floor((u - t0) / per), tl = u - t0 - k * per, fillAt = t0 + LAP_SHOW * per;
+  let coll = 0, debt = 0, lap = -1;
+  for (let j = 0; j < clamp(k, 0, LAP_SHOW); j++) { coll += base * Math.pow(q, j); debt += base * Math.pow(q, j + 1); }
+  if (u >= t0 && k < LAP_SHOW) {
+    lap = k;
+    coll += base * Math.pow(q, k) * clamp(tl / dP); debt += base * Math.pow(q, k + 1) * clamp((tl - dP) / dB);
+  }
+  const fill = win(u, fillAt, 1.4);
+  return {coll: lerp(coll, LV * base, fill), debt: lerp(debt, (LV - 1) * base, fill), lap, tP: tl, tB: tl - dP, fill, fillAt, end: fillAt + 1.4};
+}
+function lapsDraw(Lp, base, cy = 722) {   // cy: the caption's line; below the meters when they show
+  const q = LQ;
+  let s = '';
+  if (Lp.lap >= 0) {
+    s += flow(PATH.post, Lp.tP, VEN.col, '') + flow(PATH.borrow, Lp.tB, C.amber, '');
+    // the lap counter is a notification like the others (a loop icon: progress, not a result)
+    s += toast(560, cy - 38, 'lap ' + (Lp.lap + 1) + ' · post ' + usd(base * Math.pow(q, Lp.lap)) + ' shMON, borrow ' + usd(base * Math.pow(q, Lp.lap + 1)) + ' WMON', 1, 'loop', true);
+  } else if (Lp.fill > 0 && Lp.fill < 1) {
+    s += toast(560, cy - 38, 'laps 4 on: each ' + pct(100 * LQ, 0) + ' of the last, to ' + LV + 'x', Math.min(1, 4 * Lp.fill) * Math.min(1, 4 * (1 - Lp.fill)), 'loop', true);
+  }
+  return s;
+}
+// Accountable's Looping Executor instead builds the position in one flash-loan transaction: flash-borrow LQ of the
+// final collateral in WMON, stake it with the base as shMON and post all of it, then borrow WMON to repay the flash
+// loan. The balances change only when the transaction lands (it is atomic: no one sees a half-built loop), so the
+// cards jump from the start to LV x while the money is shown moving.
+function oneShot(u, t0, base) {
+  const dB = pdur(PATH.borrow), dP = pdur(PATH.post), t1 = t0 + dB + 0.15, t2 = t1 + dP + 0.15, land = u >= t2 ? 1 : 0;
+  return {coll: LV * base * land, debt: (LV - 1) * base * land, stage: u < t0 ? -1 : u < t1 ? 0 : u < t2 ? 1 : u < t2 + 1.4 ? 2 : 3,
+    t0, t1, t2, fill: land, fillAt: t2, end: t2 + 1.4};
+}
+function shotDraw(Lp, base, u, cy = 722) {
+  const steps = ['one transaction · flash-borrow ' + usd((LV - 1) * base) + ' WMON',
+    'one transaction · stake ' + usd(LV * base) + ' as shMON, post it on ' + VEN.name,
+    'one transaction · borrow ' + usd((LV - 1) * base) + ' WMON, repay the flash loan'];
+  let s = flow(PATH.borrow, u - Lp.t0, C.amber, '') + flow(PATH.post, u - Lp.t1, VEN.col, '');
+  if (Lp.stage >= 0 && Lp.stage <= 2) s += toast(560, cy - 38, steps[Lp.stage], 1, 'loop', true);
+  return s;
+}
+const LOOPFN = (u, t0, base) => ACC ? oneShot(u, t0, base) : laps(u, t0, base);
+const LOOP0 = ACC ? 1.9 : 1.6;   // the loop slide's start: a flash loan's route shows 0.3 s before its money sets off
+function cLoop(u) {
+  const L = LOOPFN(u, LOOP0, D);
+  let s = drawTree({vis: {fl: 'on', mor: 'on', per: 'off', cf: 'off'}, focus: 'mor', links: {post: .9, borrow: .9}, accIn: win(u, 1.6, .5),
+    v: {sh: D + L.debt, coll: L.coll, debt: L.debt, n: 0, margin: 0, pnl: 0, loan: 0}, sub: expoSub(D)});
+  s += ACC ? shotDraw(L, D, u) : lapsDraw(L, D);
+  return s + chip(560, 720, ACC ? 'Looped to ' + LV + 'x in one flash-loan transaction by ' + ACC.name + '’s looping executor'
+    : 'Looped to ' + LV + 'x at ' + pct(100 * LQ, 1) + ' LTV · a flash loan runs every lap in one transaction', u, L.end + 1.0, Infinity);
+}
+function cCf(u) {
+  // the valuer reads the vault's lending position; the line opens against it; the AUSD goes to the vault
+  const N = LINE(), dR = pdur(READ.mor), dL = pdur(bus('cf')), got = win(u, 10.6 + dL - 0.3, 0.5);
+  const v = Object.assign({}, FULL, {n: 0, margin: 0, loan: N.B * got, cash: N.B * got});
+  let s = drawTree({vis: {fl: 'dim', mor: 'on', per: 'off', cf: 'on'}, focus: 'cf', links: {post: .4, borrow: .4}, v,
+    sub: got > 0.5 ? 'holds ' + usd(N.B) + ' AUSD' : expoSub(D), valuer: win(u, 1.6, .6), feed: 1, readMor: fade(u, 2.2, 2.4 + 2 * dR + 0.6)});
+  s += tokenC(READ.mor, (u - 2.4) / dR, PERPL) + tokenC(rev(READ.mor), (u - 2.5 - dR) / dR, PERPL);
+  s += valCard(1200, 700, 'Valued at one block', ['collateral ' + usd(LV * D) + ' − debt ' + usd((LV - 1) * D), '= ' + usd(D) + ' of equity backs the line'], fade(u, 2.6 + 2 * dR, 9.2));
+  s += chip(1840, 70, 'Line opened: up to ' + usd(N.B) + ' AUSD against the vault', u, 8.6, 10.4);
+  s += flow(rvs(bus('cf')), u - 10.6, CREDIT.col, 'lends ' + usd(N.B) + ' AUSD to the vault · ' + CREDIT.rate);
+  return s + chip(1840, 70, 'LTV ' + pct(100 * N.ltv, 1) + ' · the vault can lose ' + pct(100 * N.loss, 0) + ' before the ' +
+    Math.round(100 * CREDIT.line) + '% limit', u, 10.6 + dL + 1.0, Infinity);
+}
+function cHedge(u) {
+  // posting the margin and opening the short are one transaction: one arrow, and both land on the Perpl card together
+  const done = win(u, 1.6 + pdur(bus('per')) - 0.2, .4), B = MM * D;
+  const v = Object.assign({}, FULL, {n: D * done, margin: B * done, cash: B * (1 - done)});
+  let s = drawTree({vis: {fl: 'dim', mor: 'dim', per: 'on', cf: 'dim'}, focus: 'per', links: {post: .4, borrow: .4}, v, valuer: .4});
+  s += flow(bus('per'), u - 1.6, PERPL, 'margin + short · one transaction');
+  return s + chip(1760, 662, 'Net MON exposure $0 · the short earns funding from long traders', u, 4.0, Infinity);
+}
+function cTogether(u) {
+  const ORDER = ['fl', 'mor', 'cf', 'per'];
+  const P_ = passes(u, 2.2, 1.7, 0.78, 8), all = P_.k >= 8 ? win(u, 2.2 + 1.7 * (1 - Math.pow(0.78, 8)) / (1 - 0.78), .6) : 0;
+  const act = P_.k >= 0 && P_.k < 8 ? ORDER[P_.k % 4] : null, pulse = act ? Math.sin(Math.PI * P_.f) : 0;
+  let s = drawTree({vis: {fl: 'on', mor: 'on', per: 'on', cf: 'on'}, focus: act, links: {post: .5, borrow: .5}, v: FULL, monad: win(u, 1.6, .8), valuer: .45,
+    glow: act ? [act, pulse] : null});
+  const route = {fl: [[bus('fl')], FAST, 'stake'], mor: [[PATH.post, PATH.borrow], VEN.col, 'borrow'],
+    cf: [[rvs(bus('cf'))], CREDIT.col, 'lend'], per: [[bus('per')], PERPL, 'hedge']};
+  const chipAt = {fl: [CX.fl - 60, 112, ''], mor: [CX.mor - 60, 688, ''], cf: [CX.cf - 60, 112, ''], per: [CX.per - 60, 688, '']};
+  for (const k of ORDER) {
+    const op = k === act ? pulse : all;
+    if (op <= 0) continue;
+    const [paths, col, lab] = route[k];
+    s += paths.map(pp => arrow(pp, {col, w: 4.5, op})).join('') + `<g opacity="${op}">` + chipC(chipAt[k][0], chipAt[k][1], lab, col, chipAt[k][2]) + '</g>';
+  }
+  s += chip(1200, 110, 'Every leg is a contract on Monad: no bridge, no second venue', u, 2.4, 7.6);
+  return s + chip(1200, 110, 'One chain means one transaction can touch every leg, which is what a flash loan requires', u, 8.1, Infinity);
+}
+// When MON moves: the hook warns, the valuer re-values both legs, the line lends the vault more, the vault tops up the
+// short, then the one-transaction rebalance repays it.
+const MV0 = TR - 1.0;   // the rise starts 1 s into the move's clock: as the camera lands
+const MOVE ={hook: 6.2, val: 7.8, lend: 10.4, top: 12.5, r1: 15.0, r2: 17.0, r3: 19.0, r3b: 21.9, r4: 24.0, r4b: 26.9, r5: 29.8, done: 31.2};
+function moveState(u) {
+  const uu = u - MV0, p = F.rally_to_topup * ease(clamp((uu - 1) / 5)), E = D,   // a steady rise to the trigger
+  pE = F.rally_to_topup * E, T_ = (1 + MM) * pE;
+  const pre = model(p, (1 + MM) * F.rally_to_topup * win(uu, MOVE.top, pdur(bus('per'))));
+  pre.loan = MM * E + T_ * win(uu, MOVE.lend, pdur(bus('cf')));
+  const r = k => win(uu, MOVE['r' + k], pdur(bus([0, 'mor', 'mor', 0, 'per', 'cf'][k])));   // each value changes as its ball travels
+  const M = Object.assign({}, pre);
+  if (uu >= MOVE.r1) {
+    const keep = E / pre.notional;
+    M.debt = lerp(pre.debt, (LV - 1) * E, r(1)); M.coll = lerp(pre.coll, LV * E, r(2));
+    M.notional = lerp(pre.notional, E, r(4)); M.pnl = lerp(pre.pnl, pre.pnl * keep, r(4)); M.margin = lerp(pre.margin, pre.margin * keep, r(4));
+    M.loan = lerp(pre.loan, MM * E, r(5)); M.acct = M.margin + M.pnl; M.ratio = M.acct / M.notional;
+  }
+  M.equity = E; M.showCash = true; M.cash = E - (M.coll - M.debt + M.margin + M.pnl - M.loan);
+  return {M, p, pE, T_, uu};
+}
+function cMove(u, quiet) {
+  const {M, p, pE, T_, uu} = moveState(u), V = D + MM * D;
+  window.__chk.move = {p, pE, T_, uu};
+  let s = drawTree({vis: {fl: 'on', mor: 'on', per: 'on', cf: 'on'}, links: {post: .5, borrow: .5}, monad: .6,
+    v: {sh: M.coll, coll: M.coll, debt: M.debt, n: M.notional, margin: M.margin, pnl: M.pnl, loan: M.loan, cash: Math.abs(M.cash) < 1 ? 0 : M.cash,
+      lev: M.coll / (M.coll - M.debt)}, sub: 'equity ' + usd(M.equity), health: quiet ? 0 : 1, agent: win(uu, MOVE.hook, .5),
+    valuer: lerp(.45, 1, fade(uu, MOVE.val - 0.4, MOVE.lend + 0.4)), readMor: fade(uu, MOVE.val, MOVE.lend), readPer: fade(uu, MOVE.val, MOVE.lend)});
+  s += wboard(M, p, 1);
+  if (!quiet) s += chip(1760, 760, 'MON +' + (100 * F.rally_to_topup).toFixed(0) + '%: margin at 3x maintenance · the hook calls the vault', uu, MOVE.hook + 0.2, MOVE.val + 0.4, 'warn');
+  s += tokenC(READ.mor, (uu - MOVE.val) / pdur(READ.mor), PERPL) + tokenC(READ.per, (uu - MOVE.val) / pdur(READ.per), PERPL);
+  s += valCard(1200, 700, 'Re-valued at one block', ['loop +' + usd(pE) + ' · short −' + usd(pE), 'the vault is still worth ' + usd(V),
+    'borrowing ' + usd(T_) + ' more: LTV ' + pct(100 * owed(MM * D + T_) / (V + T_), 0)], fade(uu, MOVE.val + 0.6, MOVE.lend + 1.2));
+  s += flow(rvs(bus('cf')), uu - MOVE.lend, CREDIT.col,'lends the vault ' + usd(T_) + ' more');
+  s += flow(bus('per'), uu - MOVE.top, PERPL, 'tops up the margin');
+  s += flow(bus('mor'), uu - MOVE.r1, C.amber, 'repay ' + usd((LV - 1) * pE) + ' of WMON debt');
+  s += flow(rvs(bus('mor')), uu - MOVE.r2, VEN.col, 'withdraw ' + usd(LV * pE) + ' shMON');
+  s += flow(bus('fl'), uu - MOVE.r3, FAST, 'sell ' + usd(LV * pE) + ' shMON');
+  s += flow(rvs(bus('fl')), uu - MOVE.r3b, FAST, 'keep ' + usd(pE));
+  s += flow(bus('per'), uu - MOVE.r4, PERPL, 'shrink the short by ' + usd(pE));
+  s += flow(rvs(bus('per')), uu - MOVE.r4b, PERPL, usd(MM * pE) + ' of margin back');
+  s += flow(bus('cf'), uu - MOVE.r5, CREDIT.col,'repay ' + usd(T_) + ' to the credit line');
+  // the whole sequence, in the order it plays: the top-up first, then the one-transaction rebalance
+  const ck = win(uu, MOVE.lend - 0.3, .3) * (1 - win(uu, MOVE.done, .4));
+  if (ck > 0) {
+    const steps = [['borrow ' + usd(T_) + ' more on the credit line', MOVE.lend, pdur(bus('cf'))],
+      ['top up the short’s margin with it', MOVE.top, pdur(bus('per'))],
+      ['take the loop’s ' + usd(pE) + ' gain: repay WMON debt, sell shMON', MOVE.r1, MOVE.r4 - MOVE.r1 - 0.1],
+      ['shrink the short by ' + usd(pE) + ' to match the loop: ' + usd(MM * pE) + ' back', MOVE.r4, MOVE.r5 - MOVE.r4 - 0.1],
+      ['repay the ' + usd(T_) + ' to the credit line', MOVE.r5, pdur(bus('cf'))]];
+    s += `<g opacity="${ck}">` + R(850, 895, 700, 330, {fill: '#fff', stroke: PERPL, sw: 2.5, rx: 14}) +
+      T(876, 937, 'Top-up, then rebalance', {size: 22, w: 800, col: PERPL}) + T(876, 963, 'steps 3-5 are one transaction · ' + (ACC ? ACC.name + '’s executor runs step 3 with a flash loan' : 'a flash loan runs step 3'), {size: 15, col: PERPL});
+    steps.forEach(([a, at, len], k) => {
+      const y = 1005 + k * 44, st = uu >= at + len ? 2 : uu >= at ? 1 : 0, col = st === 2 ? C.green : st === 1 ? PERPL : C.grey;
+      s += `<circle cx="890" cy="${y}" r="12" fill="${st ? col : '#fff'}" stroke="${col}" stroke-width="2"/>` +
+        T(890, y + 5, st === 2 ? '✓' : String(k + 1), {size: 13, w: 800, col: st ? '#fff' : col, anchor: 'middle'}) +
+        T(914, y + 6, a, {size: 17, w: st === 1 ? 700 : 400, col: st ? C.ink : C.mute});
+    });
+    s += '</g>';
+  }
+  if (quiet) return s;
+  s += chip(1200, 110, 'Back to the opening shape at the new price · equity ' + usd(D), uu, MOVE.done, MOVE.done + 2.2);
+  return s + chip(1200, 110, VEN.name + '’s LTV never moved and the short was topped up first: price alone can’t liquidate it', uu, MOVE.done + 2.8, Infinity);
+}
+// When MON falls: still hedged (both legs are fixed in MON), but the short's profit sits idle as excess margin. One
+// transaction puts it back to work with margin withdrawal (in design): withdraw the profit, buy MON and loop it to LV x,
+// then grow the same short to the loop's new size. The short stays open throughout; its account already holds the margin
+// the larger short needs.
+const DROP = {fall: 0.6, warn: 5.0, hook: 7.0, r1: 8.6, r3: 11.0, laps: 13.6, r4: 21.2, done: 23.6};
+if (ACC) {   // the re-lever is one transaction, not three laps: the steps after it move up by the time that saves
+  const saved = laps(0, DROP.laps, 1).end - oneShot(0, DROP.laps, 1).end;
+  DROP.r4 -= saved; DROP.done -= saved;
+}
+const DV0 = TR - DROP.fall, DROP_D = 0.30;   // the fall starts as the slide's lead-in ends
+function dropState(u) {
+  const uu = u - DV0, d = DROP_D * ease(clamp((uu - DROP.fall) / 4.0)), E = D, dE = DROP_D * E;
+  const M = model(-d, 0);
+  M.cash = 0; M.flash = 0; M.free = 0;
+  let Lp = {lap: -1, f: 0};
+  if (uu >= DROP.r1) {
+    const dP = pdur(bus('per'));
+    const kw = win(uu, DROP.r1, dP), kr = win(uu, DROP.r4, dP);
+    Lp = LOOPFN(uu, DROP.laps, dE);
+    const n0 = E * (1 - DROP_D);
+    M.notional = n0 + (E - n0) * kr;                          // 4 the same short grows to the loop's size
+    M.margin = MM * E - dE * kw;                              // 1 the profit leaves as withdrawn margin; the gain stays on the short
+    M.cash = dE * kw - Lp.coll + Lp.debt;                     // 1 withdrawn; 2-3 staked and looped
+    M.coll = LV * E * (1 - DROP_D) + Lp.coll;
+    M.debt = (LV - 1) * E * (1 - DROP_D) + Lp.debt;
+  }
+  M.acct = M.margin + M.pnl; M.ratio = M.notional > 0 ? M.acct / M.notional : MM; M.equity = E;
+  return {M, p: -d, dE, uu, Lp};
+}
+function cDrop(u) {
+  const {M, p, dE, uu, Lp} = dropState(u), E = D, q = 2 / 3, dP = pdur(bus('per')), dF = pdur(bus('fl'));
+  window.__chk.drop = {p, dE, uu};
+  const looping = uu >= DROP.r3 && uu < DROP.r4;
+  // MON bought for the loop is staked and posted within the same lap: count it as the loop's collateral
+  const held = uu >= DROP.r3 + dF ? Math.max(M.cash, 0) : 0, Mv = Object.assign({}, M, {coll: M.coll + held, cash: M.cash - held});
+  let s = drawTree({vis: {fl: 'on', mor: 'on', per: 'on', cf: 'on'}, focus: looping ? 'mor' : null, links: {post: looping ? .9 : .5, borrow: looping ? .9 : .5}, monad: .6,
+    v: {sh: Mv.coll, coll: Mv.coll, debt: M.debt, n: M.notional, margin: M.margin, pnl: M.pnl, free: M.free, loan: M.loan,
+      cash: Math.abs(Mv.cash) < 1 ? 0 : Mv.cash, lev: Mv.coll / (Mv.coll - M.debt)}, health: 1, agent: win(uu, DROP.hook, .5)});   // no valuer: the fall never touches the credit line
+  s += wboard(Object.assign({}, Mv, {showCash: true, margin: M.margin + M.free}), p, 1);
+  s += chip(1760, 760, 'MON −' + Math.round(100 * DROP_D) + '%: still hedged · the short is up ' + usd(dE), uu, DROP.warn, DROP.r1 - 0.2);
+  s += flow(rvs(bus('per')), uu - DROP.r1, PERPL, 'withdraw ' + usd(dE) + ' of margin');
+  s += flow(bus('fl'), uu - DROP.r3, FAST, 'buy MON, stake ' + usd(dE));
+  if (uu >= DROP.laps) s += ACC ? shotDraw(Lp, dE, uu, 812) : lapsDraw(Lp, dE, 812);
+  s += flow(bus('per'), uu - DROP.r4, PERPL, 'grow the short to ' + usd(E));
+  const ck = win(uu, DROP.r1 - 0.3, .3) * (1 - win(uu, DROP.done, .4));
+  if (ck > 0) {
+    const lapsEnd = LOOPFN(0, DROP.laps, dE).end;
+    const steps = [['withdraw the ' + usd(dE) + ' profit from the short’s margin', DROP.r1, dP], ['buy MON and stake it', DROP.r3, dF],
+      [ACC ? ACC.name + ' re-levers it to ' + LV + 'x in one flash-loan transaction' : 'loop it to ' + LV + 'x: post shMON, borrow WMON, repeat', DROP.laps, lapsEnd - DROP.laps],
+      ['grow the same short by ' + usd(dE) + ' to ' + usd(E) + ' at ' + SL + ' (no new margin)', DROP.r4, dP]];
+    s += `<g opacity="${ck}">` + R(850, 895, 700, 286, {fill: '#fff', stroke: PERPL, sw: 2.5, rx: 14}) +
+      T(876, 937, 'Rebalance · one transaction', {size: 22, w: 800, col: PERPL}) +
+      T(876, 963, 'margin withdrawal (in design) · the short stays open · ' + (ACC ? ACC.name + '’s executor re-levers' : 'a flash loan runs the laps'), {size: 15, col: PERPL});
+    steps.forEach(([a_, at, len], k) => {
+      const y = 1005 + k * 44, st = uu >= at + len ? 2 : uu >= at ? 1 : 0, col = st === 2 ? C.green : st === 1 ? PERPL : C.grey;
+      s += `<circle cx="890" cy="${y}" r="12" fill="${st ? col : '#fff'}" stroke="${col}" stroke-width="2"/>` +
+        T(890, y + 5, st === 2 ? '✓' : String(k + 1), {size: 13, w: 800, col: st ? '#fff' : col, anchor: 'middle'}) +
+        T(914, y + 6, a_, {size: 17, w: st === 1 ? 700 : 400, col: st ? C.ink : C.mute});
+    });
+    s += '</g>';
+  }
+  s += chip(1200, 110, 'Back to full size at the new price: 71,429 MON long and short · equity ' + usd(E), uu, DROP.done, DROP.done + 2.2);
+  return s + chip(1200, 110, 'Up or down, the spare capital moves to the leg that needs it, in one transaction', uu, DROP.done + 2.8, Infinity);
+}
+// ------------------------------------------------------------------ boards beside and below the tree
+function payoutBoard(u) {
+  const E = D, L = F.loop_leverage, y = F.stake_pct / 100, b = F.borrow_pct / 100, f = F.funding90_pct / 100;
+  // the same trade twice, as paired bars: Perpl (a credit line lends the short's margin) above, Hyperliquid
+  // (no credit line can reach it, so the margin comes out of the deposit and only the rest loops) below
+  const rows = payoutRows(), hl = hlRows();
+  const net = rows.reduce((a, r) => a + r[1], 0), netH = hl.reduce((a, r) => a + r[1], 0);
+  window.__chk.payout = {rows: rows.map(r => [r[0], r[1]]), net};
+  window.__chk.payoutHL = {rows: hl.map(r => [r[0], r[1]]), net: netH, loopEquity: E / (1 + MM), margin: MM * E / (1 + MM)};
+  // every bar starts at the left edge, its length the amount; the series is the bar's colour, the sign the amount's
+  // colour (green in, red out) and a red edge on every cost bar
+  const x0 = -610, W = 400, sc = W / Math.max(...rows.map(r => Math.abs(r[1]))), H0 = 262, STEP = 100;
+  const hlBar = {fill: HL, stroke: HL_DARK, sw: 1.5};
+  let s = R(-640, 120, 600, 1070, {fill: '#fff', stroke: '#d9dbe3', sw: 1.5, rx: 16}) +
+    T(-612, 168, 'A year on ' + usd(E), {size: 28, w: 800}) + T(-612, 198, 'gross to net · rates read ' + RATE_DATE, {size: 17, col: C.mute}) +
+    R(x0, 214, 18, 18, {fill: PERPL, rx: 4}) + T(x0 + 26, 230, 'on Perpl', {size: 18, w: 700, col: PERPL}) +
+    R(x0 + 140, 214, 18, 18, {...hlBar, rx: 4}) + T(x0 + 166, 230, 'hedged on Hyperliquid', {size: 18, w: 700, col: HL_DARK});
+  const bar = (v, a, y, o, note) => R(x0, y, Math.max(4, Math.abs(v) * a * sc), 24, {rx: 5, ...o, ...(v < 0 ? {stroke: C.red, sw: 2.5} : {})}) +
+    T(x0 + Math.max(4, Math.abs(v) * a * sc) + 10, y + 19, (v < 0 ? '−' : '+') + usd(Math.abs(v)), {size: 18, w: 800, col: v < 0 ? C.red : C.green}) +
+    (note ? T(x0 + Math.max(4, Math.abs(v) * a * sc) + 66, y + 19, note, {size: 16, col: C.mute}) : '');
+  hl.forEach(([labH, vh], k) => {   // the last row, bridging, is Hyperliquid's alone: Perpl has nothing to move
+    const v = k < rows.length ? rows[k][1] : 0, a = win(u, 0.3 + k * 1.0, .7), ah = win(u, 0.6 + k * 1.0, .7), yy = H0 + k * STEP;
+    const lab = k === 4 ? 'Swaps and taker fees' : k < rows.length ? rows[k][0] : labH;
+    s += `<g opacity="${clamp(a * 3)}">` + T(x0, yy + 18, lab, {size: 19}) + (k < rows.length ? bar(v, a, yy + 28, {fill: PERPL}) :
+      T(x0, yy + 47, 'none on Perpl: one chain, every leg in one transaction', {size: 17, w: 700, col: PERPL})) + '</g>';
+    s += `<g opacity="${clamp(ah * 3)}">` + (Math.abs(vh) < 0.005 ? T(x0, yy + 75, 'none on Hyperliquid: no credit line', {size: 17, w: 700, col: HL_DARK}) :
+      bar(vh, ah, yy + 56, hlBar, k >= rows.length ? BRIDGE.transfers + ' transfers, ~' + BRIDGE.sign_s + ' s and 2 transactions each' : '')) + '</g>';
+  });
+  const n = win(u, 6.4, .8), nh = win(u, 6.9, .8), g = win(u, 7.5, .8), yn = H0 + hl.length * STEP + 4;
+  const ff = 'font-size="18" fill="' + C.ink + '"', xc = x0 + 18;
+  return s + `<g opacity="${n}">` + `<line x1="${x0}" y1="${yn}" x2="${x0 + 540}" y2="${yn}" stroke="${C.ink}" stroke-width="1.5"/>` +
+    T(x0, yn + 30, 'Net to the depositor', {size: 21, w: 800}) +
+    R(x0, yn + 42, net * sc * n, 30, {fill: PERPL, rx: 5}) +
+    T(x0 + net * sc * n + 12, yn + 66, usd(net) + ' · ' + pct(100 * net / E, 1), {size: 22, w: 800, col: PERPL}) + '</g>' +
+    `<g opacity="${nh}">` + R(x0, yn + 80, netH * sc * nh, 30, {...hlBar, rx: 5}) +
+    T(x0 + netH * sc * nh + 12, yn + 104, usd(netH) + ' · ' + pct(100 * netH / E, 1), {size: 22, w: 800, col: HL_DARK}) + '</g>' +
+    `<g opacity="${g}">` + R(x0 - 8, yn + 124, 556, 178, {fill: '#f1efff', stroke: PERPL, sw: 2, rx: 12}) +
+    T(xc, yn + 166, '+' + usd(net - netH) + ' a year on Perpl (+' + pct(100 * (net - netH) / E, 1) + ')', {size: 30, w: 800, col: PERPL}) +
+    `<text x="${xc}" y="${yn + 202}" ${ff}><tspan>On Hyperliquid no credit line can reach the short, so</tspan>` +
+    `<tspan x="${xc}" dy="24">${usd(MM * E / (1 + MM))} (${Math.round(100 * MM / (1 + MM))}%) of the deposit sits idle as margin and</tspan>` +
+    `<tspan x="${xc}" dy="24">only ${usd(E / (1 + MM))} loops. Every top-up is a bridge: two</tspan>` +
+    `<tspan x="${xc}" dy="24">transactions ~${BRIDGE.sign_s} s apart, never atomic.</tspan></text></g>`;
+}
+const WL = -450, WR = 2800, WW = WR - WL, WMID = (WL + WR) / 2;   // the board's full width, payout to balance sheet
+function tile(x, y, w, h, col, title, big, sub, a) {
+  return `<g opacity="${a}" transform="translate(0 ${(1 - a) * 16})">` + R(x, y, w, h, {fill: '#fff', stroke: col, sw: 2.5, rx: 16}) +
+    T(x + 30, y + 52, title, {size: 30, w: 800, col}) + (big ? T(x + 30, y + 140, big, {size: 72, w: 800, col: C.ink}) : '') +
+    lines(x + 30, y + (big ? 196 : 104), sub, {size: 24, lh: 34, col: C.mute}) + '</g>';
+}
+function pillRow(y, items, col, u, t0) {
+  const n = items.length, gap = 46, w = (WW - gap * (n - 1)) / n;
+  let s = '';
+  items.forEach((lab, k) => {
+    const a = win(u, t0 + k * 0.5, .4), x = WL + k * (w + gap);
+    s += `<g opacity="${a}">` + R(x, y, w, 64, {fill: '#fff', stroke: col, sw: 2.5, rx: 32}) + T(x + w / 2, y + 41, lab, {size: 24, w: 700, col, anchor: 'middle'}) + '</g>';
+    if (k < n - 1 && a >= 1) s += arrow([[x + w + 4, y + 32], [x + w + gap - 4, y + 32]], {col, w: 2.5});
+  });
+  return s;
+}
+// a filled tile: tint of its colour, title in the colour, optional big number, muted lines
+function ctile(x, y, w, h, col, title, big, sub, a) {
+  return `<g opacity="${a}" transform="translate(0 ${(1 - a) * 16})">` + R(x, y, w, h, {fill: col, op: 0.09, rx: 16}) +
+    R(x, y, w, h, {fill: 'none', stroke: col, sw: 2.5, rx: 16}) +
+    T(x + 26, y + 46, title, {size: 27, w: 800, col}) + (big ? T(x + 26, y + 120, big, {size: 60, w: 800, col: C.ink}) : '') +
+    lines(x + 26, y + (big ? 166 : 90), sub, {size: 21, lh: 30, col: C.ink, op: 0.72}) + '</g>';
+}
+function crow(n, w, gap) { const tot = n * w + (n - 1) * gap; return k => WMID - tot / 2 + k * (w + gap); }
+// closing boards: the tree's card style, aligned to its four columns
+const appear = (a, body) => `<g opacity="${a}" transform="translate(0 ${(1 - a) * 14})">` + body + '</g>';
+function lendCards() {
+  const interest = (F.loop_leverage - 1) * F.borrow_pct / 100 * D, inLoop = 1 / (1 + MM);
+  return [
+    {label: 'More yield', title: pct(F.net_credit_facility_pct, 1) + ' net', mono: ['vs ' + pct(F.stake_pct, 1) + ' staking alone', 'for the vault’s depositors'], role: 'a new yield source',
+     long: 'A new yield source for the vault’s depositors: ' + pct(F.net_credit_facility_pct, 1) + ' net a year at today’s rates, against ' + pct(F.stake_pct, 1) + ' for staking alone.'},
+    {label: 'More borrowing', title: usd((LV - 1) * D) + ' WMON', mono: ['per ' + usd(D) + ' vault', usd(interest) + ' a year to lenders'], role: 'borrowing demand',
+     long: 'Each ' + usd(D) + ' vault borrows ' + usd((LV - 1) * D) + ' of WMON on ' + VEN.name + ' and pays its lenders about ' + usd(interest) + ' a year.'},
+    // the credit line is on Euler: a second loan per vault there; on another lender, the hedge brings it new borrowers
+    VEN.name === CREDIT.name
+      ? {label: CREDIT.credit, title: usd(MM * D) + ' AUSD', mono: ['lent per vault', 'at ' + pct(F.credit_facility_pct, 0) + ', ' + CREDIT.rate], role: 'a second loan per vault',
+         long: CREDIT.credit + ' lends each vault ' + usd(MM * D) + ' of AUSD at ' + pct(F.credit_facility_pct, 0) + ' (' + CREDIT.rate + ') for the hedge’s margin: a second loan per vault.'}
+      : {label: 'New borrowers', title: 'Hedged loops', mono: ['MON price risk', 'hedged on Perpl'], role: 'borrowing that was too risky',
+         long: 'A looper who won’t carry MON’s price risk can hedge it on Perpl, so leverage that was too risky becomes borrowing on ' + VEN.name + '.'},
+    {label: 'Capital efficiency', title: '100% in the loop', mono: ['vs ' + pct(100 * inLoop, 0) + ' on its own margin', pct(F.net_credit_facility_pct, 1) + ' vs ' + pct(F.net_own_margin_pct, 1) + ' net'], role: 'nothing leaves the loop',
+     long: 'With the margin lent, the whole deposit earns in the loop, against ' + pct(100 * inLoop, 0) + ' if the vault posts its own margin (' + pct(F.net_credit_facility_pct, 1) + ' against ' + pct(F.net_own_margin_pct, 1) + ' net).'},
+  ];
+}
+function curatorItems() {
+  return [
+    ['nobridge', 'No bridge', 'non-custodial, on Monad', 'The vault, its loans and its hedge all live on Monad. Nothing is wrapped or bridged, and the vault keeps custody throughout.'],
+    ['chain', 'One chain', 'every leg, same block', 'Staking, the loop, the credit line and the short are contracts on one chain, so one transaction can touch every leg in the same block.'],
+    ['eye', 'Transparent', 'every number on-chain', 'Every balance, loan and position is on-chain and readable at any block, by depositors and lenders alike.'],
+    ['up', 'Higher yield', pct(F.net_credit_facility_pct, 1) + ' vs ' + pct(F.stake_pct, 1) + ' staking', pct(F.net_credit_facility_pct, 1) + ' net a year at today’s rates, against ' + pct(F.stake_pct, 1) + ' for staking alone: the loop’s carry plus the funding paid to the short.'],
+    ['target', 'Capital efficient', 'margin lent, loop intact', 'The credit line lends the hedge’s margin, so none of the deposit sits idle as margin and the loop stays whole.'],
+    ['auto', 'Hooks manage it', 'in design; a keeper today', 'In design: Perpl calls the vault’s hook before a position nears its limit, so top-ups land in time. Today a keeper does the same job.'],
+    ['blocks', 'Known primitives', 'vaults, EOAs, audited code', 'Vaults, EOAs and delegated accounts on audited contracts: nothing new for a curator to learn or trust.'],
+  ];
+}
+function closeLending(u) {
+  const interest = (F.loop_leverage - 1) * F.borrow_pct / 100 * D, col = VEN.col, inLoop = 1 / (1 + MM), y = 878;
+  const card = (k, o) => appear(win(u, 0.4 + k * 0.8, .6), wcard([450, 950, 1450, 1950][k],
+    Object.assign({y, col, text: VEN.text, icon: VEN.icon, focus: true}, o)));
+  let s = appear(win(u, 0.2, .5), T(1200, 852, 'More TVL for ' + VEN.name, {size: 26, w: 800, col: VEN.text, anchor: 'middle'}));
+  lendCards().forEach((o, k) => { s += card(k, o); });
+  // the flywheel, sized like the tree's labels
+  const items = ['Higher vault yield', 'More deposits', 'More collateral and borrowing', 'Lenders earn more', 'More supply, cheaper loops'];
+  const ws = items.map(l => l.length * 9.6 + 44), gap = 36, tot = ws.reduce((x, z) => x + z, 0) + gap * (items.length - 1), py = 1100;
+  let x = 1200 - tot / 2;
+  const xs = ws.map(w => { const x0 = x; x += w + gap; return x0; });
+  items.forEach((lab, k) => {
+    const aa = win(u, 3.8 + k * 0.45, .4);
+    s += `<g opacity="${aa}">` + R(xs[k], py, ws[k], 42, {fill: '#fff', stroke: col, sw: 2, rx: 21}) + T(xs[k] + ws[k] / 2, py + 27, lab, {size: 17, w: 700, col: VEN.text, anchor: 'middle'}) + '</g>';
+    if (k < items.length - 1 && aa >= 1) s += arrow([[xs[k] + ws[k] + 3, py + 21], [xs[k + 1] - 3, py + 21]], {col, w: 2});
+  });
+  const r = win(u, 6.4, .5), xa = xs[4] + ws[4] / 2, xb = xs[0] + ws[0] / 2;
+  if (r > 0) s += `<g opacity="${r}">` + arrow([[xa, py + 44], [xa, py + 66], [xb, py + 66], [xb, py + 46]], {col, w: 2}) + '</g>';
+  return s;
+}
+function closeCurator(u) {
+  const items = [['No bridge', ['non-custodial,', 'on Monad']], ['One chain', ['every DeFi lego,', 'same block']], ['Transparent', ['every number', 'on-chain']],
+    ['Higher yield', [pct(F.net_credit_facility_pct, 1) + ' vs', pct(F.stake_pct, 1) + ' staking']], ['Margin lent', [LV + 'x loop,', 'nothing cut']],
+    ['Hooks manage it', ['in design;', 'a keeper today']], ['Known primitives', ['vaults, EOAs,', 'audited code']]];
+  const gap = 30, w = (2780 - gap * 6) / 7;
+  let s = '';
+  items.forEach(([t, sub], k) => { s += tile(-640 + k * (w + gap), 880, w, 300, PERPL, t, '', sub, win(u, 0.4 + k * 0.7, .5)); });
+  return s + `<g opacity="${win(u, 0.4 + 7 * 0.7 + 0.4, .6)}">` + T(-640, 1260, 'Built from contracts you already know, on one chain.', {size: 34, w: 800, col: PERPL}) +
+    T(-640, 1304, 'To build together: your vault template · a credit line from ' + CREDIT.credit + ' · the hook interface', {size: 24, col: C.mute}) + '</g>';
+}
+function closeFull(u) {
+  const st = [['Live today', 'Same-chain hedge', ['open, resize and top up', 'from any contract'], C.green], ['In design', 'Hooks', ['Perpl calls the vault', 'before it liquidates'], PERPL],
+    ['Proposed', 'Credit line', ['margin lent against', 'the vault’s position'], CREDIT.text], ['Roadmap', 'Spot order book', ['spot and perp', 'on one account'], C.mute],
+    ['Roadmap', 'Portfolio margin', ['the hedge counts', 'as a hedge'], C.mute]];
+  const gap = 30, w = (2780 - gap * 4) / 5;
+  let s = '';
+  st.forEach(([b, t, sub, col], k) => { s += tile(-640 + k * (w + gap), 880, w, 300, col, t, '', [b].concat(sub), win(u, 0.4 + k * 1.0, .5)); });
+  return s;
+}
+
+// small line icons in a 28 x 28 box at (x, y)
+function glyph(name, x, y, col) {
+  const g = `fill="none" stroke="${col}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"`;
+  const P = (d, halo) => (halo ? `<path d="${d}" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>` : '') + `<path d="${d}" ${g}/>`;
+  const body = {
+    nobridge: P('M14 2 L25 6 V13 Q25 22 14 27 Q3 22 3 13 V6 Z') + P('M9 14 L13 18 L19 10'),       // a shield: non-custodial, nothing in transit
+    chain: `<rect x="1" y="9" width="15" height="10" rx="5" ${g}/><rect x="12" y="9" width="15" height="10" rx="5" ${g}/>`,
+    eye: P('M2 14 Q14 2 26 14 Q14 26 2 14 Z') + `<circle cx="14" cy="14" r="4" ${g}/>`,
+    up: P('M2 24 L10 15 L16 19 L26 7') + P('M19 7 H26 V14'),                                       // a rising line
+    target: `<circle cx="14" cy="14" r="12" ${g}/><circle cx="14" cy="14" r="6.5" ${g}/><circle cx="14" cy="14" r="1.6" fill="${col}"/>`,
+    auto: P('M23 9 A10 10 0 1 0 24 17') + P('M24 3 V9 H18'),                                      // a loop that runs itself
+    blocks: `<rect x="2" y="15" width="11" height="11" rx="2" ${g}/><rect x="15" y="15" width="11" height="11" rx="2" ${g}/><rect x="8.5" y="2" width="11" height="11" rx="2" ${g}/>`,
+  }[name] || '';
+  return `<g transform="translate(${x} ${y})">${body}</g>`;
+}
+function closeAll(u) {
+  const items = curatorItems();
+  const pos = [0, 1, 2, 3, 4, 5, 6].map(k => 1200 - 3 * 340 + k * 340), col = PERPL;   // one row, above the Monad frame
+  let s = appear(win(u, 0.2, .5), T(1200, -176, 'For curators, LPs and traders', {size: 26, w: 800, col, anchor: 'middle'}));
+  items.forEach(([ic, title, sub], k) => {
+    const x = pos[k] - CW / 2, y = -154, h = 94;
+    s += appear(win(u, 0.4 + k * 0.45, .5), R(x + 3, y + 5, CW, h, {fill: '#000', op: 0.05, rx: 14}) +
+      R(x, y, CW, h, {fill: '#fff', stroke: col, sw: 2.2, rx: 14}) + R(x, y + 14, 5, h - 28, {fill: col, rx: 2.5}) +
+      glyph(ic, x + 20, y + 16, col) + T(x + 58, y + 39, title, {size: 21, w: 800, col}) +
+      T(x + 22, y + 74, sub, {size: 16, mono: true, col: C.ink}));
+  });
+  return s;
+}
+
+// chapter table: dur, camera moves [tStart, tEnd, x, y, zoom] (the first move starts from the previous chapter's view)
+const VIEW_ALL = [1175, 500, 0.46];   // curators above, the tree, the payout and balance boards beside it, the lending board below
+const CHAP = {
+  intro: {title: 'The vault, mechanism by mechanism', dur: 7, cam: [[0, 1.6, 1300, 560, 0.52]], draw: cIntro, badges: [['Illustrative', 'ink']],
+    cap: {full: 'The vault is built from a few mechanisms. We add them one at a time.'}},
+  // dur on every slide in the cut = the time its last element has finished appearing + HOLD; shift maps a slide's own
+  // clock back to the cut's (the chip log reads it)
+  stake: {title: 'Staking', dur: 7.6 + CHIP_IN - SH + HOLD, cam: [[0, TR, 1200, 390, 1.15], [3.9 - SH, 4.9 - SH, 880, 430, 1.0]], draw: u => cStake(u + SH), shift: SH, badges: [],
+    cap: {full: 'Staking: the vault stakes MON with FastLane and gets shMON, which earns about ' + pct(F.stake_pct, 0) + ' a year.'}},
+  loop: {get title() { return ACC ? 'The loop, by ' + ACC.name : 'The loop'; }, get dur() { return LOOPFN(0, LOOP0, D).end + 1.0 + CHIP_IN - SH + HOLD; },
+    cam: [[0, TR, 830, 437, 1.0]], draw: u => cLoop(u + SH), shift: SH,
+    get badges() { return (ACC ? [[ACC.name + ' looping vault', 'design']] : []).concat([[VEN.loopBadge || 'shMON market: curated by Hare', 'design']]); },
+    cap: {get full() { return ACC ? ACC.name + '’s looping vault builds the loop on ' + VEN.name + ' in one flash-loan transaction: stake, post shMON, borrow WMON. It settles at ' + LV + 'x.'
+      : 'Looping on ' + VEN.name + ': post shMON, borrow ' + pct(100 * LQ, 0) + ' of it in WMON, stake it, post again. It settles at ' + LV + 'x.'; }}},
+  cf: {get title() { return 'The credit line, from ' + CREDIT.credit; }, get dur() { return 10.6 + pdur(bus('cf')) + 1.0 + CHIP_IN - SH + HOLD; }, cam: [[0, TR, 1240, 560, 0.7]], draw: u => cCf(u + SH), shift: SH,
+    get badges() { return [[CREDIT.creditShort + ' on Monad', 'design']]; },
+    cap: {get full() { return 'Perpl’s valuer values the vault’s ' + VEN.name + ' position, and ' + CREDIT.credit + ' lends the vault the hedge’s margin against it, at a ' + CREDIT.rate + '.'; }}},
+  // the hedge's route line shows 0.3 s before its money sets off, so that slide runs 0.3 s later than the others
+  hedge: {title: 'The hedge', dur: 4.0 + CHIP_IN - (SH - 0.3) + HOLD, cam: [[0, TR, 1505, 520, 0.9]], draw: u => cHedge(u + SH - 0.3), shift: SH - 0.3, badges: [['Live with 10 markets', 'live']],
+    cap: {full: 'The hedge: in one transaction the vault posts that AUSD as margin and opens a ' + SL + ' short on Perpl. It cancels MON’s price risk and earns funding.'}},
+  together: {title: 'All together, on one chain', dur: 2.2 + 1.7 * (1 - Math.pow(0.78, 8)) / (1 - 0.78) + 0.6 - SH + HOLD,   // the eight passes, then all routes at once (0.6 s fade)
+    cam: [[0, TR, 1175, 395, 0.78]], draw: u => cTogether(u + SH), shift: SH, badges: [],
+    cap: {full: 'Together: every leg is a contract on Monad, so the vault moves money between them with no bridge.'}},
+  move: {title: 'When MON rises', dur: MV0 + MOVE.done + 2.8 + CHIP_IN + HOLD, cam: [[0, TR, 1500, 612, 0.61]], draw: cMove, shift: -MV0, badges: [['Credit line, hooks: in design', 'design']],
+    cap: {get full() { return 'At +' + (100 * F.rally_to_topup).toFixed(0) + '% the valuer re-values the vault, the ' + CREDIT.creditShort + ' lends it more, it tops up the short, and one transaction repays it from the loop’s gain.'; }}},
+  drop: {title: 'When MON falls', dur: DV0 + DROP.done + 2.8 + CHIP_IN + HOLD, cam: [[0, TR, 1500, 612, 0.61]], draw: cDrop, shift: -DV0, badges: [['Margin withdrawal, hooks: in design', 'design']],
+    cap: {get full() { return 'From there MON falls ' + Math.round(100 * DROP_D) + '%: the short’s gain is withdrawn as margin, looped back into ' + VEN.name + ', and the same short grows to match.'; }}},
+  payout: {title: 'What it pays', dur: PAY0 + 7.5 + 0.8 + HOLD, cam: [[0, TR, ...VIEW_ALL]], badges: [['Illustrative', 'ink'], ['Rates read ' + RATE_DATE, 'ink']],
+    cap: {full: 'A year on ' + usd(D) + ': staking rewards and funding in, interest and fees out. About ' + pct(F.net_credit_facility_pct, 0) + ' net.'}},
+  grow: {get title() { return 'Why this grows ' + VEN.name; }, dur: CLOSE0 + 6.4 + 0.5 + HOLD, cam: [[0, TR, ...VIEW_ALL]], badges: [['Illustrative', 'ink']],
+    cap: {get full() { return 'A new yield source brings TVL to ' + VEN.name + '; the margin is lent, so the deposit stays; higher yield brings more deposits.'; }}},
+  curate: {title: 'What it brings your vault', dur: 12, cam: [[0, 1.8, 750, 785, 0.49], [9.0, 11.6, ...VIEW_ALL]], badges: [['Credit line, hooks: in design', 'design']],
+    cap: {full: 'No bridge, one chain, higher yield, the margin lent, and hooks doing the work.'}},
+  next: {title: 'What it brings curators, LPs and traders', dur: CLOSE0 + 0.4 + 6 * 0.45 + 0.5 + HOLD, cam: [[0, TR, ...VIEW_ALL]],   // seven cards, 0.45 s apart
+    badges: [],   // its cards say what is live and what is in design; the earlier slides carry the badges
+    cap: {full: 'For curators, LPs and traders: no bridge, one chain, higher yield, capital efficiency (the margin is lent) and hooks doing the work.'}},
+  all: {title: 'The whole picture', dur: TR + HOLD, cam: [[0, TR, ...VIEW_ALL]],
+    badges: [],
+    cap: {full: 'Everything at once: press a number to zoom into that part.'}},
+  explore: {title: 'Try it', dur: 1, cam: [[0, 0, 1500, 612, 0.61]], badges: [['Illustrative', 'ink']],
+    cap: {full: 'Move the price: collateral and debt move together, the short offsets them, and equity holds.'}},
+};
+// while zoomed onto a part: what stays sharp (FOCUS: its cards, routes and notes) and what its takeaways panel sits
+// beside (ANCHOR: its main card or row). Rectangles are [x1, y1, x2, y2] in canvas coordinates.
+const FOCUS = {
+  stake: [[300, 85, 1470, 650], [960, 100, 1440, 180]],
+  loop: [[160, 85, 1470, 790]],
+  cf: [[400, 50, 2200, 830], [700, 840, 1700, 1130]],
+  hedge: [[930, 85, 2080, 830], [840, 840, 1560, 910]],
+  move: [[190, 30, 2870, 1440]], drop: [[190, 30, 2870, 1440]],
+  payout: [[-460, 110, 160, 1200]], grow: [[280, 830, 2120, 1180]], next: [[10, -210, 2390, -50]],
+};
+const ANCHOR = {stake: [300, 85, 1470, 790], loop: [160, 85, 1470, 790], cf: [400, 85, 2080, 1130], hedge: [840, 85, 2080, 910],
+  payout: [-460, 110, 160, 1200], grow: [280, 830, 2120, 1180], next: [10, -210, 2390, -50]};
+const CLOSE_FN = {grow: closeLending, next: closeAll}, CLOSE_DY = {grow: 0};   // the lending row sits below the frame
+const BASE = ['stake', 'loop', 'cf', 'hedge', 'together', 'move', 'drop', 'payout'];
+const CUTS = {lending: BASE.concat(['grow', 'next', 'all'])};
+const CUTNAME = {lending: ''};
+const SCN = CHAP;   // the playback code reads SCN[id].dur and .title
+
+// ------------------------------------------------------------------ the 9:16 cut (?portrait)
+// Each slide is framed on the parts it is about (the wide scene does not fit a phone at the landscape zoom); the title
+// sits above in large type and the slide's one-sentence caption below. Cameras are [tStart, tEnd, x, y, zoom] as in CHAP.
+const PORTRAIT = new URLSearchParams(location.search).has('portrait');
+const PCAM = {
+  stake: [[0, TR, 1200, 345, 0.95], [3.9 - SH, 4.9 - SH, 834, 345, 0.75]],
+  loop: [[0, TR, 790, 425, 0.7]],
+  cf: [[0, TR, 1195, 440, 0.45]],
+  hedge: [[0, TR, 1545, 420, 0.78]],
+  together: [[0, TR, 1175, 400, 0.45]],
+  move: [[0, TR, 1175, 622, 0.45]], drop: [[0, TR, 1175, 622, 0.45]],
+  payout: [[0, TR, -150, 590, 1.0]],
+  grow: [[0, TR, 1200, 625, 0.47]],
+  next: [[0, TR, 1200, 485, 0.375]],
+  all: [[0, TR, 1175, 485, 0.27]],
+};
+// each slide's content height in canvas units: the scene band is that at the slide's final zoom, plus a margin
+const PH = {stake: 480, loop: 650, cf: 750, hedge: 640, together: 680, move: 1120, drop: 1120, payout: 960,
+  grow: 1120, next: 1400, all: 1400};
+function portraitSvg(w, id, u, idx, cut, S) {
+  if (!document.body.classList.contains('portrait')) {   // a 1080 x 1920 stage when recording
+    document.body.classList.add('portrait');
+    const st = document.createElement('style');
+    st.textContent = 'body.record.portrait #stage{width:1080px;height:1920px;aspect-ratio:auto}';
+    document.head.appendChild(st);
+  }
+  const [cx, cy, z] = camAt(cut, idx, id, u, PCAM);
+  // header: brand line, title, badges
+  let hdr = T(48, 64, 'Programmable margin on Perpl · ' + (ACC ? VEN.name + ' · looping by ' + ACC.name : lendingOn()), {size: 24, w: 700, col: PERPL});
+  const tl = wrap((idx >= 0 ? (idx + 1) + ' · ' : '') + S.title, 26);
+  tl.forEach((l, k) => { hdr += T(48, 132 + k * 56, l, {size: 48, w: 800}); });
+  const by = 132 + (tl.length - 1) * 56 + 30;
+  let bx = 0;
+  hdr += `<g transform="translate(48 ${by}) scale(1.4)">` + (S.badges || []).map(([b, kind]) => { const o = badge(bx, 0, b, kind); bx += b.length * 9.4 + 36; return o; }).join('') + '</g>';
+  const hb = by + ((S.badges || []).length ? 42 : 0) + 24;
+  // caption: on the price stories the MON move leads it (the side board is outside the frame)
+  const P = (id === 'move' || id === 'drop') && window.__chk[id] ? window.__chk[id].p : null;
+  const capText = id === 'all' ? 'Everything at once: the loop, the credit line and the hedge, all on one chain.'   // no markers in a video
+    : S.cap ? S.cap.full : '';
+  const capLines = wrap(capText, 50).slice(0, P != null ? 3 : 4);
+  const capH = (P != null ? 64 : 0) + capLines.length * 40;
+  // the scene band fits the slide's content; scene and caption sit centred between the header and the footer
+  const camL = (PCAM[id] || CHAP[id].cam).slice(-1)[0], bandH = Math.min(1560 - hb - capH - 40, Math.round((PH[id] || 900) * camL[4] + 80));
+  const top = hb + Math.max(0, (1550 - hb - (bandH + 40 + capH)) / 2);
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1600" font-family="-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif">` +
+    R(0, 0, 900, 1600, {fill: BG, rx: 0}) +
+    `<svg x="0" y="${top}" width="900" height="${bandH}" viewBox="0 0 900 ${bandH}">` +
+    `<g transform="translate(450 ${bandH / 2}) scale(${z}) translate(${-cx} ${-cy})">${w}</g></svg>` + hdr;
+  let y = top + bandH + 40 + 30;
+  if (P != null) { s += T(48, y + 20, 'MON ' + spct(100 * P, 0), {size: 56, w: 800, col: P > 0.001 ? C.green : P < -0.001 ? C.red : C.ink}); y += 64; }
+  capLines.forEach((l, k) => { s += T(48, y + k * 40, l, {size: 30, w: 600}); });
+  s += T(450, 1584, 'Illustrative · rates read ' + RATE_DATE + ' · ' + SL + ' short · ' + usd(D) + ' example', {size: 18, col: C.mute, anchor: 'middle'});
+  return s + '</svg>';
+}
+function camAt(cut, idx, id, u, cams = null) {
+  const camOf = k => (cams && cams[k]) || CHAP[k].cam;
+  const C_ = camOf(id);
+  let prev = C_[0];
+  if (idx > 0) { const pc = camOf(CUTS[cut][idx - 1]); prev = pc[pc.length - 1]; }
+  let cur = prev.slice(2);
+  for (const m of C_) {
+    const f = m[1] > m[0] ? ease((u - m[0]) / (m[1] - m[0])) : (u >= m[0] ? 1 : 0);
+    if (f <= 0) break;
+    const to = m.slice(2);
+    cur = [lerp(cur[0], to[0], f), lerp(cur[1], to[1], f), Math.exp(lerp(Math.log(cur[2]), Math.log(to[2]), f))];
+    if (f < 1) break;
+  }
+  return cur;
+}
+function frame(id, u, idx, n, cut) {
+  window.__chk = {id, u};
+  const S = CHAP[id], order = id === 'explore' ? [] : CUTS[cut], at = order.indexOf(id);
+  let [cx, cy, z] = id === 'explore' ? CHAP.explore.cam[0].slice(2) : camAt(cut, idx, id, u);
+  if (!document.body.classList.contains('record')) {    // a marker's zoom overrides the slide's camera, gliding in and out
+    const ZM = window.__zoom;
+    if (ZM) {
+      const k = ease((performance.now() - ZM.t0) / (1000 * TR)), a = ZM.from, b = ZM.out ? [cx, cy, z] : ZM.to;
+      cx = lerp(a[0], b[0], k); cy = lerp(a[1], b[1], k); z = Math.exp(lerp(Math.log(a[2]), Math.log(b[2]), k));
+      if (ZM.out && k >= 1) window.__zoom = null;
+    }
+    window.__curCam = [cx, cy, z];
+  }
+  // slide 11: a marker's part replays in place, on its own clock (advances while running; follows the speed slider)
+  const RP = id === 'all' && !document.body.classList.contains('record') ? window.__replay : null, RK = RP ? RP.key : null;
+  const ZK = window.__zoom && !window.__zoom.out ? window.__zoom.key : null;   // a board zoomed onto (9, 10) is shown complete
+  let uR = 0;
+  if (RP) {
+    const now = performance.now();
+    if (RP.running) RP.acc += (now - RP.last) / 1000;
+    RP.last = now;
+    uR = Math.min(RP.acc, CHAP[RK].dur);
+  }
+  let w = '';
+  if (id === 'explore') {
+    const M = model(X.p / 100, 0, X.src, X.f);
+    w += drawTree({vis: {fl: 'on', mor: 'on', per: 'on', cf: X.src === 'cf' ? 'on' : 'ghost'}, links: {post: .5, borrow: .5}, monad: .6, valuer: .45,
+      v: {sh: M.coll, coll: M.coll, debt: M.debt, n: M.notional, margin: M.margin, pnl: M.pnl, loan: M.loan, cash: 0, lev: M.coll / (M.coll - M.debt)},
+      sub: 'equity ' + usd(M.equity), health: 1}) + wboard(M, X.p / 100, 1);
+  } else if (S.draw) w += S.draw(u);
+  else if (RK && CHAP[RK].draw) w += CHAP[RK].draw(uR);   // slide 11: a part's animation replayed in place
+  else {   // after the stories: the vault as the fall left it (MON down, rebalanced to the opening shape)
+    const {M, p} = dropState(CHAP.drop.dur);
+    w += drawTree({vis: {fl: 'on', mor: 'on', per: 'on', cf: 'on'}, links: {post: .5, borrow: .5}, monad: .6, valuer: .45, agent: 1,
+      v: {sh: M.coll, coll: M.coll, debt: M.debt, n: M.notional, margin: M.margin, pnl: M.pnl, loan: M.loan, cash: 0, lev: M.coll / (M.coll - M.debt)}}) +
+      wboard(Object.assign({}, M, {cash: 0}), p, 1);
+  }
+  // boards: built as the story reaches them, kept afterwards
+  const pi = order.indexOf('payout');
+  if (pi >= 0 && at >= pi) w += `<g transform="translate(190 0)">` + payoutBoard(id === 'payout' ? u - PAY0 : RK === 'payout' ? uR - PAY0 : 99) + '</g>';   // 100 from the Monad frame, as the balance board is
+  // closing boards stack under the tree, each kept once built
+  order.forEach((ck, ci) => {
+    if (CLOSE_FN[ck] && at >= ci && RK !== 'move' && RK !== 'drop') w += `<g transform="translate(0 ${CLOSE_DY[ck] || 0})">` + CLOSE_FN[ck](id === ck && ZK !== ck ? u - CLOSE0 : 99) + '</g>';
+  });
+  if (!window.__collect && id !== 'explore') updateChipLog(order, at, u);
+  // numbered markers on the picture: press one to zoom onto the part it sits on
+  let mk = '';
+  if (!document.body.classList.contains('record') && at >= 0) {
+    const has = k => order.indexOf(k) >= 0 && at >= order.indexOf(k);
+    const board = ['move', 'drop', 'payout', 'grow', 'next', 'all'].includes(id), replay67 = RK === 'move' || RK === 'drop';   // 6/7 replay: its rows below are hidden
+    const marks = [['stake', CX.fl + 150, CY.fl, id !== 'stake' || u > 5.0 - SH], ['loop', CX.mor + 150, CY.mor, has('loop')], ['cf', CX.cf + 150, CY.cf, has('cf')],
+      ['hedge', CX.per + 150, CY.per, has('hedge')], ['together', 200, 70, has('together')], ['move', 2200, 140, board], ['drop', 2800, 140, board],
+      ['payout', -450, 120, has('payout')], ['grow', 300, 878, has('grow') && !replay67], ['next', 30, -154, has('next') && !replay67]];
+    const r = 15 / z;
+    marks.forEach(([k, mx, my, show]) => {
+      const i = order.indexOf(k);
+      if (!show || i < 0) return;
+      const ZM = window.__zoom, cur = !!(ZM && !ZM.out && ZM.key === k);
+      mk += `<g data-zoom="${k}" style="cursor:zoom-in"><title>${i + 1} · ${esc(CHAP[k].title)}: zoom in</title>` +
+        `<circle cx="${mx}" cy="${my}" r="${r * 1.35}" fill="#fff" opacity=".9"/>` +
+        `<circle cx="${mx}" cy="${my}" r="${r}" fill="${cur ? PERPL : '#fff'}" stroke="${PERPL}" stroke-width="${2 / z}"/>` +
+        `<text x="${mx}" y="${my + 5.5 / z}" font-size="${15 / z}" font-weight="800" fill="${cur ? '#fff' : PERPL}" text-anchor="middle">${i + 1}</text></g>`;
+    });
+  }
+  // while zoomed: sharp inside the part's focus rectangles, blurred and faded outside them
+  const ZF = window.__zoom;
+  if (!document.body.classList.contains('record') && ZF && FOCUS[ZF.key]) {
+    const k = ease((performance.now() - ZF.t0) / (1000 * TR)), foc = ZF.out ? 1 - k : k;
+    if (foc > 0.01) {
+      const rects = FOCUS[ZF.key].map(([x1, y1, x2, y2]) => `<rect x="${x1}" y="${y1}" width="${x2 - x1}" height="${y2 - y1}"/>`).join('');
+      w = `<defs><filter id="zb" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${4 / z}"/></filter>` +
+        `<clipPath id="zc">${rects}</clipPath></defs>` + (foc < 1 ? `<g opacity="${1 - foc}">${w}</g>` : '') +
+        `<g filter="url(#zb)" opacity="${0.35 * foc}">${w}</g><g clip-path="url(#zc)" opacity="${foc}">${w}</g>`;
+    }
+  }
+  w += mk;
+  if (PORTRAIT) return portraitSvg(w, id, u, idx, cut, S);
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" font-family="-apple-system,Helvetica Neue,Helvetica,Arial,sans-serif">`;
+  s += R(0, 0, 1600, 900, {fill: BG, rx: 0});
+  s += `<g transform="translate(800 504) scale(${z}) translate(${-cx} ${-cy})">${w}</g>`;   // centred below the header
+  s += R(0, 0, 1600, 108, {fill: BG, op: 0.94, rx: 0});
+  s += T(40, 58, (idx >= 0 ? (idx + 1) + ' · ' : '') + S.title, {size: 30, w: 800});
+  s += T(40, 84, 'Programmable margin on Perpl · ' + lendingOn() + (ACC ? ' · looping by ' + ACC.name : ''), {size: 16, col: PERPL, w: 600});
+  s += badges(S.badges, 1560, 22);
+  // the dashes are the navigation: click one to go to that slide; the next one pulses once this slide has finished
+  const live = !document.body.classList.contains('record'), pulse = 0.45 + 0.45 * Math.sin(performance.now() / 260);
+  if (n > 1) for (let k = 0; k < n; k++) {
+    const x = 1560 - (n - k) * 38 + 10, nextUp = live && window.__held && k === idx + 1, on = k === idx || nextUp;
+    s += `<g data-nav="${k}" style="cursor:pointer"><title>${k + 1} · ${esc(CHAP[CUTS[cut][k]].title)}</title>` +
+      `<rect x="${x}" y="68" width="28" height="24" rx="6" fill="${on ? PERPL : '#e6e7ee'}" opacity="${nextUp ? 0.4 + 0.6 * pulse : 1}"/>` +
+      T(x + 14, 85, String(k + 1), {size: 13, w: 800, col: on ? '#fff' : C.mute, anchor: 'middle'}) + '</g>';
+  }
+  if (id === 'all' && !window.__zoom && !document.body.classList.contains('record')) s += T(40, 884, 'Press a number to zoom into that part', {size: 20, w: 700, col: PERPL});
+  s += T(1580, 890, 'Illustrative · rates read ' + RATE_DATE + ' · ' + SL + ' short · ' + usd(D) + ' example', {size: 12, col: C.mute, anchor: 'end'});
+  return s + '</svg>';
+}
+// The page around the slide: the dashes in the slide header jump between slides; under the slide, top-left of the chip
+// stack, big Play / Pause / Restart buttons, a speed slider and the Takeaways dialog. Playback runs slide to slide. The
+// template's own controls stay in the page, hidden, and are driven from here.
+const CHIP_LOG = {sig: '', cache: {}};
+function chipsOf(id) {                  // every chip a slide shows, with its window, read by running it to its end
+  if (CHIP_LOG.cache[id]) return CHIP_LOG.cache[id];
+  const S = CHAP[id], keep = window.__chk;
+  window.__collect = []; window.__chk = {};
+  try { if (S.draw) S.draw(S.dur); } catch (e) { /* a slide that cannot render alone has no chips */ }
+  const list = window.__collect; window.__collect = null; window.__chk = keep;
+  const sh = S.shift || 0;   // chips record their window on the slide's own clock
+  return (CHIP_LOG.cache[id] = list.map(c => Object.assign({}, c, {a: c.a - sh, b: c.b - sh})));
+}
+function updateChipLog(order, idx, u) {
+  const box = document.getElementById('chiplog');
+  if (!box || idx < 0) return;
+  const done = [];
+  order.forEach((id, k) => {
+    if (k > idx) return;
+    chipsOf(id).forEach(c => { if (k < idx || (c.b !== Infinity && u >= c.b + 0.45)) done.push({k, s: c.s, kind: c.kind}); });
+  });
+  const sig = done.length + ':' + idx;
+  if (sig === CHIP_LOG.sig) return;
+  const prev = +CHIP_LOG.sig.split(':')[0] || 0, grow = done.length - prev;
+  CHIP_LOG.sig = sig;
+  box.innerHTML = done.length ? '' : '<div class="empty">Notes from each step collect here as the story plays.</div>';
+  done.slice().reverse().forEach((c, r) => {
+    const el = document.createElement('div');
+    el.className = 'chipitem' + (grow > 0 && grow <= 2 && r < grow ? ' arrive' : '');
+    el.innerHTML = `<span class="ic ${c.kind}">${c.kind === 'warn' ? '!' : '✓'}</span><span class="tx"></span><span class="sl">${c.k + 1}</span>`;
+    el.querySelector('.tx').textContent = c.s;
+    box.appendChild(el);
+  });
+  if (grow > 0) box.scrollTop = 0;
+}
+function payoutRows() {
+  const E = D, L = F.loop_leverage, y = F.stake_pct / 100, b = F.borrow_pct / 100, f = F.funding90_pct / 100;
+  return [['Staking rewards on ' + usd(L * E) + ' shMON', L * y * E, FAST], ['Interest to ' + VEN.name + '’s WMON lenders', -(L - 1) * b * E, VEN.col],
+    ['Funding paid to the short', f * E, PERPL], ['Interest on the ' + CREDIT.creditShort + ' line', -MM * F.credit_facility_pct / 100 * E, CREDIT.text],
+    ['Swaps and Perpl taker fees', F.legs_pct.costs / 100 * E, C.grey]];
+}
+function hlRows() {   // the same trade with the short on Hyperliquid: margin from the deposit, so E / (1 + m) loops
+  const Eh = D / (1 + MM), L = F.loop_leverage, y = F.stake_pct / 100, b = F.borrow_pct / 100, f = F.funding90_pct / 100;
+  return [['Staking rewards on ' + usd(L * Eh) + ' shMON', L * y * Eh], ['Interest to ' + VEN.name + '’s WMON lenders', -(L - 1) * b * Eh],
+    ['Funding paid to the short', f * Eh], ['No credit line', 0], ['Swaps and taker fees', F.legs_pct.costs / 100 * Eh],
+    ['Moving margin between the chains', -(BRIDGE.transfers * BRIDGE.fee + BRIDGE.activation)]];
+}
+function sectionTakeaways(key) {        // [lead, text] pairs for a section's panel
+  if (key === 'payout') {
+    const rows = payoutRows(), net = rows.reduce((a, r) => a + r[1], 0);
+    const netH = hlRows().reduce((a, r) => a + r[1], 0), idle = MM * D / (1 + MM);
+    return rows.map(r => [(r[1] < 0 ? '−' : '+') + usd(Math.abs(r[1])), r[0]]).concat([[usd(net) + ' · ' + pct(100 * net / D, 1), 'net to the depositor, a year on ' + usd(D)],
+      [usd(netH) + ' · ' + pct(100 * netH / D, 1), 'hedged on Hyperliquid: ' + usd(idle) +
+        ' (' + Math.round(100 * idle / D) + '%) of the deposit sits as margin, only ' + usd(D - idle) + ' loops'],
+      ['+' + usd(net - netH) + ' a year (+' + pct(100 * (net - netH) / D, 1) + ')', 'on Perpl; bridging adds ' + usd(BRIDGE.transfers * BRIDGE.fee + BRIDGE.activation) + ' a year and ~' + BRIDGE.sign_s + ' s per top-up on Hyperliquid']]);
+  }
+  if (key === 'grow') return lendCards().map(o => [o.label + ':', o.long]);
+  if (key === 'next') return curatorItems().map(([g, title, sub, long]) => [title + ':', long]);
+  return chipsOf(key).map(c => ['', c.s]);
+}
+function takeawayPages() {
+  const net = F.net_credit_facility_pct / 100 * D;
+  const pages = [{group: 'What it pays', title: usd(net) + ' a year', big: pct(F.net_credit_facility_pct, 1) + ' net',
+    text: 'On a ' + usd(D) + ' deposit at rates read ' + RATE_DATE + ': staking rewards and funding in, interest and fees out.', icon: ''}];
+  lendCards().forEach(o => pages.push({group: 'More TVL for ' + VEN.name, title: o.label, big: o.title, text: o.long, icon: 'img:' + VEN.icon}));
+  curatorItems().forEach(([g, title, sub, long]) => pages.push({group: 'For curators, LPs and traders', title, big: '', text: long, icon: 'glyph:' + g}));
+  return pages;
+}
+(function pageShell() {
+  if (new URLSearchParams(location.search).has('record')) return;
+  // speed: the template's clock reads performance.now, so warp it; changes re-base so time never jumps
+  const realNow = performance.now.bind(performance);
+  let base = realNow(), virt = base, spd = 1;
+  performance.now = () => virt + (realNow() - base) * spd;
+  const setSpeed = s => { virt = performance.now(); base = realNow(); spd = s; };
+  const css = document.createElement('style');
+  css.textContent = `
+#ovbar,.bar,#explore{display:none!important}
+html,body{background:#f6f6f3}
+#wrap{max-width:none;padding:0}
+#hud{position:absolute;top:0;left:0;width:1600px;height:900px;transform-origin:0 0;pointer-events:none}
+#ctrl{position:absolute;right:40px;top:108px;height:36px;pointer-events:auto}
+#stagewrap{height:100vh;display:flex;align-items:center;justify-content:center;background:#f6f6f3}
+#stage{width:min(100vw,calc(100vh * 16 / 9));height:auto;border-radius:0;box-shadow:none}
+#ctrl{display:flex;align-items:center;gap:14px}
+#ctrl .big{width:36px;height:36px;border-radius:50%;border:2px solid #6F5CFF;background:#fff;color:#6F5CFF;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+#ctrl .big.on{background:#6F5CFF;color:#fff}
+#ctrl .mid{width:30px;height:30px;font-size:15px}
+#ctrl #cRestart{font-size:24px;line-height:1}
+#ctrl label{display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;margin-left:4px}
+#ctrl input[type=range]{width:110px;accent-color:#6F5CFF}
+#ctrl .sp{min-width:34px;font-size:13px;font-weight:700;color:#6F5CFF}
+#secpanel{position:absolute;width:470px;max-height:300px;overflow-y:auto;background:rgba(255,255,255,.97);border:2px solid #6F5CFF;border-radius:16px;padding:14px 18px;box-shadow:0 8px 28px rgba(0,0,0,.14);pointer-events:auto;font-size:16px;line-height:1.4;color:#1f2937}
+#secpanel.at-br{right:24px;bottom:24px}#secpanel.at-bl{left:24px;bottom:24px}#secpanel.at-tl{left:24px;top:120px;width:380px}
+#secpanel.at-bc{left:50%;bottom:24px;transform:translateX(-50%);width:900px;max-height:250px}
+#secpanel .hd{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;color:#6F5CFF;margin-bottom:6px}
+#secpanel .n{width:26px;height:26px;border-radius:50%;background:#6F5CFF;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center}
+#secpanel ul{margin:0;padding-left:20px}#secpanel li{margin:6px 0}#secpanel b{color:#111827}
+#ctrl .take{border-radius:18px;padding:5px 12px;border:2px solid #6F5CFF;color:#6F5CFF;font-weight:700;font-size:14px;background:#fff}
+#chiplog{height:190px;overflow-y:auto;background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:10px;display:flex;flex-direction:column;gap:8px}
+#chiplog .empty{color:#9ca3af;font-size:14px;padding:8px}
+.chipitem{display:flex;align-items:center;gap:10px;border:1px solid #e3e5ea;border-radius:12px;padding:8px 12px;font-size:15px;font-weight:600;background:#fff}
+.chipitem .ic{flex:none;width:22px;height:22px;border-radius:50%;color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;background:#2e7d32}
+.chipitem .ic.warn{background:#d97706}
+.chipitem .tx{flex:1}
+.chipitem .sl{flex:none;color:#9ca3af;font-size:12px;font-weight:700}
+.chipitem.arrive{animation:arrive .5s ease-out}
+@keyframes arrive{from{transform:translateY(-26px);opacity:0;background:#efeaff}to{transform:none;opacity:1;background:#fff}}
+#tk{position:fixed;inset:0;background:rgba(20,21,28,.55);display:none;align-items:center;justify-content:center;z-index:50}
+#tk.open{display:flex}
+#tk .card{background:#fff;border-radius:18px;width:min(92vw,820px);max-height:88vh;overflow:auto;padding:clamp(20px,4vw,44px);box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
+#tk .grp{color:#6F5CFF;font-weight:800;font-size:clamp(13px,1.6vw,16px);letter-spacing:.04em;text-transform:uppercase}
+#tk .hd{display:flex;align-items:center;gap:16px;margin-top:14px}
+#tk .hd .icn{width:clamp(36px,5vw,56px);height:clamp(36px,5vw,56px);flex:none}
+#tk .hd .icn svg,#tk .hd .icn img{width:100%;height:100%}
+#tk h2{margin:0;font-size:clamp(24px,4vw,40px)}
+#tk .bign{font-size:clamp(30px,6vw,64px);font-weight:800;margin-top:10px}
+#tk p{font-size:clamp(16px,2.2vw,22px);line-height:1.45;color:#374151}
+#tk .ft{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+#tk .ft button{font-size:18px;padding:8px 16px;border-radius:22px}
+#tk .x{position:absolute;right:16px;top:12px;border:none;background:none;font-size:26px;color:#6b7280}
+`;
+  document.head.appendChild(css);
+  const $ = id => document.getElementById(id), wrapEl = $('wrap');
+  const hud = document.createElement('div');
+  hud.id = 'hud';
+  hud.innerHTML = '<div id="ctrl"><button class="big" id="cPlay" title="Play (space)">▶</button><button class="big" id="cPause" title="Pause (space)">❚❚</button>' +
+    '<button class="big" id="cRestart" title="Restart from slide 1">⟲</button>' +
+    '<label>Speed <input type="range" id="cSpeed" min="0.25" max="2" step="0.25" value="1"><span class="sp" id="cSpeedV">1×</span></label>' +
+    '<button class="take" id="cZoom" style="display:none">Zoom out</button></div>';
+  $('stagewrap').appendChild(hud);                          // on the slide, top right, laid out at its 1600-wide scale
+  const place = () => { const r = $('stage').getBoundingClientRect(), w = $('stagewrap').getBoundingClientRect();
+    hud.style.transform = `translate(${r.left - w.left}px, ${r.top - w.top}px) scale(${r.width / 1600})`; };
+  place(); window.addEventListener('resize', place); setTimeout(place, 60);
+  const tk = document.createElement('div');
+  tk.id = 'tk';
+  tk.innerHTML = '<div class="card"><button class="x" id="tkX" title="Close (Esc)">×</button><div class="grp" id="tkG"></div>' +
+    '<div class="hd"><div class="icn" id="tkI"></div><h2 id="tkT"></h2></div><div class="bign" id="tkB"></div><p id="tkP"></p>' +
+    '<div class="ft"><button id="tkPrev">‹ Back</button><span id="tkN"></span><button id="tkNext">Next ›</button></div></div>';
+  document.body.appendChild(tk);
+  const playing = () => $('play') && $('play').textContent === 'Pause';
+  // a section's takeaways, shown in a panel on the slide while the camera is zoomed onto it
+  const panel = document.createElement('div');
+  panel.id = 'secpanel';
+  panel.style.display = 'none';
+  $('hud').appendChild(panel);
+  const showPanel = key => {
+    const items = sectionTakeaways(key);
+    panel.className = ''; panel.removeAttribute('style');
+    panel.innerHTML = `<div class="hd"><span class="n">${CUTS.lending.indexOf(key) + 1}</span><span class="t"></span></div><ul></ul>`;
+    panel.querySelector('.t').textContent = CHAP[key].title;
+    items.forEach(([lead, text]) => {
+      const li = document.createElement('li');
+      li.innerHTML = lead ? '<b></b> <span></span>' : '<span></span>';
+      if (lead) li.querySelector('b').textContent = lead;
+      li.querySelector('span').textContent = text;
+      panel.querySelector('ul').appendChild(li);
+    });
+    panel.style.display = '';
+    placePanel(key);
+  };
+  // beside the part's main card at the zoomed camera (below a row of cards); a free corner when there is no room
+  const placePanel = key => {
+    const A = ANCHOR[key], cam = ZOOMS[key], wide = key === 'grow' || key === 'next';
+    panel.style.width = (wide ? 900 : 470) + 'px';
+    // Wp, Hp: the panel as rendered, its padding and border included
+    const Wp = panel.offsetWidth, Hp = panel.offsetHeight, corner = () => { panel.className = 'at-' + (PANEL_AT[key] || 'br'); panel.style.width = ''; };
+    if (!A) return corner();
+    const sx = v => 800 + (v - cam[0]) * cam[2], sy = v => 504 + (v - cam[1]) * cam[2];
+    const L = sx(A[0]), Rr = sx(A[2]), Tt = sy(A[1]), B = sy(A[3]), clampY = y => Math.max(150, Math.min(900 - Hp - 24, y));
+    if (wide) {
+      const left = Math.max(24, Math.min(1576 - Wp, (L + Rr) / 2 - Wp / 2));
+      const top = B + 16 + Hp <= 884 ? B + 16 : Tt - 16 - Hp;
+      if (top < 150) return corner();
+      panel.style.left = left + 'px'; panel.style.top = top + 'px'; return;
+    }
+    if (Rr + 16 + Wp <= 1576) { panel.style.left = (Rr + 16) + 'px'; panel.style.top = clampY(Tt) + 'px'; return; }
+    if (L - 16 - Wp >= 24) { panel.style.left = (L - 16 - Wp) + 'px'; panel.style.top = clampY(Tt) + 'px'; return; }
+    corner();
+  };
+  // zoom: each marker's part of the picture, as a camera [x, y, zoom]
+  const ZOOMS = {stake: [1185, 437, 0.87], loop: [1147, 437, 0.78], cf: [800, 607, 0.61], hedge: [1145, 497, 0.82],
+    together: [1175, 395, 0.78], move: [1500, 612, 0.61], drop: [1500, 612, 0.61], payout: [-150, 650, 0.66],
+    grow: [1200, 1160, 0.86], next: [1200, 150, 0.66]};
+  const PANEL_AT = {stake: 'br', loop: 'br', cf: 'bl', hedge: 'bl', together: 'br', move: 'br', drop: 'br', payout: 'br', grow: 'bc', next: 'bc'};
+  const zoomed = () => !!(window.__zoom && !window.__zoom.out);
+  const zoomOut = () => { if (zoomed()) window.__zoom = {out: true, key: window.__zoom.key, from: window.__curCam, t0: performance.now()};
+    window.__replay = null; panel.style.display = 'none'; };
+  const zoomTo = key => {
+    window.__zoom = {key, from: window.__curCam, to: ZOOMS[key], t0: performance.now()};
+    const sc = $('scenes'), i = CUTS.lending.indexOf(key);
+    const onWhole = sc && sc.lastElementChild && sc.lastElementChild.classList.contains('on');
+    if (key === 'grow' || key === 'next') {               // 9 and 10: just show the cards, complete; nothing replays
+      window.__replay = null;
+    } else if (onWhole) {                                 // slide 11: replay this part's animation in place
+      window.__replay = {key, acc: 0, last: performance.now(), running: true};
+    } else {                                              // slides 1-10: play that part's slide, and hold at its end
+      window.__replay = null;
+      if ($('auto')) $('auto').checked = false;
+      if (sc && sc.children[i]) sc.children[i].click();
+    }
+    showPanel(key);
+  };
+  $('cZoom').onclick = () => {   // zoom out to the whole picture: slide 11
+    zoomOut(); const sc = $('scenes'); if (sc && sc.lastElementChild && !sc.lastElementChild.classList.contains('on')) sc.lastElementChild.click(); };
+  $('cPlay').onclick = () => {
+    const RP = window.__replay;
+    if (RP && zoomed()) { if (!RP.running) { RP.running = true; RP.last = performance.now(); } return; }   // resume the replay
+    zoomOut(); if (!playing() && $('play')) $('play').click();
+  };
+  $('cPause').onclick = () => { const RP = window.__replay; if (RP) RP.running = false; if (playing()) $('play').click(); };
+  $('cRestart').onclick = () => { zoomOut(); const sc = $('scenes'); if (sc && sc.children[0]) sc.children[0].click(); };
+  $('cSpeed').oninput = () => { const v = +$('cSpeed').value; setSpeed(v); $('cSpeedV').textContent = v + '×'; };
+  if ($('auto')) $('auto').checked = true;                 // the story runs slide to slide
+  // Takeaways: one point per page, sized to the window
+  let page = 0, pages = [];
+  const showPage = () => {
+    const P = pages[page];
+    $('tkG').textContent = P.group; $('tkT').textContent = P.title; $('tkB').textContent = P.big; $('tkP').textContent = P.text;
+    $('tkN').textContent = (page + 1) + ' / ' + pages.length;
+    const ic = P.icon || '';
+    $('tkI').innerHTML = ic.startsWith('img:') && ICON[ic.slice(4)] ? `<img src="${ICON[ic.slice(4)]}" alt="">`
+      : ic.startsWith('glyph:') ? `<svg viewBox="0 0 28 28">${glyph(ic.slice(6), 0, 0, PERPL)}</svg>` : '';
+    $('tkI').style.display = ic ? '' : 'none';
+  };
+  const openTk = () => { pages = takeawayPages(); page = 0; showPage(); tk.classList.add('open'); $('cPause').click(); };
+  const closeTk = () => tk.classList.remove('open');
+  $('tkX').onclick = closeTk;
+  tk.onclick = e => { if (e.target === tk) closeTk(); };
+  $('tkPrev').onclick = () => { page = (page + pages.length - 1) % pages.length; showPage(); };
+  $('tkNext').onclick = () => { page = (page + 1) % pages.length; showPage(); };
+  document.addEventListener('keydown', e => {           // while the dialog is open, keys page it instead of the story
+    if (!tk.classList.contains('open')) { if (e.key === 'Escape') zoomOut(); return; }
+    if (e.key === 'Escape') closeTk();
+    if (e.key === 'ArrowRight') $('tkNext').click();
+    if (e.key === 'ArrowLeft') $('tkPrev').click();
+    e.stopImmediatePropagation(); e.preventDefault();
+  }, true);
+  // the dashes in the slide header jump to a slide (on press: the stage is redrawn every frame)
+  $('stage').addEventListener('pointerdown', e => {
+    const zg = e.target.closest('[data-zoom]');          // a marker: zoom into its part, or back out if already there
+    if (zg) { if (zoomed() && window.__zoom.key === zg.dataset.zoom) zoomOut(); else zoomTo(zg.dataset.zoom); return; }
+    const g = e.target.closest('[data-nav]');
+    if (!g || g.dataset.nav === 'auto') return;
+    const sc = $('scenes'), k = +g.dataset.nav;
+    zoomOut();
+    if (sc && sc.children[k]) sc.children[k].click();
+  });
+  (function sync() {
+    const nx = $('ovNext');
+    window.__held = !!(nx && nx.classList.contains('pulse'));
+    const on = playing();
+    const sc = $('scenes'), last = sc && sc.lastElementChild && sc.lastElementChild.classList.contains('on');
+    if ($('auto')) $('auto').checked = !last && !zoomed();   // run slide to slide; stop at the end, or at a zoomed slide's end
+    $('cPlay').classList.toggle('on', on); $('cPause').classList.toggle('on', !on);
+    $('cZoom').style.display = zoomed() ? '' : 'none';
+    requestAnimationFrame(sync);
+  })();
+})();
+
+// ------------------------------------------------------------------ playback
+const Q = new URLSearchParams(location.search);
+let CUT = Q.get('cut') || 'lending', t0 = performance.now(), playing = true, tCur = 0, mode = 'story';
+const X = {p: 0, f: +F.funding90_pct.toFixed(1), src: 'cf'};
+function dur(cut) { return CUTS[cut].reduce((a, id) => a + SCN[id].dur, 0); }
+function renderAt(t) {
+  const list = CUTS[CUT]; let acc = 0;
+  for (let k = 0; k < list.length; k++) { const d = SCN[list[k]].dur;
+    if (t < acc + d || k === list.length - 1) { document.getElementById('stage').innerHTML = frame(list[k], Math.min(t - acc, d), k, list.length, CUT); return; }
+    acc += d; }
+}
+window.renderAt = renderAt;
+window.setCut = c => { CUT = c; window.CUT_DURATION = dur(c); };
+window.CUT_DURATION = dur(CUT);
+function renderExplore() { document.getElementById('stage').innerHTML = frame('explore', 0, -1, 1, CUT); }
+if (Q.has('record')) { document.body.classList.add('record'); renderAt(+(Q.get('t') || 0)); }
+else {
+  // Step-through playback: each scene plays once and holds on its last frame until the viewer moves on.
+  // Autoplay (off by default) runs the scenes back to back, the way the recordings do.
+  const $ = id => document.getElementById(id);
+  const sel = $('cut'); sel.value = CUT;
+  let sIdx = 0, u = 0, start = performance.now(), held = false;
+  const scenes = $('scenes'), scrub = $('scrub'), play = $('play'), auto = $('auto');
+  const list = () => CUTS[CUT], curDur = () => SCN[list()[sIdx]].dur;
+  function go(k, playNow = true) {
+    sIdx = Math.max(0, Math.min(list().length - 1, k)); u = 0; held = false; mode = 'story';
+    playing = playNow; start = performance.now(); play.textContent = playing ? 'Pause' : 'Play';
+  }
+  function buildButtons() {
+    scenes.innerHTML = '';
+    list().forEach((id, k) => { const b = document.createElement('button'); b.textContent = (k + 1) + ' ' + SCN[id].title;
+      b.onclick = () => go(k); scenes.appendChild(b); });
+  }
+  buildButtons();
+  sel.onchange = () => { CUT = sel.value; window.CUT_DURATION = dur(CUT); buildButtons(); go(0); };
+  const next = () => { if (sIdx < list().length - 1) go(sIdx + 1); else go(0); };
+  const back = () => go(u > 1.5 || sIdx === 0 ? sIdx : sIdx - 1);
+  $('next').onclick = $('ovNext').onclick = next;
+  $('back').onclick = $('ovPrev').onclick = back;
+  play.onclick = () => {
+    if (mode === 'explore') { go(sIdx); return; }
+    if (held) { go(sIdx); return; }                                   // replay a finished scene
+    playing = !playing; start = performance.now() - u * 1000; play.textContent = playing ? 'Pause' : 'Play';
+  };
+  scrub.oninput = () => { mode = 'story'; playing = false; held = false; play.textContent = 'Play'; u = scrub.value / 1000 * curDur(); };
+  const xp = $('xp'), xf = $('xf'), xm = $('xm');
+  xf.value = X.f; $('xfv').textContent = pct(X.f, 1);
+  const onX = () => { X.p = +xp.value; X.f = +xf.value; X.src = xm.value; mode = 'explore'; playing = false; play.textContent = 'Play';
+    $('xpv').textContent = spct(X.p, 0); $('xfv').textContent = pct(X.f, 1); renderExplore(); $('ovNext').classList.remove('pulse'); };
+  xp.oninput = xf.oninput = xm.onchange = onX;
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === ' ') { e.preventDefault(); play.click(); }
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') back();
+  });
+  (function tick() {
+    if (mode === 'story') {
+      if (playing) {
+        u = (performance.now() - start) / 1000;
+        if (u >= curDur()) {
+          if (auto.checked) { next(); } else { u = curDur(); playing = false; held = true; play.textContent = 'Replay'; }
+        }
+      }
+      const at = list().slice(0, sIdx).reduce((a, id) => a + SCN[id].dur, 0);
+      renderAt(at + Math.min(u, curDur() - 1e-6));
+      scrub.value = Math.round(1000 * u / curDur());
+      [...scenes.children].forEach((b, k) => b.classList.toggle('on', k === sIdx));
+      $('ovNext').classList.toggle('pulse', held);
+      $('ovNext').textContent = sIdx === list().length - 1 ? 'Start again ›' : 'Next ›';
+      $('ovPrev').style.visibility = sIdx === 0 && u < 1.5 ? 'hidden' : 'visible';
+    }
+    requestAnimationFrame(tick);
+  })();
+}
+</script>
+</body></html>
